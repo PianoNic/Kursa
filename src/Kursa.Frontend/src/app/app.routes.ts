@@ -26,6 +26,11 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/courses/course-detail.component').then((m) => m.CourseDetailComponent),
       },
+      {
+        path: 'pinned',
+        loadComponent: () =>
+          import('./features/pinned/pinned.component').then((m) => m.PinnedComponent),
+      },
     ],
   },
 ];
