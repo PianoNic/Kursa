@@ -76,6 +76,10 @@ public static class DependencyInjection
         // Recording indexing (transcript → embeddings + summary)
         services.AddScoped<IRecordingIndexingService, RecordingIndexingService>();
 
+        // Microsoft Graph (OneNote + SharePoint)
+        services.AddHttpClient("MicrosoftGraph");
+        services.AddScoped<IMicrosoftGraphService, MicrosoftGraphService>();
+
         // Whisper transcription
         services.AddHttpClient("Whisper");
         services.AddScoped<ITranscriptionService, WhisperTranscriptionService>();

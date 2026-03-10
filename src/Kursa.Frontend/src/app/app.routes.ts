@@ -81,6 +81,11 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/timetable/timetable.component').then((m) => m.TimetableComponent),
       },
+      {
+        path: 'microsoft',
+        loadComponent: () =>
+          import('./features/microsoft/microsoft.component').then((m) => m.MicrosoftComponent),
+      },
     ],
   },
 ];

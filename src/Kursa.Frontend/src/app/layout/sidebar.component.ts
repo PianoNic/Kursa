@@ -121,6 +121,14 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
           Timetable
         </a>
         <a
+          routerLink="/microsoft"
+          routerLinkActive="bg-accent text-accent-foreground"
+          class="flex items-center gap-3 rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" aria-hidden="true"><rect width="20" height="14" x="2" y="3" rx="2" /><line x1="8" x2="8" y1="21" y2="17" /><line x1="16" x2="16" y1="21" y2="17" /><line x1="12" x2="12" y1="21" y2="17" /></svg>
+          Microsoft
+        </a>
+        <a
           routerLink="/settings"
           routerLinkActive="bg-accent text-accent-foreground"
           class="flex items-center gap-3 rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
