@@ -197,7 +197,7 @@ dotnet run
 
 # Run frontend
 cd src/Kursa.Web
-npm install
+bun install
 ng serve
 ```
 

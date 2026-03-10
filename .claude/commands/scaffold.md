@@ -1,16 +1,16 @@
-Scaffold the entire StudyApp project from scratch. This is the initial project setup command.
+Scaffold the entire Kursa project from scratch. This is the initial project setup command.
 
 Follow these steps in order:
 
 ## 1. .NET Solution & Projects
 ```bash
-dotnet new sln -n StudyApp
-dotnet new webapi -n StudyApp.Api -o src/StudyApp.Api --use-controllers false
-dotnet new classlib -n StudyApp.Domain -o src/StudyApp.Domain
-dotnet new classlib -n StudyApp.Application -o src/StudyApp.Application
-dotnet new classlib -n StudyApp.Infrastructure -o src/StudyApp.Infrastructure
-dotnet new xunit -n StudyApp.Api.Tests -o tests/StudyApp.Api.Tests
-dotnet new xunit -n StudyApp.Application.Tests -o tests/StudyApp.Application.Tests
+dotnet new sln -n Kursa
+dotnet new webapi -n Kursa.API -o src/Kursa.API --use-controllers false
+dotnet new classlib -n Kursa.Domain -o src/Kursa.Domain
+dotnet new classlib -n Kursa.Application -o src/Kursa.Application
+dotnet new classlib -n Kursa.Infrastructure -o src/Kursa.Infrastructure
+dotnet new xunit -n Kursa.API.Tests -o tests/Kursa.API.Tests
+dotnet new xunit -n Kursa.Application.Tests -o tests/Kursa.Application.Tests
 ```
 
 Add all projects to the solution and set up project references:
@@ -19,19 +19,19 @@ Add all projects to the solution and set up project references:
 - Tests → respective projects
 
 ## 2. NuGet Packages
-**StudyApp.Api**: MediatR, FluentValidation.AspNetCore, Hangfire, Serilog, Swashbuckle
-**StudyApp.Application**: MediatR, FluentValidation
-**StudyApp.Infrastructure**: Npgsql.EntityFrameworkCore.PostgreSQL, Microsoft.EntityFrameworkCore.Tools, Qdrant.Client, StackExchange.Redis, Minio
-**StudyApp.Domain**: (minimal, maybe just abstractions)
+**Kursa.API**: MediatR, FluentValidation.AspNetCore, Hangfire, Serilog, Swashbuckle
+**Kursa.Application**: MediatR, FluentValidation
+**Kursa.Infrastructure**: Npgsql.EntityFrameworkCore.PostgreSQL, Microsoft.EntityFrameworkCore.Tools, Qdrant.Client, StackExchange.Redis, Minio
+**Kursa.Domain**: (minimal, maybe just abstractions)
 
 ## 3. Angular Frontend
 ```bash
 cd src
-ng new StudyApp.Web --style css --routing --standalone --skip-tests false
-cd StudyApp.Web
-npm install -D tailwindcss @tailwindcss/postcss postcss
+ng new Kursa.Frontend --style css --routing --standalone --skip-tests false
+cd Kursa.Frontend
+bun install -D tailwindcss @tailwindcss/postcss postcss
 # Install spartan.ng CLI and core packages
-npx nx g @spartan-ng/cli:init
+bunx nx g @spartan-ng/cli:init
 ```
 
 Set up:
@@ -56,7 +56,7 @@ Create:
 ## 6. Verify
 ```bash
 dotnet build
-cd src/StudyApp.Web && ng build
+cd src/Kursa.Frontend && bun run build
 docker compose config
 ```
 
