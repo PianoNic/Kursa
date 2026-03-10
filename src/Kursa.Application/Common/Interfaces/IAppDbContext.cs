@@ -23,5 +23,13 @@ public interface IAppDbContext
 
     DbSet<ChatMessage> ChatMessages { get; }
 
+    DbSet<Quiz> Quizzes { get; }
+
+    DbSet<QuizQuestion> QuizQuestions { get; }
+
+    DbSet<QuizAttempt> QuizAttempts { get; }
+
+    DbSet<QuizAnswer> QuizAnswers { get; }
+
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }
