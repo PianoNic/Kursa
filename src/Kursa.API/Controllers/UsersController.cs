@@ -44,4 +44,14 @@ public class UsersController(ISender sender) : ControllerBase
             ? Ok(result.Value)
             : BadRequest(result.Error);
     }
+
+    [HttpPost("me/onboarding/complete")]
+    public async Task<IActionResult> CompleteOnboardingAsync(CancellationToken cancellationToken)
+    {
+        var result = await sender.Send(new CompleteOnboardingCommand(), cancellationToken);
+
+        return result.IsSuccess
+            ? Ok()
+            : BadRequest(result.Error);
+    }
 }

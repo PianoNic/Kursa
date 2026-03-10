@@ -3,6 +3,11 @@ import { ShellComponent } from './layout/shell.component';
 
 export const routes: Routes = [
   {
+    path: 'onboarding',
+    loadComponent: () =>
+      import('./features/onboarding/onboarding.component').then((m) => m.OnboardingComponent),
+  },
+  {
     path: '',
     component: ShellComponent,
     children: [
