@@ -76,6 +76,9 @@ public static class DependencyInjection
         // Recording indexing (transcript → embeddings + summary)
         services.AddScoped<IRecordingIndexingService, RecordingIndexingService>();
 
+        // AI study suggestions (agentic behavior)
+        services.AddScoped<IStudySuggestionService, StudySuggestionService>();
+
         // Microsoft Graph (OneNote + SharePoint)
         services.AddHttpClient("MicrosoftGraph");
         services.AddScoped<IMicrosoftGraphService, MicrosoftGraphService>();

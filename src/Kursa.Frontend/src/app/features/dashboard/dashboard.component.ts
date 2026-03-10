@@ -6,6 +6,7 @@ import {
   AnalyticsService,
   StudyActivity,
 } from '../../core/services/analytics.service';
+import { SuggestionService, StudySuggestion } from '../../core/services/suggestion.service';
 
 @Component({
   selector: 'app-dashboard',
@@ -166,6 +167,53 @@ import {
             }
           </div>
 
+          <!-- AI Suggestions -->
+          <div class="rounded-lg border border-border bg-card p-5">
+            <div class="flex items-center gap-2">
+              <svg class="h-4 w-4 text-primary" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09ZM18.259 8.715 18 9.75l-.259-1.035a3.375 3.375 0 0 0-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 0 0 2.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 0 0 2.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 0 0-2.455 2.456Z" /></svg>
+              <h2 class="text-sm font-semibold text-foreground">AI Study Suggestions</h2>
+            </div>
+            @if (suggestionsLoading()) {
+              <div class="mt-3 flex items-center gap-2 text-xs text-muted-foreground">
+                <div class="h-3 w-3 animate-spin rounded-full border-2 border-primary border-t-transparent"></div>
+                Analyzing your study patterns...
+              </div>
+            } @else if (suggestions().length > 0) {
+              <div class="mt-3 space-y-2">
+                @for (s of suggestions(); track s.title) {
+                  @if (s.actionUrl) {
+                    <a
+                      [routerLink]="s.actionUrl"
+                      class="flex items-start gap-3 rounded-md p-2 transition-colors hover:bg-accent"
+                    >
+                      <div
+                        class="mt-0.5 h-2 w-2 shrink-0 rounded-full"
+                        [class]="s.priority === 'high' ? 'bg-orange-500' : s.priority === 'low' ? 'bg-muted-foreground' : 'bg-primary'"
+                      ></div>
+                      <div>
+                        <p class="text-sm font-medium text-foreground">{{ s.title }}</p>
+                        <p class="text-xs text-muted-foreground">{{ s.description }}</p>
+                      </div>
+                    </a>
+                  } @else {
+                    <div class="flex items-start gap-3 rounded-md p-2">
+                      <div
+                        class="mt-0.5 h-2 w-2 shrink-0 rounded-full"
+                        [class]="s.priority === 'high' ? 'bg-orange-500' : s.priority === 'low' ? 'bg-muted-foreground' : 'bg-primary'"
+                      ></div>
+                      <div>
+                        <p class="text-sm font-medium text-foreground">{{ s.title }}</p>
+                        <p class="text-xs text-muted-foreground">{{ s.description }}</p>
+                      </div>
+                    </div>
+                  }
+                }
+              </div>
+            } @else {
+              <p class="mt-3 text-xs text-muted-foreground">No suggestions available right now.</p>
+            }
+          </div>
+
           <!-- Streaks & Quick Actions -->
           <div class="space-y-4">
             <div class="rounded-lg border border-border bg-card p-5">
@@ -226,9 +274,12 @@ import {
 })
 export class DashboardComponent implements OnInit {
   private readonly analyticsService = inject(AnalyticsService);
+  private readonly suggestionService = inject(SuggestionService);
 
   readonly loading = signal(true);
   readonly data = signal<Analytics | null>(null);
+  readonly suggestions = signal<StudySuggestion[]>([]);
+  readonly suggestionsLoading = signal(true);
 
   ngOnInit(): void {
     this.analyticsService.getAnalytics().subscribe({
@@ -237,6 +288,14 @@ export class DashboardComponent implements OnInit {
         this.loading.set(false);
       },
       error: () => this.loading.set(false),
+    });
+
+    this.suggestionService.getSuggestions().subscribe({
+      next: (suggestions) => {
+        this.suggestions.set(suggestions);
+        this.suggestionsLoading.set(false);
+      },
+      error: () => this.suggestionsLoading.set(false),
     });
   }
 
