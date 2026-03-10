@@ -1,0 +1,204 @@
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { Router } from '@angular/router';
+import { FormsModule } from '@angular/forms';
+import { AuthService } from '../../core/services/auth.service';
+import { MoodleService } from '../../core/services/moodle.service';
+
+@Component({
+  selector: 'app-onboarding',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [FormsModule],
+  template: `
+    <div class="flex min-h-screen items-center justify-center bg-background p-4">
+      <div class="w-full max-w-lg space-y-8">
+        <!-- Progress indicator -->
+        <div class="flex items-center justify-center gap-2">
+          @for (s of steps; track s; let i = $index) {
+            <div
+              class="h-2 w-12 rounded-full transition-colors"
+              [class]="i <= currentStep() ? 'bg-primary' : 'bg-muted'"
+            ></div>
+          }
+        </div>
+
+        <div class="rounded-lg border border-border bg-card p-8">
+          @switch (currentStep()) {
+            @case (0) {
+              <!-- Step 1: Welcome -->
+              <div class="space-y-4 text-center">
+                <svg class="mx-auto h-16 w-16 text-primary" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M4.26 10.147a60.438 60.438 0 0 0-.491 6.347A48.62 48.62 0 0 1 12 20.904a48.62 48.62 0 0 1 8.232-4.41 60.46 60.46 0 0 0-.491-6.347m-15.482 0a50.636 50.636 0 0 0-2.658-.813A59.906 59.906 0 0 1 12 3.493a59.903 59.903 0 0 1 10.399 5.84c-.896.248-1.783.52-2.658.814m-15.482 0A50.717 50.717 0 0 1 12 13.489a50.702 50.702 0 0 1 7.74-3.342M6.75 15a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Zm0 0v-3.675A55.378 55.378 0 0 1 12 8.443m-7.007 11.55A5.981 5.981 0 0 0 6.75 15.75v-1.5" />
+                </svg>
+                <h2 class="text-2xl font-bold text-foreground">Welcome to Kursa</h2>
+                <p class="text-muted-foreground">
+                  Let's get you set up. This will only take a minute.
+                </p>
+              </div>
+            }
+            @case (1) {
+              <!-- Step 2: Link Moodle -->
+              <div class="space-y-4">
+                <h2 class="text-xl font-bold text-foreground">Connect Moodle</h2>
+                <p class="text-sm text-muted-foreground">
+                  Link your Moodle account to browse courses and content.
+                </p>
+
+                <div class="space-y-3">
+                  <div>
+                    <label for="moodle-url" class="block text-sm font-medium text-foreground">Moodle URL</label>
+                    <input
+                      id="moodle-url"
+                      type="url"
+                      [(ngModel)]="moodleUrl"
+                      placeholder="https://moodle.example.com"
+                      class="mt-1 block w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                    />
+                  </div>
+                  <div>
+                    <label for="moodle-token" class="block text-sm font-medium text-foreground">API Token</label>
+                    <input
+                      id="moodle-token"
+                      type="password"
+                      [(ngModel)]="moodleToken"
+                      placeholder="Your Moodle API token"
+                      class="mt-1 block w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                    />
+                  </div>
+                </div>
+
+                @if (moodleLinkError()) {
+                  <p class="text-sm text-destructive">{{ moodleLinkError() }}</p>
+                }
+                @if (moodleLinkSuccess()) {
+                  <p class="text-sm text-green-500">Moodle account linked successfully!</p>
+                }
+              </div>
+            }
+            @case (2) {
+              <!-- Step 3: Preferences -->
+              <div class="space-y-4">
+                <h2 class="text-xl font-bold text-foreground">Preferences</h2>
+                <p class="text-sm text-muted-foreground">Customize your experience.</p>
+
+                <div>
+                  <label for="theme" class="block text-sm font-medium text-foreground">Theme</label>
+                  <select
+                    id="theme"
+                    [(ngModel)]="selectedTheme"
+                    class="mt-1 block w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                  >
+                    <option value="dark">Dark</option>
+                    <option value="light">Light</option>
+                    <option value="system">System</option>
+                  </select>
+                </div>
+              </div>
+            }
+            @case (3) {
+              <!-- Step 4: Done -->
+              <div class="space-y-4 text-center">
+                <svg class="mx-auto h-16 w-16 text-green-500" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                </svg>
+                <h2 class="text-2xl font-bold text-foreground">You're all set!</h2>
+                <p class="text-muted-foreground">
+                  Head to the dashboard to start exploring your courses.
+                </p>
+              </div>
+            }
+          }
+
+          <!-- Navigation buttons -->
+          <div class="mt-8 flex items-center justify-between">
+            @if (currentStep() > 0 && currentStep() < steps.length - 1) {
+              <button
+                (click)="previous()"
+                class="rounded-md border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-accent"
+              >
+                Back
+              </button>
+            } @else {
+              <div></div>
+            }
+
+            <div class="flex items-center gap-3">
+              @if (currentStep() < steps.length - 1) {
+                <button
+                  (click)="skip()"
+                  class="text-sm text-muted-foreground hover:text-foreground"
+                >
+                  Skip
+                </button>
+              }
+
+              @if (currentStep() < steps.length - 1) {
+                <button
+                  (click)="next()"
+                  class="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+                >
+                  {{ currentStep() === 1 && moodleUrl && moodleToken ? 'Connect & Continue' : 'Continue' }}
+                </button>
+              } @else {
+                <button
+                  (click)="finish()"
+                  class="rounded-md bg-primary px-6 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+                >
+                  Go to Dashboard
+                </button>
+              }
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `,
+})
+export class OnboardingComponent {
+  private readonly router = inject(Router);
+  private readonly authService = inject(AuthService);
+  private readonly moodleService = inject(MoodleService);
+
+  readonly steps = ['Welcome', 'Moodle', 'Preferences', 'Done'];
+  readonly currentStep = signal(0);
+  readonly moodleLinkError = signal<string | null>(null);
+  readonly moodleLinkSuccess = signal(false);
+
+  moodleUrl = '';
+  moodleToken = '';
+  selectedTheme = 'dark';
+
+  next(): void {
+    if (this.currentStep() === 1 && this.moodleUrl && this.moodleToken) {
+      // Attempt to link Moodle before proceeding
+      this.moodleLinkError.set(null);
+      // The actual linking would go through the MoodleController
+      // For now, just advance
+    }
+
+    if (this.currentStep() < this.steps.length - 1) {
+      this.currentStep.update((s) => s + 1);
+    }
+  }
+
+  previous(): void {
+    if (this.currentStep() > 0) {
+      this.currentStep.update((s) => s - 1);
+    }
+  }
+
+  skip(): void {
+    this.currentStep.update((s) => s + 1);
+  }
+
+  finish(): void {
+    this.authService.completeOnboarding().subscribe({
+      next: () => {
+        this.router.navigate(['/dashboard']);
+      },
+      error: () => {
+        // Still navigate even if the API call fails — can retry later
+        this.router.navigate(['/dashboard']);
+      },
+    });
+  }
+}
