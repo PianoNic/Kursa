@@ -76,6 +76,11 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/forums/forums.component').then((m) => m.ForumsComponent),
       },
+      {
+        path: 'timetable',
+        loadComponent: () =>
+          import('./features/timetable/timetable.component').then((m) => m.TimetableComponent),
+      },
     ],
   },
 ];
