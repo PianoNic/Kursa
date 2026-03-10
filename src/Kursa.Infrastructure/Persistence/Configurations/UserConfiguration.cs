@@ -18,6 +18,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         builder.Property(u => u.DisplayName).HasMaxLength(256);
         builder.Property(u => u.MoodleToken).HasMaxLength(512);
         builder.Property(u => u.MoodleUrl).HasMaxLength(512);
+        builder.Property(u => u.AvatarUrl).HasMaxLength(1024);
 
         builder.HasMany(u => u.Courses)
             .WithMany(c => c.Users)
