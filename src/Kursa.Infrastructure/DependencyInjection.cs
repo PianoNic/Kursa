@@ -61,6 +61,12 @@ public static class DependencyInjection
         services.AddOptions<OidcOptions>()
             .Bind(configuration.GetSection(OidcOptions.SectionName));
 
+        // Qdrant vector store
+        services.AddSingleton<IVectorStore, QdrantVectorStore>();
+
+        // Content embedding pipeline
+        services.AddScoped<IContentPipeline, ContentPipeline>();
+
         // LLM provider — configuration-driven selection
         services.AddSingleton<ILlmProvider>(sp =>
         {
