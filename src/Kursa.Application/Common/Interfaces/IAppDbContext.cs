@@ -31,5 +31,9 @@ public interface IAppDbContext
 
     DbSet<QuizAnswer> QuizAnswers { get; }
 
+    DbSet<FlashcardDeck> FlashcardDecks { get; }
+
+    DbSet<Flashcard> Flashcards { get; }
+
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }
