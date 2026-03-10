@@ -23,4 +23,8 @@ public class User : BaseEntity
     public ICollection<Course> Courses { get; init; } = new List<Course>();
 
     public ICollection<PinnedContent> PinnedContents { get; init; } = new List<PinnedContent>();
+
+    public UserSettings? Settings { get; set; }
+
+    public string? AvatarUrl { get; set; }
 }

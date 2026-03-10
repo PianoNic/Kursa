@@ -1,9 +1,10 @@
+using Kursa.Application.Common.Interfaces;
 using Kursa.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace Kursa.Infrastructure.Persistence;
 
-public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(options)
+public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(options), IAppDbContext
 {
     public DbSet<User> Users => Set<User>();
 
@@ -14,6 +15,8 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<Content> Contents => Set<Content>();
 
     public DbSet<PinnedContent> PinnedContents => Set<PinnedContent>();
+
+    public DbSet<UserSettings> UserSettings => Set<UserSettings>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
