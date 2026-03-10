@@ -32,6 +32,10 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
 
     public DbSet<QuizAnswer> QuizAnswers => Set<QuizAnswer>();
 
+    public DbSet<FlashcardDeck> FlashcardDecks => Set<FlashcardDeck>();
+
+    public DbSet<Flashcard> Flashcards => Set<Flashcard>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);

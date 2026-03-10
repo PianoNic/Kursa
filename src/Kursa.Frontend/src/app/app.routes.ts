@@ -46,6 +46,11 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/quizzes/quizzes.component').then((m) => m.QuizzesComponent),
       },
+      {
+        path: 'flashcards',
+        loadComponent: () =>
+          import('./features/flashcards/flashcards.component').then((m) => m.FlashcardsComponent),
+      },
     ],
   },
 ];
