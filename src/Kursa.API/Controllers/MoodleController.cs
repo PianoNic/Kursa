@@ -62,4 +62,15 @@ public class MoodleController(ISender sender) : ControllerBase
             ? Ok(result.Value)
             : BadRequest(result.Error);
     }
+
+    [HttpGet("assignments")]
+    public async Task<IActionResult> GetAssignmentsAsync(
+        [FromQuery] int? courseId, CancellationToken cancellationToken)
+    {
+        var result = await sender.Send(new GetAssignmentsQuery(courseId), cancellationToken);
+
+        return result.IsSuccess
+            ? Ok(result.Value)
+            : BadRequest(result.Error);
+    }
 }
