@@ -38,6 +38,8 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
 
     public DbSet<StudySession> StudySessions => Set<StudySession>();
 
+    public DbSet<Recording> Recordings => Set<Recording>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);

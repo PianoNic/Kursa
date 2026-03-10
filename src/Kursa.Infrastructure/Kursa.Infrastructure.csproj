@@ -20,6 +20,7 @@
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
     <PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis" Version="10.0.4" />
+    <PackageReference Include="Minio" Version="7.0.0" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.0" />
     <PackageReference Include="OpenAI" Version="2.2.0-beta.4" />
     <PackageReference Include="Qdrant.Client" Version="1.17.0" />
