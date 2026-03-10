@@ -50,6 +50,16 @@ public class PinnedContentsController(ISender sender) : ControllerBase
             ? Ok(new { isStarred = result.Value })
             : BadRequest(result.Error);
     }
+
+    [HttpPost("{contentId:guid}/index")]
+    public async Task<IActionResult> IndexContentAsync(Guid contentId, CancellationToken cancellationToken)
+    {
+        var result = await sender.Send(new IndexPinnedContentCommand(contentId), cancellationToken);
+
+        return result.IsSuccess
+            ? Ok()
+            : BadRequest(result.Error);
+    }
 }
 
 public sealed record PinContentRequest(string? Notes);
