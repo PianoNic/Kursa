@@ -18,7 +18,8 @@ public sealed record UploadRecordingCommand(
 public sealed class UploadRecordingHandler(
     ICurrentUserService currentUserService,
     IAppDbContext dbContext,
-    IFileStorageService fileStorage) : IRequestHandler<UploadRecordingCommand, Result<RecordingDto>>
+    IFileStorageService fileStorage,
+    ITranscriptionQueue transcriptionQueue) : IRequestHandler<UploadRecordingCommand, Result<RecordingDto>>
 {
     private static readonly HashSet<string> AllowedContentTypes = new(StringComparer.OrdinalIgnoreCase)
     {
@@ -81,6 +82,9 @@ public sealed class UploadRecordingHandler(
 
         dbContext.Recordings.Add(recording);
         await dbContext.SaveChangesAsync(cancellationToken);
+
+        // Auto-enqueue transcription
+        await transcriptionQueue.EnqueueAsync(recording.Id, cancellationToken);
 
         string? courseTitle = request.CourseId.HasValue
             ? await dbContext.Courses

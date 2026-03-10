@@ -245,6 +245,14 @@ type View = 'list' | 'upload' | 'detail';
                 <div class="rounded-lg border border-border bg-card p-5">
                   <h2 class="text-sm font-semibold text-foreground">Actions</h2>
                   <div class="mt-3 space-y-2">
+                    @if (d.status === 'Uploaded' || d.status === 'Failed') {
+                      <button
+                        (click)="retryTranscription(d.id)"
+                        class="w-full rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+                      >
+                        {{ d.status === 'Failed' ? 'Retry Transcription' : 'Start Transcription' }}
+                      </button>
+                    }
                     <button
                       (click)="downloadRecording(d.id)"
                       class="w-full rounded-md border border-border px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
@@ -367,6 +375,12 @@ export class RecordingsComponent implements OnInit {
         this.detailLoading.set(false);
         this.view.set('list');
       },
+    });
+  }
+
+  retryTranscription(id: string): void {
+    this.recordingService.transcribe(id).subscribe({
+      next: () => this.openDetail(id),
     });
   }
 

@@ -72,6 +72,10 @@ export class RecordingService {
     return this.http.post<Recording>('/api/recordings/upload', formData);
   }
 
+  transcribe(id: string): Observable<void> {
+    return this.http.post<void>(`/api/recordings/${id}/transcribe`, {});
+  }
+
   delete(id: string): Observable<void> {
     return this.http.delete<void>(`/api/recordings/${id}`);
   }

@@ -73,6 +73,13 @@ public static class DependencyInjection
         // Summary service
         services.AddScoped<ISummaryService, SummaryService>();
 
+        // Whisper transcription
+        services.AddHttpClient("Whisper");
+        services.AddScoped<ITranscriptionService, WhisperTranscriptionService>();
+        services.AddSingleton<TranscriptionQueue>();
+        services.AddSingleton<ITranscriptionQueue>(sp => sp.GetRequiredService<TranscriptionQueue>());
+        services.AddHostedService<TranscriptionBackgroundService>();
+
         // LLM provider — configuration-driven selection
         services.AddSingleton<ILlmProvider>(sp =>
         {
