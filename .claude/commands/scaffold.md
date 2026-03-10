@@ -30,13 +30,23 @@ cd src
 ng new Kursa.Frontend --style css --routing --standalone --skip-tests false
 cd Kursa.Frontend
 bun install -D tailwindcss @tailwindcss/postcss postcss
-# Install spartan.ng CLI and core packages
-bunx nx g @spartan-ng/cli:init
+
+# Install spartan.ng CLI
+bun add -D @spartan-ng/cli
+
+# Initialize spartan
+ng g @spartan-ng/cli:init
+
+# Set up theme (Tailwind integration)
+ng g @spartan-ng/cli:ui-theme
+
+# Add core components (select: button, input, card, dialog, sidebar, sheet, separator, label, avatar, dropdown-menu, tooltip)
+ng g @spartan-ng/cli:ui
 ```
 
 Set up:
 - Tailwind config with dark mode `class` strategy
-- spartan.ng base components (button, input, card, dialog, sidebar, etc.)
+- spartan.ng uses brain/helm pattern: brain (brn-*) = behavior, helm (hlm-*) = styled components
 - App shell with sidebar + topbar + main content + right panel layout
 - Dark mode as default
 - Routing structure for features (dashboard, courses, chat, study-tools, settings)

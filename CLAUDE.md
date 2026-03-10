@@ -41,7 +41,7 @@ Kursa is a full-fledged LMS that uses Moodle, OneNote, and SharePoint as **lazy-
 | **Cache** | Redis | Moodle API response caching, session data |
 | **Object Storage** | MinIO | Audio recordings, PDFs, cached content |
 | **Background Jobs** | Hangfire | Moodle polling, embedding generation, summary pipelines |
-| **Auth** | Microsoft OAuth2 + Moodle tokens | Graph API for OneNote/SharePoint, Moodle token for LMS data |
+| **Auth** | OIDC (OpenID Connect) + Moodle tokens | External OIDC provider for user auth, Moodle token for LMS data |
 | **LLM** | Configurable | Support OpenAI, Anthropic, and local Ollama — abstracted behind interface |
 | **Speech-to-Text** | Whisper | API or self-hosted via Python microservice |
 | **Diarization** | pyannote | Speaker separation in Python microservice |
@@ -266,6 +266,18 @@ dotnet ef database update -s ../Kursa.Api
 - Don't rely on training data for API signatures, configuration patterns, or breaking changes — **always check docs**
 - If a build fails due to an API mismatch, check Context7 for the correct usage before guessing fixes
 
+### Serena MCP for Code Intelligence (MANDATORY)
+**You MUST use Serena's symbolic tools for navigating and editing the codebase. Serena provides language-server-powered code intelligence for both C# and TypeScript.**
+
+- Use `get_symbols_overview` to understand a file before editing — don't just read the raw file
+- Use `find_symbol` to locate classes, methods, interfaces by name across the codebase
+- Use `find_referencing_symbols` to find all usages before renaming or modifying a symbol
+- Use `replace_symbol_body` for precise edits to methods/classes — prefer this over raw text replacement
+- Use `insert_after_symbol` / `insert_before_symbol` to add new code at the right location
+- Read Serena's project memories (`read_memory`) at the start of each session for context
+- After activating the project, always `check_onboarding_performed` to ensure memories are loaded
+- Serena understands both C# (.NET backend) and TypeScript (Angular frontend)
+
 ### Discovered Issues → GitHub Issue First (MANDATORY)
 **If you discover a bug, tech debt, missing feature, or anything that needs fixing — ALWAYS create a GitHub issue BEFORE touching code.**
 
@@ -442,6 +454,7 @@ gh workflow run version-bump.yml -f bump_type=patch
 
 | Service | Purpose | Auth |
 |---|---|---|
+| OIDC Provider | User authentication | OpenID Connect (external provider) |
 | MoodlewareAPI | Moodle data bridge | Moodle token |
 | Microsoft Graph | OneNote, SharePoint, Calendar | OAuth2 (delegated) |
 | Qdrant | Vector search | API key or no auth (local) |
@@ -459,6 +472,10 @@ gh workflow run version-bump.yml -f bump_type=patch
 ### Phase 1 — Foundation
 - [ ] Project scaffolding (solution, projects, Docker, CI)
 - [ ] PostgreSQL + EF Core setup with initial entities (User, Course, Module, Content)
+- [ ] OIDC authentication (external provider, JWT validation, login/logout)
+- [ ] User management (profiles, roles, settings)
+- [ ] Moodle token linking per user
+- [ ] User onboarding flow (first login wizard)
 - [ ] Angular shell with spartan.ng (sidebar, topbar, routing, dark mode)
 - [ ] Moodle proxy: authenticate, list courses, fetch course content on demand
 - [ ] Basic content viewer (render PDFs, text, HTML inline)
