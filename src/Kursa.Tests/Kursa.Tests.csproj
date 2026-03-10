@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
@@ -18,6 +18,12 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Kursa.API\Kursa.API.csproj" />
+    <ProjectReference Include="..\Kursa.Application\Kursa.Application.csproj" />
+    <ProjectReference Include="..\Kursa.Infrastructure\Kursa.Infrastructure.csproj" />
   </ItemGroup>
 
   <ItemGroup>
