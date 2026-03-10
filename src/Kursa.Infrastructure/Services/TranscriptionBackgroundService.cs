@@ -97,6 +97,13 @@ public sealed class TranscriptionBackgroundService(
                 }
 
                 logger.LogInformation("Transcription completed for recording {RecordingId}", recordingId);
+
+                await dbContext.SaveChangesAsync(cancellationToken);
+
+                // Chain: index the transcript for RAG search + generate summary
+                await IndexRecordingAsync(scope, recordingId, cancellationToken);
+
+                return;
             }
             else
             {
@@ -116,5 +123,29 @@ public sealed class TranscriptionBackgroundService(
         }
 
         await dbContext.SaveChangesAsync(cancellationToken);
+    }
+
+    private async Task IndexRecordingAsync(IServiceScope scope, Guid recordingId, CancellationToken cancellationToken)
+    {
+        try
+        {
+            IRecordingIndexingService indexingService = scope.ServiceProvider.GetRequiredService<IRecordingIndexingService>();
+            await indexingService.IndexRecordingAsync(recordingId, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Indexing failed for recording {RecordingId}, transcript is still available", recordingId);
+
+            // Don't fail the recording — transcript is still useful even without indexing
+            IAppDbContext dbContext = scope.ServiceProvider.GetRequiredService<IAppDbContext>();
+            Recording? recording = await dbContext.Recordings
+                .FirstOrDefaultAsync(r => r.Id == recordingId, cancellationToken);
+
+            if (recording is not null)
+            {
+                recording.Status = RecordingStatus.Transcribed;
+                await dbContext.SaveChangesAsync(cancellationToken);
+            }
+        }
     }
 }

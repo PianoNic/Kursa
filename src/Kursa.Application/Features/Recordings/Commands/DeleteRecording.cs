@@ -10,7 +10,8 @@ public sealed record DeleteRecordingCommand(Guid RecordingId) : IRequest<Result<
 public sealed class DeleteRecordingHandler(
     ICurrentUserService currentUserService,
     IAppDbContext dbContext,
-    IFileStorageService fileStorage) : IRequestHandler<DeleteRecordingCommand, Result<bool>>
+    IFileStorageService fileStorage,
+    IRecordingIndexingService recordingIndexing) : IRequestHandler<DeleteRecordingCommand, Result<bool>>
 {
     public async Task<Result<bool>> Handle(DeleteRecordingCommand request, CancellationToken cancellationToken)
     {
@@ -30,6 +31,7 @@ public sealed class DeleteRecordingHandler(
             return Result<bool>.Failure("Recording not found.");
 
         await fileStorage.DeleteAsync(recording.ObjectKey, cancellationToken);
+        await recordingIndexing.RemoveRecordingIndexAsync(recording.Id, cancellationToken);
 
         dbContext.Recordings.Remove(recording);
         await dbContext.SaveChangesAsync(cancellationToken);

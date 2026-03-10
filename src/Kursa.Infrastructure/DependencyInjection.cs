@@ -73,6 +73,9 @@ public static class DependencyInjection
         // Summary service
         services.AddScoped<ISummaryService, SummaryService>();
 
+        // Recording indexing (transcript → embeddings + summary)
+        services.AddScoped<IRecordingIndexingService, RecordingIndexingService>();
+
         // Whisper transcription
         services.AddHttpClient("Whisper");
         services.AddScoped<ITranscriptionService, WhisperTranscriptionService>();
