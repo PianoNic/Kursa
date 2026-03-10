@@ -51,6 +51,11 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/flashcards/flashcards.component').then((m) => m.FlashcardsComponent),
       },
+      {
+        path: 'study',
+        loadComponent: () =>
+          import('./features/study/study.component').then((m) => m.StudyComponent),
+      },
     ],
   },
 ];
