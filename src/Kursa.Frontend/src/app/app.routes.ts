@@ -36,6 +36,11 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/pinned/pinned.component').then((m) => m.PinnedComponent),
       },
+      {
+        path: 'chat',
+        loadComponent: () =>
+          import('./features/chat/chat.component').then((m) => m.ChatComponent),
+      },
     ],
   },
 ];

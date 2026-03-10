@@ -19,5 +19,9 @@ public interface IAppDbContext
 
     DbSet<ContentSummary> ContentSummaries { get; }
 
+    DbSet<ChatThread> ChatThreads { get; }
+
+    DbSet<ChatMessage> ChatMessages { get; }
+
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }
