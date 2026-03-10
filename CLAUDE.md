@@ -125,6 +125,7 @@ Kursa/
 - **No magic strings**: Use constants or enums.
 
 ### Angular / Frontend
+- **Package manager**: ALWAYS use `bun` — NEVER use `npm` or `yarn`. Use `bun install`, `bun run build`, `bun add`, `bunx`, etc.
 - **Angular version**: 21+ with standalone components (no NgModules)
 - **Signals**: Prefer Angular signals over RxJS where possible for state
 - **New control flow**: Use `@if`, `@for`, `@switch` — never `*ngIf`, `*ngFor`
