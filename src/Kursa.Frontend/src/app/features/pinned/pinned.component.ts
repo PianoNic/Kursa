@@ -96,7 +96,8 @@ export class PinnedComponent implements OnInit {
         this.loading.set(false);
       },
       error: (err) => {
-        this.error.set(err.error ?? 'Failed to load pinned items.');
+        const message = typeof err.error === 'string' ? err.error : err.message ?? 'Failed to load pinned items.';
+        this.error.set(message);
         this.loading.set(false);
       },
     });

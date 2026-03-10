@@ -90,7 +90,8 @@ export class CoursesComponent implements OnInit {
         this.loading.set(false);
       },
       error: (err) => {
-        this.error.set(err.error ?? 'Failed to load courses. Please check your Moodle connection.');
+        const message = typeof err.error === 'string' ? err.error : err.message ?? 'Failed to load courses. Please check your Moodle connection.';
+        this.error.set(message);
         this.loading.set(false);
       },
     });
