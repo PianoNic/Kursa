@@ -1,7 +1,0 @@
-<Solution>
-  <Project Path="../Kursa.Application/Kursa.Application.csproj" />
-  <Project Path="../Kursa.Domain/Kursa.Domain.csproj" />
-  <Project Path="../Kursa.Infrastructure/Kursa.Infrastructure.csproj" />
-  <Project Path="../Kursa.Tests/Kursa.Tests.csproj" Id="78c239a0-db3a-4112-9875-1444a68e1034" />
-  <Project Path="Kursa.API.csproj" />
-</Solution>

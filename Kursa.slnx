@@ -1,0 +1,11 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Kursa.API/Kursa.API.csproj" />
+    <Project Path="src/Kursa.Application/Kursa.Application.csproj" />
+    <Project Path="src/Kursa.Domain/Kursa.Domain.csproj" />
+    <Project Path="src/Kursa.Infrastructure/Kursa.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="src/Kursa.Tests/Kursa.Tests.csproj" />
+  </Folder>
+</Solution>
