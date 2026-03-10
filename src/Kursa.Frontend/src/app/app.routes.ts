@@ -56,6 +56,11 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/study/study.component').then((m) => m.StudyComponent),
       },
+      {
+        path: 'recordings',
+        loadComponent: () =>
+          import('./features/recordings/recordings.component').then((m) => m.RecordingsComponent),
+      },
     ],
   },
 ];

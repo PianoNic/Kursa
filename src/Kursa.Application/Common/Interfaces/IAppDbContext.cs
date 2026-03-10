@@ -37,5 +37,7 @@ public interface IAppDbContext
 
     DbSet<StudySession> StudySessions { get; }
 
+    DbSet<Recording> Recordings { get; }
+
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

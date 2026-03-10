@@ -64,6 +64,9 @@ public static class DependencyInjection
         // Qdrant vector store
         services.AddSingleton<IVectorStore, QdrantVectorStore>();
 
+        // MinIO file storage
+        services.AddSingleton<IFileStorageService, MinioFileStorageService>();
+
         // Content embedding pipeline
         services.AddScoped<IContentPipeline, ContentPipeline>();
 
