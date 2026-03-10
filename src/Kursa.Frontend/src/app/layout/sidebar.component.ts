@@ -97,6 +97,14 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
           Assignments
         </a>
         <a
+          routerLink="/grades"
+          routerLinkActive="bg-accent text-accent-foreground"
+          class="flex items-center gap-3 rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" aria-hidden="true"><path d="M22 12h-4l-3 9L9 3l-3 9H2" /></svg>
+          Grades
+        </a>
+        <a
           routerLink="/settings"
           routerLinkActive="bg-accent text-accent-foreground"
           class="flex items-center gap-3 rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"

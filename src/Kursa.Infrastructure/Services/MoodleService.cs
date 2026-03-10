@@ -96,6 +96,26 @@ public sealed class MoodleService(
         return result;
     }
 
+    public async Task<MoodleGradeReportDto> GetGradesAsync(
+        string moodleUrl, string moodleToken, int courseId, CancellationToken cancellationToken = default)
+    {
+        string cacheKey = $"moodle:grades:{HashToken(moodleToken)}:{courseId}";
+
+        var cached = await GetFromCacheAsync<MoodleGradeReportDto>(cacheKey, cancellationToken);
+        if (cached is not null)
+            return cached;
+
+        var response = await SendMoodleRequestAsync(
+            moodleUrl, moodleToken, $"/gradereport_user_get_grade_items?courseid={courseId}", cancellationToken);
+
+        var result = JsonSerializer.Deserialize<MoodleGradeReportDto>(response, JsonOptions)
+            ?? new MoodleGradeReportDto();
+
+        await SetCacheAsync(cacheKey, result, ContentCacheDuration, cancellationToken);
+
+        return result;
+    }
+
     private async Task<string> SendMoodleRequestAsync(
         string moodleUrl, string moodleToken, string endpoint, CancellationToken cancellationToken)
     {
