@@ -1,6 +1,7 @@
 using Kursa.API.Middleware;
 using Kursa.Application;
 using Kursa.Infrastructure;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Serilog;
 
 Log.Logger = new LoggerConfiguration()
@@ -18,6 +19,19 @@ try
     builder.Services.AddOpenApi();
     builder.Services.AddProblemDetails();
     builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+
+    builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+        .AddJwtBearer(options =>
+        {
+            options.Authority = builder.Configuration["Oidc:Authority"];
+            options.Audience = builder.Configuration["Oidc:ClientId"];
+            options.RequireHttpsMetadata = builder.Configuration.GetValue("Oidc:RequireHttpsMetadata", true);
+            options.TokenValidationParameters.NameClaimType = "name";
+            options.TokenValidationParameters.RoleClaimType = "role";
+        });
+
+    builder.Services.AddAuthorization();
+
     builder.Services.AddApplication();
     builder.Services.AddInfrastructure(builder.Configuration);
 
@@ -33,6 +47,7 @@ try
 
     app.UseSerilogRequestLogging();
     app.UseHttpsRedirection();
+    app.UseAuthentication();
     app.UseAuthorization();
     app.MapControllers();
 
