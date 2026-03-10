@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="../Kursa.Application/Kursa.Application.csproj" />
+  <Project Path="../Kursa.Domain/Kursa.Domain.csproj" />
+  <Project Path="../Kursa.Infrastructure/Kursa.Infrastructure.csproj" />
+  <Project Path="Kursa.API.csproj" />
+</Solution>
