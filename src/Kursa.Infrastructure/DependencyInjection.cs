@@ -67,6 +67,9 @@ public static class DependencyInjection
         // Content embedding pipeline
         services.AddScoped<IContentPipeline, ContentPipeline>();
 
+        // Summary service
+        services.AddScoped<ISummaryService, SummaryService>();
+
         // LLM provider — configuration-driven selection
         services.AddSingleton<ILlmProvider>(sp =>
         {
