@@ -84,4 +84,24 @@ public class MoodleController(ISender sender) : ControllerBase
             ? Ok(result.Value)
             : BadRequest(result.Error);
     }
+
+    [HttpGet("courses/{courseId:int}/forums")]
+    public async Task<IActionResult> GetForumsAsync(int courseId, CancellationToken cancellationToken)
+    {
+        var result = await sender.Send(new GetForumsQuery(courseId), cancellationToken);
+
+        return result.IsSuccess
+            ? Ok(result.Value)
+            : BadRequest(result.Error);
+    }
+
+    [HttpGet("forums/{forumId:int}/discussions")]
+    public async Task<IActionResult> GetForumDiscussionsAsync(int forumId, CancellationToken cancellationToken)
+    {
+        var result = await sender.Send(new GetForumDiscussionsQuery(forumId), cancellationToken);
+
+        return result.IsSuccess
+            ? Ok(result.Value)
+            : BadRequest(result.Error);
+    }
 }

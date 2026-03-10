@@ -71,6 +71,11 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/grades/grades.component').then((m) => m.GradesComponent),
       },
+      {
+        path: 'forums',
+        loadComponent: () =>
+          import('./features/forums/forums.component').then((m) => m.ForumsComponent),
+      },
     ],
   },
 ];

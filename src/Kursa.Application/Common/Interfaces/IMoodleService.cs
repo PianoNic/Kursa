@@ -19,4 +19,10 @@ public interface IMoodleService
 
     Task<MoodleGradeReportDto> GetGradesAsync(
         string moodleUrl, string moodleToken, int courseId, CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<MoodleForumDto>> GetForumsAsync(
+        string moodleUrl, string moodleToken, int courseId, CancellationToken cancellationToken = default);
+
+    Task<MoodleForumDiscussionsResponseDto> GetForumDiscussionsAsync(
+        string moodleUrl, string moodleToken, int forumId, CancellationToken cancellationToken = default);
 }
