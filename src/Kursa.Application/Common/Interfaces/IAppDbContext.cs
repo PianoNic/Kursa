@@ -17,5 +17,7 @@ public interface IAppDbContext
 
     DbSet<UserSettings> UserSettings { get; }
 
+    DbSet<ContentSummary> ContentSummaries { get; }
+
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }
