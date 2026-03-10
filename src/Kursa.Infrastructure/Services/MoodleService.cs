@@ -71,6 +71,31 @@ public sealed class MoodleService(
             ?? throw new InvalidOperationException("Failed to deserialize Moodle site info.");
     }
 
+    public async Task<MoodleAssignmentsResponseDto> GetAssignmentsAsync(
+        string moodleUrl, string moodleToken, IReadOnlyList<int>? courseIds = null,
+        CancellationToken cancellationToken = default)
+    {
+        string courseParam = courseIds is { Count: > 0 }
+            ? "?" + string.Join("&", courseIds.Select((id, i) => $"courseids[{i}]={id}"))
+            : string.Empty;
+
+        string cacheKey = $"moodle:assignments:{HashToken(moodleToken)}:{courseParam.GetHashCode(StringComparison.Ordinal):x8}";
+
+        var cached = await GetFromCacheAsync<MoodleAssignmentsResponseDto>(cacheKey, cancellationToken);
+        if (cached is not null)
+            return cached;
+
+        var response = await SendMoodleRequestAsync(
+            moodleUrl, moodleToken, $"/mod_assign_get_assignments{courseParam}", cancellationToken);
+
+        var result = JsonSerializer.Deserialize<MoodleAssignmentsResponseDto>(response, JsonOptions)
+            ?? new MoodleAssignmentsResponseDto();
+
+        await SetCacheAsync(cacheKey, result, ContentCacheDuration, cancellationToken);
+
+        return result;
+    }
+
     private async Task<string> SendMoodleRequestAsync(
         string moodleUrl, string moodleToken, string endpoint, CancellationToken cancellationToken)
     {
