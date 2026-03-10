@@ -16,6 +16,16 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/dashboard/dashboard.component').then((m) => m.DashboardComponent),
       },
+      {
+        path: 'courses',
+        loadComponent: () =>
+          import('./features/courses/courses.component').then((m) => m.CoursesComponent),
+      },
+      {
+        path: 'courses/:courseId',
+        loadComponent: () =>
+          import('./features/courses/course-detail.component').then((m) => m.CourseDetailComponent),
+      },
     ],
   },
 ];

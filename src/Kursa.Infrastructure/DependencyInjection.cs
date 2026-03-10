@@ -21,6 +21,18 @@ public static class DependencyInjection
         services.AddScoped<ICurrentUserService, CurrentUserService>();
         services.AddScoped<IUserSyncService, UserSyncService>();
 
+        // Redis distributed cache
+        string redisConnection = configuration.GetConnectionString("Redis") ?? "localhost:6379";
+        services.AddStackExchangeRedisCache(options =>
+        {
+            options.Configuration = redisConnection;
+            options.InstanceName = "Kursa:";
+        });
+
+        // HTTP client for Moodle proxy
+        services.AddHttpClient("Moodle");
+        services.AddScoped<IMoodleService, MoodleService>();
+
         services.AddOptions<QdrantOptions>()
             .Bind(configuration.GetSection(QdrantOptions.SectionName))
             .ValidateDataAnnotations()
