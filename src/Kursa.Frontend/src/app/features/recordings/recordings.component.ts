@@ -5,6 +5,7 @@ import {
   RecordingDetail,
   RecordingService,
   RecordingStatus,
+  TranscriptSegment,
 } from '../../core/services/recording.service';
 
 type View = 'list' | 'upload' | 'detail';
@@ -270,17 +271,65 @@ type View = 'list' | 'upload' | 'detail';
               </div>
             </div>
 
-            <!-- Transcript -->
+            <!-- Transcript Viewer -->
             @if (d.transcriptText) {
               <div class="rounded-lg border border-border bg-card p-5">
                 <div class="flex items-center justify-between">
                   <h2 class="text-sm font-semibold text-foreground">Transcript</h2>
-                  @if (d.transcribedAt) {
-                    <span class="text-xs text-muted-foreground">Transcribed {{ d.transcribedAt | date:'medium' }}</span>
+                  <div class="flex items-center gap-2">
+                    @if (d.transcribedAt) {
+                      <span class="text-xs text-muted-foreground">{{ d.transcribedAt | date:'medium' }}</span>
+                    }
+                    <button
+                      (click)="exportTranscript(d)"
+                      class="rounded-md border border-border px-2 py-1 text-xs text-muted-foreground hover:bg-accent hover:text-foreground"
+                      aria-label="Export transcript"
+                    >
+                      Export
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Search -->
+                <div class="mt-3">
+                  <input
+                    #searchInput
+                    type="text"
+                    placeholder="Search transcript..."
+                    (input)="transcriptSearch.set(searchInput.value)"
+                    class="w-full rounded-md border border-border bg-background px-3 py-1.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                  />
+                  @if (transcriptSearch()) {
+                    <p class="mt-1 text-xs text-muted-foreground">
+                      {{ filteredSegmentCount() }} matching segments
+                    </p>
                   }
                 </div>
-                <div class="mt-3 max-h-96 overflow-y-auto whitespace-pre-wrap text-sm text-foreground">
-                  {{ d.transcriptText }}
+
+                <!-- Segments or fallback to full text -->
+                <div class="mt-3 max-h-[32rem] overflow-y-auto">
+                  @if (d.segments.length > 0) {
+                    <div class="space-y-1">
+                      @for (seg of getFilteredSegments(d.segments); track seg.id) {
+                        <div
+                          class="flex gap-3 rounded-md px-2 py-1.5 transition-colors hover:bg-accent"
+                        >
+                          <button
+                            class="shrink-0 font-mono text-xs text-primary hover:underline"
+                            (click)="copyTimestamp(seg.startSeconds)"
+                            [attr.aria-label]="'Copy timestamp ' + formatTimestamp(seg.startSeconds)"
+                          >
+                            {{ formatTimestamp(seg.startSeconds) }}
+                          </button>
+                          <p class="text-sm text-foreground">{{ seg.text }}</p>
+                        </div>
+                      }
+                    </div>
+                  } @else {
+                    <div class="whitespace-pre-wrap text-sm text-foreground">
+                      {{ d.transcriptText }}
+                    </div>
+                  }
                 </div>
               </div>
             } @else if (d.status === 'Transcribing') {
@@ -311,6 +360,14 @@ export class RecordingsComponent implements OnInit {
   readonly uploadError = signal<string | null>(null);
   readonly detail = signal<RecordingDetail | null>(null);
   readonly detailLoading = signal(false);
+  readonly transcriptSearch = signal('');
+
+  readonly filteredSegmentCount = computed(() => {
+    const d = this.detail();
+    const search = this.transcriptSearch().toLowerCase();
+    if (!d || !search) return 0;
+    return d.segments.filter(s => s.text.toLowerCase().includes(search)).length;
+  });
 
   ngOnInit(): void {
     this.loadRecordings();
@@ -364,6 +421,7 @@ export class RecordingsComponent implements OnInit {
   openDetail(id: string): void {
     this.detailLoading.set(true);
     this.detail.set(null);
+    this.transcriptSearch.set('');
     this.view.set('detail');
 
     this.recordingService.getRecording(id).subscribe({
@@ -415,6 +473,43 @@ export class RecordingsComponent implements OnInit {
     if (h > 0) return `${h}h ${m}m ${s}s`;
     if (m > 0) return `${m}m ${s}s`;
     return `${s}s`;
+  }
+
+  getFilteredSegments(segments: TranscriptSegment[]): TranscriptSegment[] {
+    const search = this.transcriptSearch().toLowerCase();
+    if (!search) return segments;
+    return segments.filter(s => s.text.toLowerCase().includes(search));
+  }
+
+  formatTimestamp(seconds: number): string {
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    const s = Math.floor(seconds % 60);
+    if (h > 0) return `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+    return `${m}:${String(s).padStart(2, '0')}`;
+  }
+
+  copyTimestamp(seconds: number): void {
+    navigator.clipboard.writeText(this.formatTimestamp(seconds));
+  }
+
+  exportTranscript(d: RecordingDetail): void {
+    let content: string;
+    if (d.segments.length > 0) {
+      content = d.segments
+        .map(s => `[${this.formatTimestamp(s.startSeconds)}] ${s.text}`)
+        .join('\n');
+    } else {
+      content = d.transcriptText || '';
+    }
+
+    const blob = new Blob([content], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${d.title} - Transcript.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
   }
 
   getStatusClasses(status: RecordingStatus): string {

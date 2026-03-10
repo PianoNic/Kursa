@@ -71,6 +71,31 @@ public sealed class TranscriptionBackgroundService(
                 recording.Status = RecordingStatus.Transcribed;
                 recording.ErrorMessage = null;
 
+                // Store segments if available
+                if (result.Segments is { Count: > 0 })
+                {
+                    // Remove existing segments (in case of retry)
+                    List<TranscriptSegment> existing = await dbContext.TranscriptSegments
+                        .Where(s => s.RecordingId == recordingId)
+                        .ToListAsync(cancellationToken);
+
+                    if (existing.Count > 0)
+                        dbContext.TranscriptSegments.RemoveRange(existing);
+
+                    for (int i = 0; i < result.Segments.Count; i++)
+                    {
+                        TranscriptionSegment seg = result.Segments[i];
+                        dbContext.TranscriptSegments.Add(new TranscriptSegment
+                        {
+                            RecordingId = recordingId,
+                            OrderIndex = i,
+                            StartSeconds = seg.StartSeconds,
+                            EndSeconds = seg.EndSeconds,
+                            Text = seg.Text,
+                        });
+                    }
+                }
+
                 logger.LogInformation("Transcription completed for recording {RecordingId}", recordingId);
             }
             else

@@ -40,18 +40,23 @@ public sealed class WhisperTranscriptionService(
                 string errorBody = await response.Content.ReadAsStringAsync(cancellationToken);
                 logger.LogError("Whisper transcription failed with status {Status}: {Body}",
                     response.StatusCode, errorBody);
-                return new TranscriptionResult(false, null, null, $"Transcription service returned {response.StatusCode}");
+                return new TranscriptionResult(false, null, null, null, $"Transcription service returned {response.StatusCode}");
             }
 
             string responseBody = await response.Content.ReadAsStringAsync(cancellationToken);
             WhisperResponse? result = JsonSerializer.Deserialize<WhisperResponse>(responseBody, JsonOptions);
 
             if (result is null)
-                return new TranscriptionResult(false, null, null, "Invalid response from transcription service.");
+                return new TranscriptionResult(false, null, null, null, "Invalid response from transcription service.");
 
             int? durationSeconds = result.Duration.HasValue ? (int)Math.Round(result.Duration.Value) : null;
 
-            return new TranscriptionResult(true, result.Text, durationSeconds, null);
+            List<TranscriptionSegment>? segments = result.Segments?
+                .Select(s => new TranscriptionSegment(s.Start, s.End, s.Text?.Trim() ?? ""))
+                .Where(s => !string.IsNullOrWhiteSpace(s.Text))
+                .ToList();
+
+            return new TranscriptionResult(true, result.Text, durationSeconds, segments, null);
         }
         catch (TaskCanceledException) when (cancellationToken.IsCancellationRequested)
         {
@@ -60,7 +65,7 @@ public sealed class WhisperTranscriptionService(
         catch (Exception ex)
         {
             logger.LogError(ex, "Whisper transcription failed");
-            return new TranscriptionResult(false, null, null, $"Transcription failed: {ex.Message}");
+            return new TranscriptionResult(false, null, null, null, $"Transcription failed: {ex.Message}");
         }
     }
 
@@ -68,5 +73,13 @@ public sealed class WhisperTranscriptionService(
     {
         public string? Text { get; init; }
         public double? Duration { get; init; }
+        public List<WhisperSegment>? Segments { get; init; }
+    }
+
+    private sealed class WhisperSegment
+    {
+        public double Start { get; init; }
+        public double End { get; init; }
+        public string? Text { get; init; }
     }
 }

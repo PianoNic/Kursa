@@ -1,5 +1,6 @@
 using Kursa.Application.Common.Interfaces;
 using Kursa.Application.Common.Models;
+using Kursa.Domain.Entities;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
@@ -22,28 +23,39 @@ public sealed class GetRecordingDetailHandler(
         if (user is null)
             return Result<RecordingDetailDto>.Failure("User not found.");
 
-        RecordingDetailDto? recording = await dbContext.Recordings
-            .Where(r => r.Id == request.RecordingId && r.UserId == user.Id)
-            .Select(r => new RecordingDetailDto(
-                r.Id,
-                r.Title,
-                r.Description,
-                r.CourseId,
-                r.Course != null ? r.Course.Name : null,
-                r.FileName,
-                r.ContentType,
-                r.FileSizeBytes,
-                r.DurationSeconds,
-                r.Status,
-                r.TranscriptText,
-                r.TranscribedAt,
-                r.ErrorMessage,
-                r.CreatedAt))
-            .FirstOrDefaultAsync(cancellationToken);
+        Recording? recording = await dbContext.Recordings
+            .Include(r => r.Course)
+            .Include(r => r.Segments.OrderBy(s => s.OrderIndex))
+            .FirstOrDefaultAsync(r => r.Id == request.RecordingId && r.UserId == user.Id, cancellationToken);
 
         if (recording is null)
             return Result<RecordingDetailDto>.Failure("Recording not found.");
 
-        return Result<RecordingDetailDto>.Success(recording);
+        List<TranscriptSegmentDto> segments = recording.Segments
+            .Select(s => new TranscriptSegmentDto(
+                s.Id,
+                s.OrderIndex,
+                s.StartSeconds,
+                s.EndSeconds,
+                s.Text,
+                s.Speaker))
+            .ToList();
+
+        return Result<RecordingDetailDto>.Success(new RecordingDetailDto(
+            recording.Id,
+            recording.Title,
+            recording.Description,
+            recording.CourseId,
+            recording.Course?.Name,
+            recording.FileName,
+            recording.ContentType,
+            recording.FileSizeBytes,
+            recording.DurationSeconds,
+            recording.Status,
+            recording.TranscriptText,
+            segments,
+            recording.TranscribedAt,
+            recording.ErrorMessage,
+            recording.CreatedAt));
     }
 }

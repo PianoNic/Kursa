@@ -34,6 +34,8 @@ public class Recording : BaseEntity
     public DateTime? TranscribedAt { get; set; }
 
     public string? ErrorMessage { get; set; }
+
+    public ICollection<TranscriptSegment> Segments { get; set; } = new List<TranscriptSegment>();
 }
 
 public enum RecordingStatus

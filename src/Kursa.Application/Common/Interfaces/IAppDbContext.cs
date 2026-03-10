@@ -39,5 +39,7 @@ public interface IAppDbContext
 
     DbSet<Recording> Recordings { get; }
 
+    DbSet<TranscriptSegment> TranscriptSegments { get; }
+
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }
