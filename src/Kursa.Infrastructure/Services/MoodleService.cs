@@ -155,6 +155,29 @@ public sealed class MoodleService(
         return result;
     }
 
+    public async Task<MoodleCalendarEventsResponseDto> GetCalendarEventsAsync(
+        string moodleUrl, string moodleToken, long timeStart, long timeEnd,
+        CancellationToken cancellationToken = default)
+    {
+        string cacheKey = $"moodle:calendar:{HashToken(moodleToken)}:{timeStart}:{timeEnd}";
+
+        var cached = await GetFromCacheAsync<MoodleCalendarEventsResponseDto>(cacheKey, cancellationToken);
+        if (cached is not null)
+            return cached;
+
+        string endpoint = $"/core_calendar_get_calendar_events?events[timestart]={timeStart}&events[timeend]={timeEnd}";
+
+        var response = await SendMoodleRequestAsync(
+            moodleUrl, moodleToken, endpoint, cancellationToken);
+
+        var result = JsonSerializer.Deserialize<MoodleCalendarEventsResponseDto>(response, JsonOptions)
+            ?? new MoodleCalendarEventsResponseDto();
+
+        await SetCacheAsync(cacheKey, result, ContentCacheDuration, cancellationToken);
+
+        return result;
+    }
+
     private async Task<string> SendMoodleRequestAsync(
         string moodleUrl, string moodleToken, string endpoint, CancellationToken cancellationToken)
     {

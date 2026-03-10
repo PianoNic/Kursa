@@ -104,4 +104,15 @@ public class MoodleController(ISender sender) : ControllerBase
             ? Ok(result.Value)
             : BadRequest(result.Error);
     }
+
+    [HttpGet("calendar")]
+    public async Task<IActionResult> GetCalendarEventsAsync(
+        [FromQuery] DateTime weekStart, CancellationToken cancellationToken)
+    {
+        var result = await sender.Send(new GetCalendarEventsQuery(weekStart), cancellationToken);
+
+        return result.IsSuccess
+            ? Ok(result.Value)
+            : BadRequest(result.Error);
+    }
 }

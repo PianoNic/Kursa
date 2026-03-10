@@ -25,4 +25,8 @@ public interface IMoodleService
 
     Task<MoodleForumDiscussionsResponseDto> GetForumDiscussionsAsync(
         string moodleUrl, string moodleToken, int forumId, CancellationToken cancellationToken = default);
+
+    Task<MoodleCalendarEventsResponseDto> GetCalendarEventsAsync(
+        string moodleUrl, string moodleToken, long timeStart, long timeEnd,
+        CancellationToken cancellationToken = default);
 }
