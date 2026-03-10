@@ -10,7 +10,7 @@ services:
       - "5000:8080"
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=studyapp;Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
+      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=kursa;Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
       - ConnectionStrings__Redis=redis:6379
       - Qdrant__Host=qdrant
       - Qdrant__Port=6334
@@ -52,15 +52,15 @@ services:
   postgres:
     image: postgres:18-alpine
     environment:
-      - POSTGRES_DB=studyapp
-      - POSTGRES_USER=${POSTGRES_USER:-studyapp}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-studyapp_dev}
+      - POSTGRES_DB=kursa
+      - POSTGRES_USER=${POSTGRES_USER:-kursa}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-kursa_dev}
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-studyapp}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-kursa}"]
       interval: 5s
       timeout: 5s
       retries: 5
