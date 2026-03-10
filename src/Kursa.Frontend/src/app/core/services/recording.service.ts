@@ -29,9 +29,19 @@ export interface RecordingDetail {
   durationSeconds: number | null;
   status: RecordingStatus;
   transcriptText: string | null;
+  segments: TranscriptSegment[];
   transcribedAt: string | null;
   errorMessage: string | null;
   createdAt: string;
+}
+
+export interface TranscriptSegment {
+  id: string;
+  orderIndex: number;
+  startSeconds: number;
+  endSeconds: number;
+  text: string;
+  speaker: string | null;
 }
 
 export type RecordingStatus =

@@ -28,6 +28,15 @@ public sealed record RecordingDetailDto(
     int? DurationSeconds,
     RecordingStatus Status,
     string? TranscriptText,
+    IReadOnlyList<TranscriptSegmentDto> Segments,
     DateTime? TranscribedAt,
     string? ErrorMessage,
     DateTime CreatedAt);
+
+public sealed record TranscriptSegmentDto(
+    Guid Id,
+    int OrderIndex,
+    double StartSeconds,
+    double EndSeconds,
+    string Text,
+    string? Speaker);
