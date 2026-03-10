@@ -71,6 +71,16 @@ public class RecordingsController(ISender sender) : ControllerBase
             : BadRequest(result.Error);
     }
 
+    [HttpPost("{recordingId:guid}/transcribe")]
+    public async Task<IActionResult> TranscribeRecordingAsync(Guid recordingId, CancellationToken cancellationToken)
+    {
+        var result = await sender.Send(new TranscribeRecordingCommand(recordingId), cancellationToken);
+
+        return result.IsSuccess
+            ? Ok()
+            : BadRequest(result.Error);
+    }
+
     [HttpDelete("{recordingId:guid}")]
     public async Task<IActionResult> DeleteRecordingAsync(Guid recordingId, CancellationToken cancellationToken)
     {
