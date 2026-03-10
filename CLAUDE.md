@@ -1,6 +1,6 @@
-# CLAUDE.md — StudyApp
+# CLAUDE.md — Kursa
 
-> **Project Codename**: StudyApp (name TBD — replace everywhere once finalized)
+> **Project Name**: Kursa
 > **Owner**: Niclas (PianoNic) — pianonic.ch
 > **Type**: AI-powered LMS + Study Companion with Moodle integration
 
@@ -8,7 +8,7 @@
 
 ## Project Overview
 
-StudyApp is a full-fledged LMS that uses Moodle, OneNote, and SharePoint as **lazy-loaded data sources** (fetched on demand, not bulk-synced), combined with AI-powered study tools and a lesson recording pipeline. Think "Moodle but actually good, with AI baked in."
+Kursa is a full-fledged LMS that uses Moodle, OneNote, and SharePoint as **lazy-loaded data sources** (fetched on demand, not bulk-synced), combined with AI-powered study tools and a lesson recording pipeline. Think "Moodle but actually good, with AI baked in."
 
 ### Architecture Philosophy
 - **Own LMS** with Moodle as a backend data source via MoodlewareAPI
@@ -53,7 +53,7 @@ StudyApp is a full-fledged LMS that uses Moodle, OneNote, and SharePoint as **la
 ## Project Structure
 
 ```
-StudyApp/
+Kursa/
 ├── .claude/                    # Claude Code configuration
 │   ├── settings.json
 │   └── commands/               # Custom slash commands
@@ -62,7 +62,7 @@ StudyApp/
 │   ├── architecture.md         # Architecture decisions
 │   └── api-contracts.md        # API endpoint contracts
 ├── src/
-│   ├── StudyApp.Api/           # ASP.NET Core Web API
+│   ├── Kursa.Api/           # ASP.NET Core Web API
 │   │   ├── Controllers/        # API controllers (or Endpoints/ for minimal APIs)
 │   │   ├── Features/           # CQRS feature folders (Commands, Queries, Handlers)
 │   │   ├── Infrastructure/     # EF Core, Qdrant client, Redis, MinIO, LLM clients
@@ -70,10 +70,10 @@ StudyApp/
 │   │   ├── Middleware/         # Auth, error handling, logging
 │   │   ├── Services/           # Application services (Moodle proxy, content pipeline, etc.)
 │   │   └── Program.cs
-│   ├── StudyApp.Domain/        # Domain layer (entities, interfaces, enums)
-│   ├── StudyApp.Application/   # Application layer (CQRS handlers, DTOs, interfaces)
-│   ├── StudyApp.Infrastructure/# Infrastructure layer (EF, external services, repositories)
-│   └── StudyApp.Web/           # Angular frontend
+│   ├── Kursa.Domain/        # Domain layer (entities, interfaces, enums)
+│   ├── Kursa.Application/   # Application layer (CQRS handlers, DTOs, interfaces)
+│   ├── Kursa.Infrastructure/# Infrastructure layer (EF, external services, repositories)
+│   └── Kursa.Web/           # Angular frontend
 │       ├── src/
 │       │   ├── app/
 │       │   │   ├── core/       # Guards, interceptors, services, auth
@@ -86,9 +86,9 @@ StudyApp/
 │       ├── tailwind.config.js
 │       └── package.json
 ├── tests/
-│   ├── StudyApp.Api.Tests/
-│   ├── StudyApp.Application.Tests/
-│   └── StudyApp.Web.Tests/     # Angular tests (Karma/Jest)
+│   ├── Kursa.Api.Tests/
+│   ├── Kursa.Application.Tests/
+│   └── Kursa.Web.Tests/     # Angular tests (Karma/Jest)
 ├── docker/
 │   ├── Dockerfile.api
 │   ├── Dockerfile.web
@@ -97,7 +97,7 @@ StudyApp/
 ├── README.md
 ├── .gitignore
 ├── .editorconfig
-└── StudyApp.sln
+└── Kursa.sln
 ```
 
 ---
@@ -192,11 +192,11 @@ StudyApp/
 docker compose up -d postgres redis qdrant minio
 
 # Run backend
-cd src/StudyApp.Api
+cd src/Kursa.Api
 dotnet run
 
 # Run frontend
-cd src/StudyApp.Web
+cd src/Kursa.Web
 npm install
 ng serve
 ```
@@ -212,7 +212,7 @@ docker compose up -d
 dotnet test
 
 # Frontend tests
-cd src/StudyApp.Web
+cd src/Kursa.Web
 ng test
 
 # E2E (if configured)
@@ -221,9 +221,9 @@ ng e2e
 
 ### Database Migrations
 ```bash
-cd src/StudyApp.Infrastructure
-dotnet ef migrations add <MigrationName> -s ../StudyApp.Api
-dotnet ef database update -s ../StudyApp.Api
+cd src/Kursa.Infrastructure
+dotnet ef migrations add <MigrationName> -s ../Kursa.Api
+dotnet ef database update -s ../Kursa.Api
 ```
 
 ---
@@ -239,6 +239,41 @@ dotnet ef database update -s ../StudyApp.Api
 - Docker-compose must always work — test with `docker compose build` after Dockerfile changes
 - Use `dotnet format` and `prettier` to format code
 
+### Self-Debugging (MANDATORY)
+**You MUST debug your own work autonomously. Never leave broken code or ask the user to debug for you.**
+
+- After every code change, **build and verify** — if it fails, read the error, fix it, and retry
+- If a build/test fails, **analyze the error output yourself**, trace the root cause, and fix it before moving on
+- Run the application and **verify it actually works** — don't just assume compilation = success
+- If you hit an unexpected error, investigate logs, stack traces, and related code — don't give up or ask the user
+- Loop: code → build → test → fix → repeat until everything passes
+
+### Playwright / Puppeteer for Frontend (MANDATORY)
+**When doing frontend/web development, you MUST use Playwright (MCP Puppeteer/browser tools) to visually verify your work.**
+
+- After building UI components, **open the browser and check the result yourself**
+- Navigate to the page, take screenshots, verify layout, interactions, and responsiveness
+- If something looks wrong, fix it and re-check — don't rely on build success alone
+- Use browser tools to test: clicking, form filling, navigation, dark mode, responsive sizes
+- This applies to all frontend work: components, pages, layouts, styling, accessibility
+
+### Context7 for Documentation (MANDATORY)
+**When you encounter documentation questions or need up-to-date library/framework docs, you MUST use Context7 (MCP).**
+
+- Before implementing anything with a library you're unsure about, **fetch the latest docs via Context7 first**
+- Use Context7 for: Angular, spartan.ng, Tailwind, EF Core, MediatR, Qdrant client, or any dependency
+- Don't rely on training data for API signatures, configuration patterns, or breaking changes — **always check docs**
+- If a build fails due to an API mismatch, check Context7 for the correct usage before guessing fixes
+
+### Discovered Issues → GitHub Issue First (MANDATORY)
+**If you discover a bug, tech debt, missing feature, or anything that needs fixing — ALWAYS create a GitHub issue BEFORE touching code.**
+
+- Found a bug while working on something else? `gh issue create --label "bug"` first, then decide whether to fix now or later
+- Noticed missing validation, broken config, outdated dependency? Issue first.
+- Never silently fix things — every fix must be traceable to an issue
+- If it's unrelated to your current task, create the issue and continue your current work — don't context-switch
+- If it blocks your current task, create the issue, then branch off and fix it following the full workflow (branch → PR → review → merge)
+
 ### DON'T
 - Don't bulk-sync Moodle data — always lazy-load on demand
 - Don't hardcode LLM provider — always use the abstraction
@@ -247,6 +282,8 @@ dotnet ef database update -s ../StudyApp.Api
 - Don't commit secrets, API keys, or connection strings — use `.env` and user-secrets
 - Don't skip error handling — every external call (Moodle, LLM, Qdrant) can fail
 - Don't use `var` in C# for non-obvious types — prefer explicit types for readability at boundaries
+- Don't leave broken code — if it doesn't build or pass tests, fix it before moving on
+- Don't guess library APIs — use Context7 to verify
 
 ### Useful Commands
 ```bash
@@ -257,10 +294,10 @@ ng g c features/dashboard/components/course-card --standalone
 ng g s core/services/moodle-proxy
 
 # Add NuGet package
-dotnet add src/StudyApp.Api package <PackageName>
+dotnet add src/Kursa.Api package <PackageName>
 
 # Add EF migration
-dotnet ef migrations add <Name> --project src/StudyApp.Infrastructure --startup-project src/StudyApp.Api
+dotnet ef migrations add <Name> --project src/Kursa.Infrastructure --startup-project src/Kursa.Api
 
 # Run specific test
 dotnet test --filter "FullyQualifiedName~TestClassName"
@@ -312,9 +349,32 @@ docker compose config
    gh pr create --title "feat(auth): add user authentication" --body "Closes #42" --label "feature"
    ```
 
-5. **Merge via PR only** — never fast-forward or push to main directly
+5. **Self-review the PR** — check the diff, verify quality, and approve
+   ```bash
+   # Review your own diff
+   gh pr diff <number>
 
-**This is non-negotiable. Every single change — no matter how small — goes through issue → branch → PR → merge.**
+   # Add a review comment summarizing what was done and why it's correct
+   gh pr review <number> --approve --body "Reviewed: <summary of what was verified>"
+   ```
+
+6. **Merge the PR** — squash merge to keep history clean
+   ```bash
+   gh pr merge <number> --squash --delete-branch
+   ```
+
+**This is non-negotiable. Every single change — no matter how small — goes through issue → branch → PR → self-review → merge.**
+
+### PR Self-Review Checklist (MANDATORY before approving)
+Before approving your own PR, verify ALL of the following:
+- [ ] Code builds without errors or warnings (`dotnet build` / `bun run build`)
+- [ ] Tests pass (`dotnet test`)
+- [ ] No secrets, API keys, or credentials in the diff
+- [ ] PR has the correct label(s) matching the branch type
+- [ ] PR body references the issue with `Closes #<number>`
+- [ ] Changes are focused — no unrelated modifications
+- [ ] Frontend changes were visually verified with Playwright/browser tools
+- [ ] Library usage was verified against docs via Context7 (if applicable)
 
 ### Labels (configured on repo)
 | Label | Color | Purpose |

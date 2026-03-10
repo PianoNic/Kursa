@@ -1,8 +1,8 @@
-# StudyApp
+# Kursa
 
 > **AI-powered LMS + Study Companion** — Moodle but actually good, with AI baked in.
 
-StudyApp is a full-fledged learning management system that uses Moodle, OneNote, and SharePoint as lazy-loaded data sources, combined with AI-powered study tools (RAG chat, quiz generation, flashcards, spaced repetition) and a lesson recording pipeline.
+Kursa is a full-fledged learning management system that uses Moodle, OneNote, and SharePoint as lazy-loaded data sources, combined with AI-powered study tools (RAG chat, quiz generation, flashcards, spaced repetition) and a lesson recording pipeline.
 
 ## Features
 
@@ -24,8 +24,8 @@ StudyApp is a full-fledged learning management system that uses Moodle, OneNote,
 
 ```bash
 # Clone
-git clone https://github.com/PianoNic/StudyApp.git
-cd StudyApp
+git clone https://github.com/PianoNic/Kursa.git
+cd Kursa
 
 # Copy env file
 cp .env.example .env
@@ -36,10 +36,10 @@ docker compose up -d
 
 # Or run individually:
 # Backend
-cd src/StudyApp.Api && dotnet run
+cd src/Kursa.API && dotnet run
 
 # Frontend
-cd src/StudyApp.Web && npm install && ng serve
+cd src/Kursa.Frontend && bun install && bun run start
 ```
 
 ## Documentation
