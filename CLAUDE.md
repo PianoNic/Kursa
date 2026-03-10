@@ -271,6 +271,112 @@ docker compose config
 
 ---
 
+## GitHub (MANDATORY — always use `gh` CLI)
+
+**You MUST always use the GitHub CLI (`gh`) for ALL GitHub interactions. Never use the GitHub web UI or raw API calls when `gh` can do it.**
+
+### Repository
+- **Remote**: `PianoNic/Kursa` on GitHub
+- **Default branch**: `main`
+
+### ⚠️ CRITICAL: Git Workflow (NEVER violate this)
+
+**NEVER commit or push directly to `main`. ALWAYS follow this workflow:**
+
+1. **Create an issue first** — every piece of work starts with a GitHub issue
+   ```bash
+   gh issue create --title "Add user authentication" --body "Description..." --label "feature"
+   ```
+
+2. **Create a branch from the issue** — branch naming is strict:
+   ```
+   feature/<issue-number>_FeatureName     # New features
+   bug/<issue-number>_BugName             # Bug fixes
+   refactor/<issue-number>_RefactorName   # Refactoring
+   enhancement/<issue-number>_EnhanceName # Enhancements
+   ```
+   Examples:
+   ```bash
+   git checkout -b feature/42_UserAuthentication
+   git checkout -b bug/57_FixTokenRefresh
+   git checkout -b refactor/63_CleanupMoodleProxy
+   ```
+
+3. **Do all work on the branch** — commit as needed, push to remote
+   ```bash
+   git push -u origin feature/42_UserAuthentication
+   ```
+
+4. **Create a PR back to `main`** — with proper labels matching the branch type
+   ```bash
+   gh pr create --title "feat(auth): add user authentication" --body "Closes #42" --label "feature"
+   ```
+
+5. **Merge via PR only** — never fast-forward or push to main directly
+
+**This is non-negotiable. Every single change — no matter how small — goes through issue → branch → PR → merge.**
+
+### Labels (configured on repo)
+| Label | Color | Purpose |
+|---|---|---|
+| `bug` | #d73a4a | Something isn't working |
+| `feature` | #0052cc | New capability or function |
+| `enhancement` | #a2eeef | New feature or request |
+| `refactor` | #fbca04 | Code structure/performance improvements |
+| `duplicate` | #cfd3d7 | Already exists |
+
+### CI/CD Pipelines
+- **Build & Test** (`build.yml`): Runs on push/PR to `main`. Builds .NET backend + Angular frontend.
+- **Release Drafter** (`release-drafter.yml`): Auto-drafts release notes from merged PRs based on labels.
+- **Docker Publish** (`docker-publish-release.yaml`): Builds and pushes multi-arch Docker images on release.
+- **Version Bump** (`version-bump.yml`): Manual workflow to bump version in all `.csproj` files.
+- **Restrict Dev Issues** (`restrict-dev-issues.yml`): Auto-closes `[DEV]` issues from non-maintainers.
+
+### Common `gh` Commands
+```bash
+# Issues
+gh issue create --title "Title" --body "Description" --label "feature"
+gh issue list
+gh issue view <number>
+gh issue close <number>
+
+# Pull Requests
+gh pr create --title "Title" --body "Description" --label "feature"
+gh pr list
+gh pr view <number>
+gh pr merge <number>
+gh pr checks <number>
+
+# Releases
+gh release list
+gh release create v1.0.0 --title "v1.0.0" --notes "Release notes"
+gh release view <tag>
+
+# Labels
+gh label list
+gh label create <name> --description "desc" --color <hex>
+
+# Repo info
+gh repo view
+gh api repos/PianoNic/Kursa/...
+
+# Workflow runs
+gh run list
+gh run view <id>
+gh workflow run version-bump.yml -f bump_type=patch
+```
+
+### Workflow Rules
+- **NEVER push to `main`** — all changes go through PRs
+- Every task starts with `gh issue create` — get the issue number first
+- Branch names MUST follow the pattern: `<type>/<issue-number>_<Name>`
+- Apply the correct label to PRs so the release drafter categorizes them
+- Reference the issue in the PR body with `Closes #<number>`
+- After merging, the release drafter auto-updates the draft release
+- To publish a release: `gh release create` — this triggers Docker image builds
+
+---
+
 ## External Dependencies & APIs
 
 | Service | Purpose | Auth |
