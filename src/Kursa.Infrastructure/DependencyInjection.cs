@@ -5,6 +5,7 @@ using Kursa.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 
 namespace Kursa.Infrastructure;
 
@@ -59,6 +60,20 @@ public static class DependencyInjection
 
         services.AddOptions<OidcOptions>()
             .Bind(configuration.GetSection(OidcOptions.SectionName));
+
+        // LLM provider — configuration-driven selection
+        services.AddSingleton<ILlmProvider>(sp =>
+        {
+            LlmOptions llmOptions = sp.GetRequiredService<IOptions<LlmOptions>>().Value;
+
+            return llmOptions.Provider.ToLowerInvariant() switch
+            {
+                "openai" or "anthropic" => ActivatorUtilities.CreateInstance<OpenAiLlmProvider>(sp),
+                "ollama" => ActivatorUtilities.CreateInstance<OllamaLlmProvider>(sp),
+                _ => throw new InvalidOperationException(
+                    $"Unknown LLM provider '{llmOptions.Provider}'. Supported: openai, anthropic, ollama.")
+            };
+        });
 
         return services;
     }
