@@ -116,6 +116,45 @@ public sealed class MoodleService(
         return result;
     }
 
+    public async Task<IReadOnlyList<MoodleForumDto>> GetForumsAsync(
+        string moodleUrl, string moodleToken, int courseId, CancellationToken cancellationToken = default)
+    {
+        string cacheKey = $"moodle:forums:{HashToken(moodleToken)}:{courseId}";
+
+        var cached = await GetFromCacheAsync<List<MoodleForumDto>>(cacheKey, cancellationToken);
+        if (cached is not null)
+            return cached;
+
+        var response = await SendMoodleRequestAsync(
+            moodleUrl, moodleToken, $"/mod_forum_get_forums_by_courses?courseids[0]={courseId}", cancellationToken);
+
+        var forums = JsonSerializer.Deserialize<List<MoodleForumDto>>(response, JsonOptions) ?? [];
+
+        await SetCacheAsync(cacheKey, forums, ContentCacheDuration, cancellationToken);
+
+        return forums;
+    }
+
+    public async Task<MoodleForumDiscussionsResponseDto> GetForumDiscussionsAsync(
+        string moodleUrl, string moodleToken, int forumId, CancellationToken cancellationToken = default)
+    {
+        string cacheKey = $"moodle:discussions:{HashToken(moodleToken)}:{forumId}";
+
+        var cached = await GetFromCacheAsync<MoodleForumDiscussionsResponseDto>(cacheKey, cancellationToken);
+        if (cached is not null)
+            return cached;
+
+        var response = await SendMoodleRequestAsync(
+            moodleUrl, moodleToken, $"/mod_forum_get_forum_discussions?forumid={forumId}", cancellationToken);
+
+        var result = JsonSerializer.Deserialize<MoodleForumDiscussionsResponseDto>(response, JsonOptions)
+            ?? new MoodleForumDiscussionsResponseDto();
+
+        await SetCacheAsync(cacheKey, result, ContentCacheDuration, cancellationToken);
+
+        return result;
+    }
+
     private async Task<string> SendMoodleRequestAsync(
         string moodleUrl, string moodleToken, string endpoint, CancellationToken cancellationToken)
     {
