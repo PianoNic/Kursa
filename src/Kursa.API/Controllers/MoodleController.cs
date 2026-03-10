@@ -42,4 +42,24 @@ public class MoodleController(ISender sender) : ControllerBase
             ? Ok()
             : BadRequest(result.Error);
     }
+
+    [HttpGet("courses")]
+    public async Task<IActionResult> GetCoursesAsync(CancellationToken cancellationToken)
+    {
+        var result = await sender.Send(new GetEnrolledCoursesQuery(), cancellationToken);
+
+        return result.IsSuccess
+            ? Ok(result.Value)
+            : BadRequest(result.Error);
+    }
+
+    [HttpGet("courses/{courseId:int}/content")]
+    public async Task<IActionResult> GetCourseContentAsync(int courseId, CancellationToken cancellationToken)
+    {
+        var result = await sender.Send(new GetCourseContentQuery(courseId), cancellationToken);
+
+        return result.IsSuccess
+            ? Ok(result.Value)
+            : BadRequest(result.Error);
+    }
 }
