@@ -16,4 +16,7 @@ public interface IMoodleService
     Task<MoodleAssignmentsResponseDto> GetAssignmentsAsync(
         string moodleUrl, string moodleToken, IReadOnlyList<int>? courseIds = null,
         CancellationToken cancellationToken = default);
+
+    Task<MoodleGradeReportDto> GetGradesAsync(
+        string moodleUrl, string moodleToken, int courseId, CancellationToken cancellationToken = default);
 }
