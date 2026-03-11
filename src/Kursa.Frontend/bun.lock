@@ -1,6 +1,5 @@
 {
   "lockfileVersion": 1,
-  "configVersion": 1,
   "workspaces": {
     "": {
       "name": "kursa.frontend",
@@ -13,6 +12,7 @@
         "@angular/platform-browser": "^21.1.0",
         "@angular/router": "^21.1.0",
         "@spartan-ng/brain": "^0.0.1-alpha.649",
+        "angular-oauth2-oidc": "^20.0.2",
         "rxjs": "~7.8.0",
         "tslib": "^2.3.0",
       },
@@ -1032,6 +1032,8 @@
     "ajv-keywords": ["ajv-keywords@5.1.0", "", { "dependencies": { "fast-deep-equal": "^3.1.3" }, "peerDependencies": { "ajv": "^8.8.2" } }, "sha512-YCS/JNFAUyr5vAuhk1DWm1CBxRHW9LbJ2ozWeemrIqpbsqKjHVxYPyi5GC0rjZIT5JxJ3virVTS8wk4i/Z+krw=="],
 
     "algoliasearch": ["algoliasearch@5.48.1", "", { "dependencies": { "@algolia/abtesting": "1.14.1", "@algolia/client-abtesting": "5.48.1", "@algolia/client-analytics": "5.48.1", "@algolia/client-common": "5.48.1", "@algolia/client-insights": "5.48.1", "@algolia/client-personalization": "5.48.1", "@algolia/client-query-suggestions": "5.48.1", "@algolia/client-search": "5.48.1", "@algolia/ingestion": "1.48.1", "@algolia/monitoring": "1.48.1", "@algolia/recommend": "5.48.1", "@algolia/requester-browser-xhr": "5.48.1", "@algolia/requester-fetch": "5.48.1", "@algolia/requester-node-http": "5.48.1" } }, "sha512-Rf7xmeuIo7nb6S4mp4abW2faW8DauZyE2faBIKFaUfP3wnpOvNSbiI5AwVhqBNj0jPgBWEvhyCu0sLjN2q77Rg=="],
+
+    "angular-oauth2-oidc": ["angular-oauth2-oidc@20.0.2", "", { "dependencies": { "tslib": "^2.5.2" }, "peerDependencies": { "@angular/common": ">=20.0.0", "@angular/core": ">=20.0.0" } }, "sha512-bMSXEQIuvgq8yqnsIatZggAvCJvY+pm7G8MK0tWCHR93UpFuNN+L5B6pY9CzRg8Ys+VVhkLIBx4zEHbJnv9icg=="],
 
     "ansi-colors": ["ansi-colors@4.1.3", "", {}, "sha512-/6w/C21Pm1A7aZitlI5Ni/2J6FFQN8i1Cvz3kHABAAbw93v/NlvKdVOqz7CCWz/3iv/JplRSEEZ83XION15ovw=="],
 

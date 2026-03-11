@@ -1,15 +1,28 @@
 import { Routes } from '@angular/router';
 import { ShellComponent } from './layout/shell.component';
+import { authGuard } from './core/guards/auth.guard';
 
 export const routes: Routes = [
   {
+    path: 'login',
+    loadComponent: () =>
+      import('./features/login/login.component').then((m) => m.LoginComponent),
+  },
+  {
+    path: 'callback',
+    loadComponent: () =>
+      import('./features/callback/callback.component').then((m) => m.CallbackComponent),
+  },
+  {
     path: 'onboarding',
+    canActivate: [authGuard],
     loadComponent: () =>
       import('./features/onboarding/onboarding.component').then((m) => m.OnboardingComponent),
   },
   {
     path: '',
     component: ShellComponent,
+    canActivate: [authGuard],
     children: [
       {
         path: '',
@@ -29,7 +42,9 @@ export const routes: Routes = [
       {
         path: 'courses/:courseId',
         loadComponent: () =>
-          import('./features/courses/course-detail.component').then((m) => m.CourseDetailComponent),
+          import('./features/courses/course-detail.component').then(
+            (m) => m.CourseDetailComponent,
+          ),
       },
       {
         path: 'pinned',
@@ -64,7 +79,9 @@ export const routes: Routes = [
       {
         path: 'assignments',
         loadComponent: () =>
-          import('./features/assignments/assignments.component').then((m) => m.AssignmentsComponent),
+          import('./features/assignments/assignments.component').then(
+            (m) => m.AssignmentsComponent,
+          ),
       },
       {
         path: 'grades',
