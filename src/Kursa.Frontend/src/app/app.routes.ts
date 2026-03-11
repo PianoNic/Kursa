@@ -86,6 +86,11 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/microsoft/microsoft.component').then((m) => m.MicrosoftComponent),
       },
+      {
+        path: 'settings',
+        loadComponent: () =>
+          import('./features/settings/settings.component').then((m) => m.SettingsComponent),
+      },
     ],
   },
 ];

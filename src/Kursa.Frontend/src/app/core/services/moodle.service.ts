@@ -61,6 +61,14 @@ export class MoodleService {
     return this.http.get<MoodleConnectionStatus>(`${this.baseUrl}/status`);
   }
 
+  linkToken(token: string): Observable<void> {
+    return this.http.post<void>(`${this.baseUrl}/link`, { token });
+  }
+
+  unlinkToken(): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/link`);
+  }
+
   getEnrolledCourses(): Observable<MoodleCourse[]> {
     return this.http.get<MoodleCourse[]>(`${this.baseUrl}/courses`);
   }
