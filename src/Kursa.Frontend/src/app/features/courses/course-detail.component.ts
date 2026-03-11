@@ -142,7 +142,10 @@ export class CourseDetailComponent implements OnInit {
         this.loading.set(false);
       },
       error: (err) => {
-        this.error.set(err.error ?? 'Failed to load course content.');
+        const detail = typeof err.error === 'string'
+          ? err.error
+          : (err.error?.detail ?? err.error?.title ?? err.message ?? 'Failed to load course content.');
+        this.error.set(detail);
         this.loading.set(false);
       },
     });

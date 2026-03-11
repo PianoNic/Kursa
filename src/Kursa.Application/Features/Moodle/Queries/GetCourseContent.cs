@@ -38,9 +38,16 @@ public sealed class GetCourseContentHandler(
         if (string.IsNullOrEmpty(user.MoodleToken))
             return Result<IReadOnlyList<MoodleCourseSectionDto>>.Failure("Moodle account is not linked.");
 
-        var sections = await moodleService.GetCourseContentAsync(
-            user.MoodleToken, request.MoodleCourseId, cancellationToken);
+        try
+        {
+            var sections = await moodleService.GetCourseContentAsync(
+                user.MoodleToken, request.MoodleCourseId, cancellationToken);
 
-        return Result<IReadOnlyList<MoodleCourseSectionDto>>.Success(sections);
+            return Result<IReadOnlyList<MoodleCourseSectionDto>>.Success(sections);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return Result<IReadOnlyList<MoodleCourseSectionDto>>.Failure(ex.Message);
+        }
     }
 }
