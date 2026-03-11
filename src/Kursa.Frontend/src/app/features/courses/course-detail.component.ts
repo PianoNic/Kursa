@@ -1,6 +1,7 @@
-import { ChangeDetectionStrategy, Component, inject, input, signal, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, input, signal, OnInit, OnDestroy } from '@angular/core';
 import { MoodleCourse, MoodleCourseSection, MoodleModule, MoodleContent, MoodleService } from '../../core/services/moodle.service';
 import { PinnedContentService } from '../../core/services/pinned-content.service';
+import { AiContextService } from '../../core/services/ai-context.service';
 import { DecimalPipe } from '@angular/common';
 
 @Component({
@@ -153,9 +154,10 @@ import { DecimalPipe } from '@angular/common';
     </div>
   `,
 })
-export class CourseDetailComponent implements OnInit {
+export class CourseDetailComponent implements OnInit, OnDestroy {
   private readonly moodleService = inject(MoodleService);
   private readonly pinnedContentService = inject(PinnedContentService);
+  private readonly aiContext = inject(AiContextService);
 
   readonly courseId = input.required<number>();
   readonly sections = signal<MoodleCourseSection[]>([]);
@@ -185,8 +187,20 @@ export class CourseDetailComponent implements OnInit {
         const id = +this.courseId();
         const found = courses.find(c => c.id === id) ?? null;
         this.course.set(found);
+        if (found) {
+          this.aiContext.setContext({
+            type: 'course',
+            id: String(found.id),
+            title: found.fullName,
+            description: `Moodle course — ${found.shortName}`,
+          });
+        }
       },
     });
+  }
+
+  ngOnDestroy(): void {
+    this.aiContext.clearContext();
   }
 
   pinModule(mod: MoodleModule): void {
