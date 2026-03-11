@@ -54,10 +54,10 @@ public sealed record MoodleContentDto
     public string Type { get; init; } = string.Empty;
     public string FileName { get; init; } = string.Empty;
     public string? FilePath { get; init; }
-    public long FileSize { get; init; }
+    public double FileSize { get; init; }
     public string? FileUrl { get; init; }
-    public long TimeCreated { get; init; }
-    public long TimeModified { get; init; }
+    public double? TimeCreated { get; init; }
+    public double? TimeModified { get; init; }
     public string? MimeType { get; init; }
 }
 

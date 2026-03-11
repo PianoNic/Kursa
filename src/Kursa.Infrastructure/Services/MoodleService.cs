@@ -74,10 +74,22 @@ public sealed class MoodleService(
         if (cached is not null) return cached;
 
         var client = clientFactory.CreateForToken(moodleToken);
-        var result = await client.Core_course_get_contents.PostAsync(
+        UntypedNode? result = await client.Core_course_get_contents.PostAsync(
             new CoreCourseGetContentsRequest { Courseid = courseId }, cancellationToken: cancellationToken);
 
-        var sections = await DeserializeAsync<List<MoodleCourseSectionDto>>(result, cancellationToken) ?? [];
+        ThrowIfMoodleError(result, "core_course_get_contents");
+
+        List<MoodleCourseSectionDto> sections;
+        try
+        {
+            sections = await DeserializeAsync<List<MoodleCourseSectionDto>>(result, cancellationToken) ?? [];
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Failed to deserialize course content for course {CourseId}", courseId);
+            throw new InvalidOperationException($"Failed to parse course content response: {ex.Message}", ex);
+        }
+
         await SetCacheAsync(cacheKey, sections, ContentCacheDuration, cancellationToken);
         return sections;
     }
@@ -240,4 +252,25 @@ public sealed class MoodleService(
 
     private static string HashToken(string token)
         => token.GetHashCode(StringComparison.Ordinal).ToString("x8");
+
+    /// <summary>
+    /// Detects Moodle error responses (HTTP 200 with an exception/errorcode body) and throws
+    /// an <see cref="InvalidOperationException"/> with the Moodle error message so callers
+    /// don't try to deserialize error objects as content DTOs.
+    /// </summary>
+    private static void ThrowIfMoodleError(UntypedNode? node, string operation)
+    {
+        if (node is not UntypedObject obj) return;
+
+        IDictionary<string, UntypedNode?> values = obj.GetValue()!;
+        if (!values.ContainsKey("exception")) return;
+
+        string message = "Moodle error";
+        if (values.TryGetValue("message", out UntypedNode? msgNode) && msgNode is UntypedString msgStr)
+            message = msgStr.GetValue() ?? message;
+        else if (values.TryGetValue("errorcode", out UntypedNode? codeNode) && codeNode is UntypedString codeStr)
+            message = codeStr.GetValue() ?? message;
+
+        throw new InvalidOperationException($"Moodle returned an error for '{operation}': {message}");
+    }
 }
