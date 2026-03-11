@@ -60,7 +60,7 @@ import { ChatService, ChatThread, ChatMessage, Citation, ChatResponse } from '..
                 [class]="msg.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-muted text-foreground'"
               >
                 @if (msg.role === 'assistant') {
-                  <div class="prose prose-sm prose-invert max-w-none text-foreground [&_a]:text-primary [&_code]:rounded [&_code]:bg-background/50 [&_code]:px-1 [&_code]:py-0.5 [&_pre]:rounded [&_pre]:bg-background/50 [&_pre]:p-3" [innerHTML]="renderMarkdown(msg.content)"></div>
+                  <div class="markdown-body text-sm text-foreground" [innerHTML]="renderMarkdown(msg.content)"></div>
                 } @else {
                   <p class="whitespace-pre-wrap text-sm">{{ msg.content }}</p>
                 }
