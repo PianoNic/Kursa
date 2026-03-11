@@ -35,14 +35,14 @@ Kursa is a full-fledged LMS that uses Moodle, OneNote, and SharePoint as **lazy-
 | **Styling** | Tailwind CSS 4 | Dark mode default, utility-first |
 | **Backend** | .NET 10 / ASP.NET Core | Minimal APIs or Controllers, depends on endpoint complexity |
 | **ORM** | Entity Framework Core | Code-first migrations, PostgreSQL provider |
-| **Architecture** | CQRS + MediatR | Commands/Queries separated, pipeline behaviors for validation/logging |
+| **Architecture** | CQRS + Mediator | Commands/Queries separated via source-generated Mediator, pipeline behaviors for validation/logging |
 | **Database** | PostgreSQL | Primary relational store |
 | **Vector DB** | Qdrant | Semantic search, RAG embeddings |
 | **Cache** | Redis | Moodle API response caching, session data |
 | **Object Storage** | MinIO | Audio recordings, PDFs, cached content |
 | **Background Jobs** | Hangfire | Moodle polling, embedding generation, summary pipelines |
-| **Auth** | OIDC (OpenID Connect) + Moodle tokens | External OIDC provider for user auth, Moodle token for LMS data |
-| **LLM** | Configurable | Support OpenAI, Anthropic, and local Ollama — abstracted behind interface |
+| **Auth** | OIDC (Pocket ID, PKCE) + Moodle credentials | Pocket ID for user auth, Moodle username/password via MoodlewareAPI /auth |
+| **LLM** | Microsoft Semantic Kernel | Agentic tool-calling, KursaAgentPlugin, config-driven provider selection |
 | **Speech-to-Text** | Whisper | API or self-hosted via Python microservice |
 | **Diarization** | pyannote | Speaker separation in Python microservice |
 | **Search** | Qdrant (semantic) + PostgreSQL FTS | Qdrant for AI-indexed content, PG for full-text fallback |
@@ -62,42 +62,38 @@ Kursa/
 │   ├── architecture.md         # Architecture decisions
 │   └── api-contracts.md        # API endpoint contracts
 ├── src/
-│   ├── Kursa.Api/           # ASP.NET Core Web API
-│   │   ├── Controllers/        # API controllers (or Endpoints/ for minimal APIs)
-│   │   ├── Features/           # CQRS feature folders (Commands, Queries, Handlers)
-│   │   ├── Infrastructure/     # EF Core, Qdrant client, Redis, MinIO, LLM clients
-│   │   ├── Domain/             # Domain entities, value objects
+│   ├── Kursa.API/              # ASP.NET Core Web API
+│   │   ├── Controllers/        # API controllers
 │   │   ├── Middleware/         # Auth, error handling, logging
-│   │   ├── Services/           # Application services (Moodle proxy, content pipeline, etc.)
 │   │   └── Program.cs
-│   ├── Kursa.Domain/        # Domain layer (entities, interfaces, enums)
-│   ├── Kursa.Application/   # Application layer (CQRS handlers, DTOs, interfaces)
-│   ├── Kursa.Infrastructure/# Infrastructure layer (EF, external services, repositories)
-│   └── Kursa.Web/           # Angular frontend
-│       ├── src/
-│       │   ├── app/
-│       │   │   ├── core/       # Guards, interceptors, services, auth
-│       │   │   ├── shared/     # Shared components, pipes, directives
-│       │   │   ├── features/   # Feature modules (dashboard, courses, chat, study-tools, etc.)
-│       │   │   └── layout/     # Shell, sidebar, topbar, AI panel
-│       │   ├── environments/
-│       │   └── styles/
-│       ├── angular.json
-│       ├── tailwind.config.js
-│       └── package.json
-├── tests/
-│   ├── Kursa.Api.Tests/
-│   ├── Kursa.Application.Tests/
-│   └── Kursa.Web.Tests/     # Angular tests (Karma/Jest)
+│   ├── Kursa.Application/      # Application layer (CQRS handlers, DTOs, interfaces)
+│   │   ├── Common/             # Behaviors (validation, logging), interfaces, models
+│   │   └── Features/           # Feature folders (Commands, Queries, Handlers, DTOs)
+│   ├── Kursa.Domain/           # Domain layer (entities, value objects, enums)
+│   ├── Kursa.Infrastructure/   # Infrastructure layer (EF, external services, repositories)
+│   ├── Kursa.Frontend/         # Angular 21 frontend
+│   │   ├── src/
+│   │   │   ├── app/
+│   │   │   │   ├── core/       # Guards, interceptors, services, auth
+│   │   │   │   ├── shared/     # Shared components, pipes, directives
+│   │   │   │   ├── features/   # Feature modules (dashboard, courses, chat, study-tools, etc.)
+│   │   │   │   └── layout/     # Shell, sidebar, topbar, AI panel
+│   │   │   ├── lib/ui/         # spartan.ng hlm-* components
+│   │   │   ├── environments/
+│   │   │   └── styles/
+│   │   ├── angular.json
+│   │   └── package.json
+│   └── Kursa.Tests/            # Backend tests (xUnit)
 ├── docker/
 │   ├── Dockerfile.api
 │   ├── Dockerfile.web
-│   └── docker-compose.yml      # Full stack: API, DB, Redis, Qdrant, MinIO
+│   └── nginx.conf
+├── docker-compose.yml          # Full stack: API, DB, Redis, Qdrant, MinIO
 ├── CLAUDE.md                   # This file
 ├── README.md
 ├── .gitignore
 ├── .editorconfig
-└── Kursa.sln
+└── Kursa.slnx
 ```
 
 ---
@@ -162,11 +158,11 @@ Kursa/
 - AI features → only work on pinned/indexed content
 - Lightweight polling for change detection (metadata only)
 
-### LLM Abstraction
-- `ILlmProvider` interface with implementations for OpenAI, Anthropic, Ollama
-- Configuration-driven: switch providers via `appsettings.json`
-- All LLM calls go through a service that handles retries, rate limiting, token counting
-- System prompts stored as templates, not hardcoded
+### LLM / AI (Microsoft Semantic Kernel)
+- Microsoft Semantic Kernel for all LLM interactions (replaced custom ILlmProvider)
+- `KursaAgentPlugin` provides tool-calling capabilities (vector search, content retrieval)
+- Agentic tool-calling loop for RAG chat (not hardcoded pipeline)
+- Configuration-driven provider selection via `appsettings.json` (OpenAI, Ollama, etc.)
 
 ### Content Pipeline
 1. Content arrives (from Moodle, OneNote, SharePoint, or recording upload)
@@ -193,13 +189,13 @@ Kursa/
 docker compose up -d postgres redis qdrant minio
 
 # Run backend
-cd src/Kursa.Api
+cd src/Kursa.API
 dotnet run
 
 # Run frontend
-cd src/Kursa.Web
+cd src/Kursa.Frontend
 bun install
-ng serve
+bun run start
 ```
 
 ### Running Full Stack (Docker)
@@ -213,18 +209,14 @@ docker compose up -d
 dotnet test
 
 # Frontend tests
-cd src/Kursa.Web
-ng test
-
-# E2E (if configured)
-ng e2e
+cd src/Kursa.Frontend
+bun run test
 ```
 
 ### Database Migrations
 ```bash
-cd src/Kursa.Infrastructure
-dotnet ef migrations add <MigrationName> -s ../Kursa.Api
-dotnet ef database update -s ../Kursa.Api
+dotnet ef migrations add <MigrationName> --project src/Kursa.Infrastructure --startup-project src/Kursa.API
+dotnet ef database update --startup-project src/Kursa.API
 ```
 
 ---
@@ -262,7 +254,7 @@ dotnet ef database update -s ../Kursa.Api
 **When you encounter documentation questions or need up-to-date library/framework docs, you MUST use Context7 (MCP).**
 
 - Before implementing anything with a library you're unsure about, **fetch the latest docs via Context7 first**
-- Use Context7 for: Angular, spartan.ng, Tailwind, EF Core, MediatR, Qdrant client, or any dependency
+- Use Context7 for: Angular, spartan.ng, Tailwind, EF Core, Mediator, Semantic Kernel, Qdrant client, or any dependency
 - Don't rely on training data for API signatures, configuration patterns, or breaking changes — **always check docs**
 - If a build fails due to an API mismatch, check Context7 for the correct usage before guessing fixes
 
@@ -301,16 +293,16 @@ dotnet ef database update -s ../Kursa.Api
 ### Useful Commands
 ```bash
 # Generate Angular component
-ng g c features/dashboard/components/course-card --standalone
+cd src/Kursa.Frontend && ng g c features/dashboard/components/course-card
 
 # Generate Angular service
-ng g s core/services/moodle-proxy
+cd src/Kursa.Frontend && ng g s core/services/moodle-proxy
 
 # Add NuGet package
-dotnet add src/Kursa.Api package <PackageName>
+dotnet add src/Kursa.API package <PackageName>
 
 # Add EF migration
-dotnet ef migrations add <Name> --project src/Kursa.Infrastructure --startup-project src/Kursa.Api
+dotnet ef migrations add <Name> --project src/Kursa.Infrastructure --startup-project src/Kursa.API
 
 # Run specific test
 dotnet test --filter "FullyQualifiedName~TestClassName"
@@ -454,14 +446,14 @@ gh workflow run version-bump.yml -f bump_type=patch
 
 | Service | Purpose | Auth |
 |---|---|---|
-| OIDC Provider | User authentication | OpenID Connect (external provider) |
-| MoodlewareAPI | Moodle data bridge | Moodle token |
+| Pocket ID (OIDC) | User authentication | OpenID Connect (PKCE flow) |
+| MoodlewareAPI | Moodle data bridge | Username/password via /auth endpoint |
 | Microsoft Graph | OneNote, SharePoint, Calendar | OAuth2 (delegated) |
 | Qdrant | Vector search | API key or no auth (local) |
 | MinIO | Object storage | Access/secret key |
 | Redis | Caching | Password (optional) |
 | PostgreSQL | Relational data | Connection string |
-| LLM Provider | AI features | API key (provider-specific) |
+| LLM Provider (via Semantic Kernel) | AI features | API key (provider-specific) |
 | Whisper | Speech-to-text | Internal microservice |
 | pyannote | Speaker diarization | Internal microservice |
 
@@ -469,44 +461,55 @@ gh workflow run version-bump.yml -f bump_type=patch
 
 ## Phase Roadmap
 
-### Phase 1 — Foundation
-- [ ] Project scaffolding (solution, projects, Docker, CI)
-- [ ] PostgreSQL + EF Core setup with initial entities (User, Course, Module, Content)
-- [ ] OIDC authentication (external provider, JWT validation, login/logout)
-- [ ] User management (profiles, roles, settings)
-- [ ] Moodle token linking per user
-- [ ] User onboarding flow (first login wizard)
-- [ ] Angular shell with spartan.ng (sidebar, topbar, routing, dark mode)
-- [ ] Moodle proxy: authenticate, list courses, fetch course content on demand
-- [ ] Basic content viewer (render PDFs, text, HTML inline)
-- [ ] Pin/star system: save content to local DB
+### Phase 1 — Foundation ✅
+- [x] Project scaffolding (solution, projects, Docker, CI)
+- [x] PostgreSQL + EF Core setup with initial entities (User, Course, Module, Content)
+- [x] OIDC authentication (Pocket ID, PKCE flow, JWT validation, login/logout)
+- [x] User management (profiles, roles, settings)
+- [x] Moodle token linking per user (username/password via MoodlewareAPI /auth)
+- [x] User onboarding flow (first login wizard)
+- [x] Angular shell with spartan.ng (sidebar, topbar, routing, dark mode)
+- [x] Moodle proxy: authenticate, list courses, fetch course content on demand
+- [x] Basic content viewer (render PDFs, text, HTML inline)
+- [x] Pin/star system: save content to local DB
 
-### Phase 2 — AI Layer
-- [ ] Qdrant integration + content pipeline (embed pinned content)
-- [ ] RAG chat: ask questions about indexed content with citations
-- [ ] AI side panel: context-aware, knows what you're viewing
-- [ ] Auto-summarization on pin
+### Phase 2 — AI Layer ✅
+- [x] Qdrant integration + content pipeline (embed pinned content)
+- [x] RAG chat: agentic tool-calling loop via Semantic Kernel with citations
+- [x] AI side panel: context-aware, knows what you're viewing, markdown rendering
+- [x] Auto-summarization on pin
 
-### Phase 3 — Study Tools
-- [ ] Quiz generator (AI generates questions from materials)
-- [ ] Flashcard engine with spaced repetition (SM-2)
-- [ ] Study sessions (combine quizzes + flashcards + review)
-- [ ] Progress tracking + analytics dashboard
+### Phase 3 — Study Tools ✅
+- [x] Quiz generator (AI generates questions from materials)
+- [x] Flashcard engine with spaced repetition (SM-2)
+- [x] Study sessions (Pomodoro timer + combined tools)
+- [x] Progress tracking + analytics dashboard
 
-### Phase 4 — Recording Pipeline
-- [ ] Audio upload endpoint + MinIO storage
-- [ ] Whisper transcription microservice
-- [ ] pyannote diarization microservice
-- [ ] Transcript viewer with topic timeline
-- [ ] Recording → content pipeline integration
+### Phase 4 — Recording Pipeline ✅
+- [x] Audio upload endpoint + MinIO storage
+- [x] Whisper transcription microservice
+- [x] Transcript viewer with topic timeline
+- [x] Recording → content pipeline integration (auto-index + summarize)
 
-### Phase 5 — Full LMS
-- [ ] Assignment tracker with deadlines + calendar view
-- [ ] Grade viewer with trends
-- [ ] Forum/discussion proxy
-- [ ] Timetable integration
-- [ ] OneNote + SharePoint integration via Graph API
-- [ ] Agentic behavior (proactive study suggestions)
+### Phase 5 — Full LMS ✅
+- [x] Assignment tracker with deadlines + calendar view
+- [x] Grade viewer with trends
+- [x] Forum/discussion proxy
+- [x] Timetable integration
+- [x] OneNote + SharePoint integration via Graph API
+- [x] Agentic behavior (proactive study suggestions)
+
+### Post-Phase — Polish & Iteration (current)
+- [x] Migrate to MoodlewareAPI bridge (Kiota typed client)
+- [x] OIDC login with Pocket ID (PKCE)
+- [x] Migrate AI stack to Microsoft Semantic Kernel
+- [x] Agentic tool-calling RAG (replaced hardcoded pipeline)
+- [x] Full frontend migration to spartan.ng components
+- [x] Migrate from MediatR to Mediator source generator (licensing)
+- [ ] Index full module content — HTML, page body, file text extraction (#109)
+- [ ] Self-enrol in courses via MoodlewareAPI (#81)
+- [ ] Topbar user profile picture with settings dropdown (#86)
+- [ ] Fix EF Core LINQ GroupBy translation in analytics (#94)
 
 ---
 
@@ -516,7 +519,8 @@ gh workflow run version-bump.yml -f bump_type=patch
 - **spartan.ng docs**: https://www.spartan.ng/
 - **MoodlewareAPI**: https://github.com/MoodleNG/MoodlewareAPI
 - **Qdrant docs**: https://qdrant.tech/documentation/
-- **MediatR**: https://github.com/jbogard/MediatR
+- **Mediator**: https://github.com/martinothamar/Mediator
+- **Semantic Kernel**: https://github.com/microsoft/semantic-kernel
 - **Hangfire**: https://www.hangfire.io/
 
 ---
