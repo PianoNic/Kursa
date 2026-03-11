@@ -1,26 +1,46 @@
+using System.ClientModel;
 using Kursa.Application.Common.Interfaces;
 using Kursa.Infrastructure.Options;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using OpenAI;
 using OpenAI.Chat;
 using OpenAI.Embeddings;
 
 namespace Kursa.Infrastructure.Services;
 
-public sealed class OpenAiLlmProvider : ILlmProvider
+/// <summary>
+/// LLM provider that routes chat completions through OpenRouter (OpenAI-compatible API).
+/// Embeddings are handled via Ollama since OpenRouter does not natively support them.
+/// </summary>
+public sealed class OpenRouterLlmProvider : ILlmProvider
 {
     private readonly ChatClient _chatClient;
     private readonly EmbeddingClient _embeddingClient;
-    private readonly ILogger<OpenAiLlmProvider> _logger;
+    private readonly ILogger<OpenRouterLlmProvider> _logger;
 
-    public OpenAiLlmProvider(IOptions<LlmOptions> options, ILogger<OpenAiLlmProvider> logger)
+    public OpenRouterLlmProvider(IOptions<LlmOptions> options, ILogger<OpenRouterLlmProvider> logger)
     {
         _logger = logger;
         LlmOptions llmOptions = options.Value;
 
-        string apiKey = llmOptions.ApiKey;
-        _chatClient = new ChatClient(llmOptions.Model, apiKey);
-        _embeddingClient = new EmbeddingClient(llmOptions.EmbeddingModel, apiKey);
+        // OpenRouter exposes an OpenAI-compatible chat API
+        var openRouterOptions = new OpenAIClientOptions
+        {
+            Endpoint = new Uri(llmOptions.OpenRouterBaseUrl)
+        };
+        var openRouterCredential = new ApiKeyCredential(llmOptions.ApiKey);
+        var openRouterClient = new OpenAIClient(openRouterCredential, openRouterOptions);
+        _chatClient = openRouterClient.GetChatClient(llmOptions.Model);
+
+        // OpenRouter does not support embeddings — use Ollama for embeddings
+        var ollamaOptions = new OpenAIClientOptions
+        {
+            Endpoint = new Uri(llmOptions.OllamaHost)
+        };
+        var ollamaCredential = new ApiKeyCredential("ollama");
+        var ollamaClient = new OpenAIClient(ollamaCredential, ollamaOptions);
+        _embeddingClient = ollamaClient.GetEmbeddingClient(llmOptions.EmbeddingModel);
     }
 
     public async Task<LlmChatResponse> ChatAsync(
@@ -52,15 +72,15 @@ public sealed class OpenAiLlmProvider : ILlmProvider
             chatOptions.MaxOutputTokenCount = request.MaxTokens.Value;
         }
 
-        _logger.LogDebug("Sending chat request with {MessageCount} messages", messages.Count);
+        _logger.LogDebug("Sending OpenRouter chat request with {MessageCount} messages", messages.Count);
 
         ChatCompletion completion = await _chatClient.CompleteChatAsync(messages, chatOptions, cancellationToken);
 
         return new LlmChatResponse
         {
             Content = completion.Content[0].Text,
-            PromptTokens = completion.Usage.InputTokenCount,
-            CompletionTokens = completion.Usage.OutputTokenCount,
+            PromptTokens = completion.Usage?.InputTokenCount ?? 0,
+            CompletionTokens = completion.Usage?.OutputTokenCount ?? 0,
         };
     }
 
@@ -68,7 +88,7 @@ public sealed class OpenAiLlmProvider : ILlmProvider
         string text,
         CancellationToken cancellationToken = default)
     {
-        _logger.LogDebug("Generating embedding for text of length {Length}", text.Length);
+        _logger.LogDebug("Generating embedding via Ollama for text of length {Length}", text.Length);
 
         OpenAIEmbedding embedding = await _embeddingClient.GenerateEmbeddingAsync(text, cancellationToken: cancellationToken);
         ReadOnlyMemory<float> vector = embedding.ToFloats();
@@ -80,7 +100,7 @@ public sealed class OpenAiLlmProvider : ILlmProvider
         IReadOnlyList<string> texts,
         CancellationToken cancellationToken = default)
     {
-        _logger.LogDebug("Generating embeddings for {Count} texts", texts.Count);
+        _logger.LogDebug("Generating embeddings via Ollama for {Count} texts", texts.Count);
 
         OpenAIEmbeddingCollection embeddings = await _embeddingClient.GenerateEmbeddingsAsync(texts, cancellationToken: cancellationToken);
 

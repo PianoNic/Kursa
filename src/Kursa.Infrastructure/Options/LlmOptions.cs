@@ -11,9 +11,12 @@ public sealed class LlmOptions
 
     public string ApiKey { get; init; } = string.Empty;
 
-    public string Model { get; init; } = "gpt-4o-mini";
+    public string Model { get; init; } = "anthropic/claude-haiku-4-5";
 
-    public string EmbeddingModel { get; init; } = "text-embedding-3-small";
+    /// <summary>Embedding model served by Ollama (used as embedding backend for all providers).</summary>
+    public string EmbeddingModel { get; init; } = "nomic-embed-text";
+
+    public string OpenRouterBaseUrl { get; init; } = "https://openrouter.ai/api/v1";
 
     public string OllamaHost { get; init; } = "http://localhost:11434";
 
