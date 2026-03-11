@@ -4,6 +4,9 @@ namespace Kursa.Application.Common.Interfaces;
 
 public interface IMoodleService
 {
+    /// <summary>Authenticates with MoodlewareAPI using Moodle credentials and returns the wstoken, or null on failure.</summary>
+    Task<string?> GetTokenAsync(string username, string password, CancellationToken cancellationToken = default);
+
     Task<IReadOnlyList<MoodleCourseDto>> GetEnrolledCoursesAsync(
         string moodleToken, CancellationToken cancellationToken = default);
 

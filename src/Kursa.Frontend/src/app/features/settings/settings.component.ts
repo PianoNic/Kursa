@@ -21,7 +21,7 @@ import { MoodleService } from '../../core/services/moodle.service';
         <div>
           <h2 id="moodle-heading" class="text-lg font-semibold text-foreground">Moodle Integration</h2>
           <p class="mt-1 text-sm text-muted-foreground">
-            Connect your Moodle account to access courses, assignments, and grades.
+            Connect your Moodle account using your login credentials.
           </p>
         </div>
 
@@ -42,28 +42,47 @@ import { MoodleService } from '../../core/services/moodle.service';
             {{ isSubmitting() ? 'Disconnecting…' : 'Disconnect Moodle' }}
           </button>
         } @else {
-          <form [formGroup]="tokenForm" (ngSubmit)="linkMoodle()" class="space-y-4" novalidate>
+          <form [formGroup]="loginForm" (ngSubmit)="linkMoodle()" class="space-y-4" novalidate>
             <div>
-              <label for="moodle-token" class="block text-sm font-medium text-foreground">
-                Moodle API Token
+              <label for="moodle-username" class="block text-sm font-medium text-foreground">
+                Moodle Username
               </label>
-              <p class="mt-0.5 text-xs text-muted-foreground">
-                Find your token in Moodle → User menu → Preferences → Security keys.
-              </p>
               <input
-                id="moodle-token"
-                type="password"
-                formControlName="token"
-                autocomplete="current-password"
-                placeholder="Enter your Moodle API token"
+                id="moodle-username"
+                type="text"
+                formControlName="username"
+                autocomplete="username"
+                placeholder="Enter your Moodle username"
                 class="mt-2 block w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
-                [class]="tokenForm.controls.token.invalid && tokenForm.controls.token.touched ? 'border-destructive' : ''"
-                [attr.aria-describedby]="tokenForm.controls.token.invalid && tokenForm.controls.token.touched ? 'token-error' : null"
-                [attr.aria-invalid]="tokenForm.controls.token.invalid && tokenForm.controls.token.touched ? true : null"
+                [class]="loginForm.controls.username.invalid && loginForm.controls.username.touched ? 'border-destructive' : ''"
+                [attr.aria-invalid]="loginForm.controls.username.invalid && loginForm.controls.username.touched ? true : null"
+                [attr.aria-describedby]="loginForm.controls.username.invalid && loginForm.controls.username.touched ? 'username-error' : null"
               />
-              @if (tokenForm.controls.token.invalid && tokenForm.controls.token.touched) {
-                <p id="token-error" class="mt-1 text-xs text-destructive" role="alert">
-                  Please enter your Moodle API token.
+              @if (loginForm.controls.username.invalid && loginForm.controls.username.touched) {
+                <p id="username-error" class="mt-1 text-xs text-destructive" role="alert">
+                  Please enter your Moodle username.
+                </p>
+              }
+            </div>
+
+            <div>
+              <label for="moodle-password" class="block text-sm font-medium text-foreground">
+                Moodle Password
+              </label>
+              <input
+                id="moodle-password"
+                type="password"
+                formControlName="password"
+                autocomplete="current-password"
+                placeholder="Enter your Moodle password"
+                class="mt-2 block w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                [class]="loginForm.controls.password.invalid && loginForm.controls.password.touched ? 'border-destructive' : ''"
+                [attr.aria-invalid]="loginForm.controls.password.invalid && loginForm.controls.password.touched ? true : null"
+                [attr.aria-describedby]="loginForm.controls.password.invalid && loginForm.controls.password.touched ? 'password-error' : null"
+              />
+              @if (loginForm.controls.password.invalid && loginForm.controls.password.touched) {
+                <p id="password-error" class="mt-1 text-xs text-destructive" role="alert">
+                  Please enter your Moodle password.
                 </p>
               }
             </div>
@@ -74,7 +93,7 @@ import { MoodleService } from '../../core/services/moodle.service';
 
             <button
               type="submit"
-              [disabled]="isSubmitting() || tokenForm.invalid"
+              [disabled]="isSubmitting() || loginForm.invalid"
               class="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {{ isSubmitting() ? 'Connecting…' : 'Connect Moodle' }}
@@ -93,15 +112,12 @@ export class SettingsComponent implements OnInit {
   readonly isSubmitting = signal(false);
   readonly errorMessage = signal<string | null>(null);
 
-  readonly tokenForm = this.fb.group({
-    token: ['', [Validators.required, Validators.minLength(1)]],
+  readonly loginForm = this.fb.group({
+    username: ['', [Validators.required]],
+    password: ['', [Validators.required]],
   });
 
   ngOnInit(): void {
-    this.loadStatus();
-  }
-
-  private loadStatus(): void {
     this.moodleService.getConnectionStatus().subscribe({
       next: (status) => this.isConnected.set(status.isConnected),
       error: () => this.isConnected.set(false),
@@ -109,20 +125,20 @@ export class SettingsComponent implements OnInit {
   }
 
   linkMoodle(): void {
-    if (this.tokenForm.invalid) return;
+    if (this.loginForm.invalid) return;
 
-    const token = this.tokenForm.controls.token.value!;
+    const { username, password } = this.loginForm.value;
     this.isSubmitting.set(true);
     this.errorMessage.set(null);
 
-    this.moodleService.linkToken(token).subscribe({
+    this.moodleService.linkMoodle(username!, password!).subscribe({
       next: () => {
         this.isConnected.set(true);
         this.isSubmitting.set(false);
-        this.tokenForm.reset();
+        this.loginForm.reset();
       },
       error: () => {
-        this.errorMessage.set('Failed to connect. Check your token and try again.');
+        this.errorMessage.set('Invalid credentials or Moodle unavailable. Please try again.');
         this.isSubmitting.set(false);
       },
     });

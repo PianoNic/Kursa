@@ -61,8 +61,8 @@ export class MoodleService {
     return this.http.get<MoodleConnectionStatus>(`${this.baseUrl}/status`);
   }
 
-  linkToken(token: string): Observable<void> {
-    return this.http.post<void>(`${this.baseUrl}/link`, { token });
+  linkMoodle(username: string, password: string): Observable<void> {
+    return this.http.post<void>(`${this.baseUrl}/link`, { username, password });
   }
 
   unlinkToken(): Observable<void> {
