@@ -1,3 +1,4 @@
+using System.Net.Http.Headers;
 using System.Text.Json;
 using Kursa.Application.Common.Interfaces;
 using Kursa.Application.Features.Moodle.Models;
@@ -13,6 +14,7 @@ namespace Kursa.Infrastructure.Services;
 
 public sealed class MoodleService(
     MoodlewareClientFactory clientFactory,
+    IHttpClientFactory httpClientFactory,
     IDistributedCache cache,
     ILogger<MoodleService> logger) : IMoodleService
 {
@@ -195,6 +197,23 @@ public sealed class MoodleService(
         var dto = await DeserializeAsync<MoodleCalendarEventsResponseDto>(result, cancellationToken) ?? new MoodleCalendarEventsResponseDto();
         await SetCacheAsync(cacheKey, dto, ContentCacheDuration, cancellationToken);
         return dto;
+    }
+
+    public async Task<HttpResponseMessage> GetFileAsync(
+        string moodleToken, string moodleFileUrl, CancellationToken cancellationToken = default)
+    {
+        // Append token as a query parameter — Moodle pluginfile.php supports ?token=<wstoken>
+        var uri = new UriBuilder(moodleFileUrl);
+        string query = string.IsNullOrEmpty(uri.Query)
+            ? $"token={Uri.EscapeDataString(moodleToken)}"
+            : $"{uri.Query.TrimStart('?')}&token={Uri.EscapeDataString(moodleToken)}";
+        uri.Query = query;
+
+        HttpClient client = httpClientFactory.CreateClient("MoodleFile");
+        HttpResponseMessage response = await client.GetAsync(
+            uri.Uri, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+
+        return response;
     }
 
     /// <summary>

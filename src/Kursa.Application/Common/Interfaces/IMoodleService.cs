@@ -32,4 +32,11 @@ public interface IMoodleService
     Task<MoodleCalendarEventsResponseDto> GetCalendarEventsAsync(
         string moodleToken, long timeStart, long timeEnd,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Fetches a Moodle pluginfile.php resource by appending the token to the URL.
+    /// Returns the raw HTTP response so the caller can stream it to the client.
+    /// </summary>
+    Task<HttpResponseMessage> GetFileAsync(
+        string moodleToken, string moodleFileUrl, CancellationToken cancellationToken = default);
 }
