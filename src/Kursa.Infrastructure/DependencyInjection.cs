@@ -1,4 +1,5 @@
 using Kursa.Application.Common.Interfaces;
+using Kursa.Infrastructure.MoodlewareAPI;
 using Kursa.Infrastructure.Options;
 using Kursa.Infrastructure.Persistence;
 using Kursa.Infrastructure.Services;
@@ -30,8 +31,9 @@ public static class DependencyInjection
             options.InstanceName = "Kursa:";
         });
 
-        // HTTP client for Moodle proxy
+        // Moodle bridge — Kiota-generated client via MoodlewareAPI
         services.AddHttpClient("Moodle");
+        services.AddSingleton<MoodlewareClientFactory>();
         services.AddScoped<IMoodleService, MoodleService>();
 
         services.AddOptions<QdrantOptions>()
