@@ -1,12 +1,14 @@
 import { ChangeDetectionStrategy, Component, inject, signal, OnInit } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
+import { HlmButton } from '@spartan-ng/helm/button';
+import { HlmCardImports } from '@spartan-ng/helm/card';
 import { MoodleCourse, MoodleService } from '../../core/services/moodle.service';
 
 @Component({
   selector: 'app-courses',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, DecimalPipe],
+  imports: [RouterLink, DecimalPipe, HlmButton, ...HlmCardImports],
   template: `
     <div class="space-y-6">
       <div class="flex items-center justify-between">
@@ -23,14 +25,15 @@ import { MoodleCourse, MoodleService } from '../../core/services/moodle.service'
           <h2 class="text-lg font-semibold text-destructive">Unable to load courses</h2>
           <p class="mt-2 text-sm text-muted-foreground">{{ error() }}</p>
           <button
+            hlmBtn
             (click)="loadCourses()"
-            class="mt-4 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+            class="mt-4"
           >
             Retry
           </button>
         </div>
       } @else if (courses().length === 0) {
-        <div class="rounded-lg border border-border bg-card p-8 text-center">
+        <div hlmCard class="p-8 text-center">
           <svg class="mx-auto h-12 w-12 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18a8.967 8.967 0 0 0-6 2.292m0-14.25v14.25" />
           </svg>
@@ -44,7 +47,8 @@ import { MoodleCourse, MoodleService } from '../../core/services/moodle.service'
           @for (course of courses(); track course.id) {
             <a
               [routerLink]="['/courses', course.id]"
-              class="group rounded-lg border border-border bg-card p-6 transition-colors hover:border-primary/50 hover:bg-accent"
+              hlmCard
+              class="group block p-6 transition-colors hover:border-primary/50 hover:bg-accent no-underline"
             >
               <h3 class="font-semibold text-foreground group-hover:text-primary">{{ course.fullName }}</h3>
               <p class="mt-1 text-sm text-muted-foreground">{{ course.shortName }}</p>

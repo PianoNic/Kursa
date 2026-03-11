@@ -1,6 +1,10 @@
 import { ChangeDetectionStrategy, Component, inject, signal, computed, OnInit, OnDestroy } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { HlmButton } from '@spartan-ng/helm/button';
+import { HlmCardImports } from '@spartan-ng/helm/card';
+import { HlmInput } from '@spartan-ng/helm/input';
+import { HlmLabel } from '@spartan-ng/helm/label';
 import { StudySession, StudySessionService } from '../../core/services/study-session.service';
 import { FlashcardDeck, Flashcard, FlashcardService } from '../../core/services/flashcard.service';
 import { Quiz, QuizDetail, QuizService } from '../../core/services/quiz.service';
@@ -11,19 +15,14 @@ type TimerPhase = 'work' | 'break';
 @Component({
   selector: 'app-study',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DatePipe, FormsModule],
+  imports: [DatePipe, FormsModule, HlmButton, ...HlmCardImports, HlmInput, HlmLabel],
   template: `
     <div class="space-y-6">
       @switch (view()) {
         @case ('list') {
           <div class="flex items-center justify-between">
             <h1 class="text-2xl font-bold text-foreground">Study Sessions</h1>
-            <button
-              (click)="view.set('setup')"
-              class="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
-            >
-              New Session
-            </button>
+            <button hlmBtn (click)="view.set('setup')">New Session</button>
           </div>
 
           @if (loading()) {
@@ -31,7 +30,7 @@ type TimerPhase = 'work' | 'break';
               <div class="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
             </div>
           } @else if (sessions().length === 0) {
-            <div class="rounded-lg border border-border bg-card p-8 text-center">
+            <div hlmCard class="p-8 text-center">
               <svg class="mx-auto h-12 w-12 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
               </svg>
@@ -39,17 +38,12 @@ type TimerPhase = 'work' | 'break';
               <p class="mt-2 text-sm text-muted-foreground">
                 Start a Pomodoro-based study session combining flashcards and quizzes.
               </p>
-              <button
-                (click)="view.set('setup')"
-                class="mt-4 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
-              >
-                Start Studying
-              </button>
+              <button hlmBtn (click)="view.set('setup')" class="mt-4">Start Studying</button>
             </div>
           } @else {
             <div class="space-y-3">
               @for (session of sessions(); track session.id) {
-                <div class="flex items-center gap-4 rounded-lg border border-border bg-card p-4">
+                <div hlmCard class="flex items-center gap-4 p-4">
                   <div
                     class="flex h-10 w-10 items-center justify-center rounded-full"
                     [class]="session.status === 'Completed' ? 'bg-green-500/10 text-green-500' : 'bg-muted text-muted-foreground'"
@@ -83,11 +77,7 @@ type TimerPhase = 'work' | 'break';
 
         @case ('setup') {
           <div class="flex items-center gap-3">
-            <button
-              (click)="view.set('list')"
-              class="rounded-md p-2 text-muted-foreground hover:bg-accent"
-              aria-label="Back"
-            >
+            <button hlmBtn variant="ghost" size="icon" (click)="view.set('list')" aria-label="Back">
               <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" />
               </svg>
@@ -95,50 +85,56 @@ type TimerPhase = 'work' | 'break';
             <h1 class="text-2xl font-bold text-foreground">New Study Session</h1>
           </div>
 
-          <div class="mx-auto max-w-lg space-y-6 rounded-lg border border-border bg-card p-6">
-            <div>
-              <label for="session-title" class="block text-sm font-medium text-foreground">Session Title</label>
-              <input
-                id="session-title"
-                type="text"
-                [(ngModel)]="sessionTitle"
-                placeholder="e.g., Math Review, Exam Prep..."
-                class="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-              />
-            </div>
-
-            <div class="grid grid-cols-2 gap-4">
+          <div hlmCard class="mx-auto max-w-lg p-6">
+            <div class="space-y-4">
               <div>
-                <label for="work-min" class="block text-sm font-medium text-foreground">Work (min)</label>
+                <label hlmLabel for="session-title">Session Title</label>
                 <input
-                  id="work-min"
-                  type="number"
-                  [(ngModel)]="workMinutes"
-                  min="1"
-                  max="120"
-                  class="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                  hlmInput
+                  id="session-title"
+                  type="text"
+                  [(ngModel)]="sessionTitle"
+                  placeholder="e.g., Math Review, Exam Prep..."
+                  class="mt-1 w-full"
                 />
               </div>
-              <div>
-                <label for="break-min" class="block text-sm font-medium text-foreground">Break (min)</label>
-                <input
-                  id="break-min"
-                  type="number"
-                  [(ngModel)]="breakMinutes"
-                  min="1"
-                  max="60"
-                  class="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-                />
-              </div>
-            </div>
 
-            <button
-              (click)="startSession()"
-              [disabled]="!sessionTitle.trim()"
-              class="w-full rounded-md bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
-            >
-              Start Session
-            </button>
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <label hlmLabel for="work-min">Work (min)</label>
+                  <input
+                    hlmInput
+                    id="work-min"
+                    type="number"
+                    [(ngModel)]="workMinutes"
+                    min="1"
+                    max="120"
+                    class="mt-1 w-full"
+                  />
+                </div>
+                <div>
+                  <label hlmLabel for="break-min">Break (min)</label>
+                  <input
+                    hlmInput
+                    id="break-min"
+                    type="number"
+                    [(ngModel)]="breakMinutes"
+                    min="1"
+                    max="60"
+                    class="mt-1 w-full"
+                  />
+                </div>
+              </div>
+
+              <button
+                hlmBtn
+                (click)="startSession()"
+                [disabled]="!sessionTitle.trim()"
+                class="w-full"
+              >
+                Start Session
+              </button>
+            </div>
           </div>
         }
 
@@ -152,7 +148,7 @@ type TimerPhase = 'work' | 'break';
             </div>
 
             <!-- Timer -->
-            <div class="rounded-lg border border-border bg-card p-8 text-center">
+            <div hlmCard class="p-8 text-center">
               <p
                 class="text-xs font-medium uppercase tracking-wider"
                 [class]="timerPhase() === 'work' ? 'text-primary' : 'text-green-500'"
@@ -166,7 +162,7 @@ type TimerPhase = 'work' | 'break';
                 {{ formattedTimer() }}
               </p>
 
-              <!-- Timer progress ring -->
+              <!-- Timer progress bar -->
               <div class="mt-6 h-2 w-full overflow-hidden rounded-full bg-muted">
                 <div
                   class="h-full rounded-full transition-all"
@@ -177,40 +173,27 @@ type TimerPhase = 'work' | 'break';
 
               <div class="mt-6 flex justify-center gap-3">
                 @if (timerRunning()) {
-                  <button
-                    (click)="pauseTimer()"
-                    class="rounded-md border border-border px-6 py-2 text-sm font-medium text-muted-foreground hover:bg-accent"
-                  >
-                    Pause
-                  </button>
+                  <button hlmBtn variant="outline" (click)="pauseTimer()">Pause</button>
                 } @else {
-                  <button
-                    (click)="resumeTimer()"
-                    class="rounded-md bg-primary px-6 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
-                  >
+                  <button hlmBtn (click)="resumeTimer()">
                     {{ timerSeconds() === totalPhaseSeconds() ? 'Start' : 'Resume' }}
                   </button>
                 }
-                <button
-                  (click)="skipPhase()"
-                  class="rounded-md border border-border px-4 py-2 text-sm font-medium text-muted-foreground hover:bg-accent"
-                >
-                  Skip
-                </button>
+                <button hlmBtn variant="outline" (click)="skipPhase()">Skip</button>
               </div>
             </div>
 
             <!-- Session stats -->
             <div class="grid grid-cols-3 gap-3">
-              <div class="rounded-lg border border-border bg-card p-3 text-center">
+              <div hlmCard class="p-3 text-center">
                 <p class="text-2xl font-bold text-foreground">{{ pomodoroCount() }}</p>
                 <p class="text-xs text-muted-foreground">Pomodoros</p>
               </div>
-              <div class="rounded-lg border border-border bg-card p-3 text-center">
+              <div hlmCard class="p-3 text-center">
                 <p class="text-2xl font-bold text-foreground">{{ sessionCardsReviewed() }}</p>
                 <p class="text-xs text-muted-foreground">Cards</p>
               </div>
-              <div class="rounded-lg border border-border bg-card p-3 text-center">
+              <div hlmCard class="p-3 text-center">
                 <p class="text-2xl font-bold text-foreground">{{ sessionQuizAnswered() }}</p>
                 <p class="text-xs text-muted-foreground">Quiz Q's</p>
               </div>
@@ -231,7 +214,7 @@ type TimerPhase = 'work' | 'break';
             <div class="mx-auto max-w-lg space-y-6">
               <h1 class="text-2xl font-bold text-foreground text-center">Session Complete!</h1>
 
-              <div class="rounded-lg border border-border bg-card p-6 text-center">
+              <div hlmCard class="p-6 text-center">
                 <svg class="mx-auto h-12 w-12 text-green-500" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
                 </svg>
@@ -242,19 +225,19 @@ type TimerPhase = 'work' | 'break';
               </div>
 
               <div class="grid grid-cols-2 gap-3">
-                <div class="rounded-lg border border-border bg-card p-4 text-center">
+                <div hlmCard class="p-4 text-center">
                   <p class="text-3xl font-bold text-primary">{{ completedSession()!.completedPomodoros }}</p>
                   <p class="text-xs text-muted-foreground">Pomodoros</p>
                 </div>
-                <div class="rounded-lg border border-border bg-card p-4 text-center">
+                <div hlmCard class="p-4 text-center">
                   <p class="text-3xl font-bold text-primary">{{ formatDuration(completedSession()!.totalDurationSeconds) }}</p>
                   <p class="text-xs text-muted-foreground">Total Time</p>
                 </div>
-                <div class="rounded-lg border border-border bg-card p-4 text-center">
+                <div hlmCard class="p-4 text-center">
                   <p class="text-3xl font-bold text-primary">{{ completedSession()!.cardsReviewed }}</p>
                   <p class="text-xs text-muted-foreground">Cards Reviewed</p>
                 </div>
-                <div class="rounded-lg border border-border bg-card p-4 text-center">
+                <div hlmCard class="p-4 text-center">
                   <p class="text-3xl font-bold text-primary">
                     {{ completedSession()!.quizCorrectAnswers }}/{{ completedSession()!.quizQuestionsAnswered }}
                   </p>
@@ -262,12 +245,7 @@ type TimerPhase = 'work' | 'break';
                 </div>
               </div>
 
-              <button
-                (click)="backToList()"
-                class="w-full rounded-md bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground hover:bg-primary/90"
-              >
-                Done
-              </button>
+              <button hlmBtn (click)="backToList()" class="w-full">Done</button>
             </div>
           }
         }

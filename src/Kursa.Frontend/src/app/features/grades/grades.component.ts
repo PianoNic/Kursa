@@ -1,10 +1,11 @@
 import { ChangeDetectionStrategy, Component, signal, computed, inject, OnInit } from '@angular/core';
+import { HlmCardImports } from '@spartan-ng/helm/card';
 import { GradeService, CourseGradeSummary } from '../../core/services/grade.service';
 
 @Component({
   selector: 'app-grades',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [],
+  imports: [...HlmCardImports],
   template: `
     <div class="mx-auto max-w-7xl space-y-6 p-6">
       <div>
@@ -23,25 +24,25 @@ import { GradeService, CourseGradeSummary } from '../../core/services/grade.serv
           {{ error() }}
         </div>
       } @else if (courses().length === 0) {
-        <div class="rounded-lg border border-border bg-card p-8 text-center text-muted-foreground">
+        <div hlmCard class="p-8 text-center text-muted-foreground">
           No grades available yet.
         </div>
       } @else {
         <!-- Overview Cards -->
         <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <div class="rounded-lg border border-border bg-card p-4">
+          <div hlmCard class="p-4 gap-1">
             <p class="text-xs font-medium text-muted-foreground">Courses</p>
             <p class="mt-1 text-2xl font-bold text-foreground">{{ courses().length }}</p>
           </div>
-          <div class="rounded-lg border border-border bg-card p-4">
+          <div hlmCard class="p-4 gap-1">
             <p class="text-xs font-medium text-muted-foreground">Graded Items</p>
             <p class="mt-1 text-2xl font-bold text-foreground">{{ totalGraded() }}</p>
           </div>
-          <div class="rounded-lg border border-border bg-card p-4">
+          <div hlmCard class="p-4 gap-1">
             <p class="text-xs font-medium text-muted-foreground">Average</p>
             <p class="mt-1 text-2xl font-bold text-foreground">{{ averageGrade() }}</p>
           </div>
-          <div class="rounded-lg border border-border bg-card p-4">
+          <div hlmCard class="p-4 gap-1">
             <p class="text-xs font-medium text-muted-foreground">Highest</p>
             <p class="mt-1 text-2xl font-bold text-primary">{{ highestGrade() }}</p>
           </div>
@@ -50,7 +51,7 @@ import { GradeService, CourseGradeSummary } from '../../core/services/grade.serv
         <!-- Course Grade Cards -->
         <div class="space-y-4">
           @for (course of courses(); track course.courseId) {
-            <div class="rounded-lg border border-border bg-card">
+            <div hlmCard class="p-0 gap-0 overflow-hidden">
               <!-- Course Header -->
               <button
                 type="button"

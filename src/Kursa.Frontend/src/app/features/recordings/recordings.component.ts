@@ -1,5 +1,10 @@
-import { ChangeDetectionStrategy, Component, inject, signal, computed, OnInit, ElementRef, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal, computed, OnInit } from '@angular/core';
 import { DatePipe } from '@angular/common';
+import { HlmButton } from '@spartan-ng/helm/button';
+import { HlmCardImports } from '@spartan-ng/helm/card';
+import { HlmInput } from '@spartan-ng/helm/input';
+import { HlmLabel } from '@spartan-ng/helm/label';
+import { HlmTextarea } from '@spartan-ng/helm/textarea';
 import {
   Recording,
   RecordingDetail,
@@ -13,36 +18,32 @@ type View = 'list' | 'upload' | 'detail';
 @Component({
   selector: 'app-recordings',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DatePipe],
+  imports: [DatePipe, HlmButton, ...HlmCardImports, HlmInput, HlmLabel, HlmTextarea],
   template: `
     <div class="space-y-6">
       @switch (view()) {
         @case ('list') {
           <div class="flex items-center justify-between">
             <h1 class="text-2xl font-bold text-foreground">Recordings</h1>
-            <button
-              (click)="view.set('upload')"
-              class="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
-            >
+            <button hlmBtn (click)="view.set('upload')">
               Upload Recording
             </button>
           </div>
 
           @if (loading()) {
             <div class="flex items-center justify-center py-12">
-              <div class="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+              <div class="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" role="status">
+                <span class="sr-only">Loading recordings...</span>
+              </div>
             </div>
           } @else if (recordings().length === 0) {
-            <div class="rounded-lg border border-border bg-card p-8 text-center">
-              <svg class="mx-auto h-12 w-12 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+            <div hlmCard class="p-8 text-center">
+              <svg class="mx-auto h-12 w-12 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 18.75a6 6 0 0 0 6-6v-1.5m-6 7.5a6 6 0 0 1-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 0 1-3-3V4.5a3 3 0 1 1 6 0v8.25a3 3 0 0 1-3 3Z" />
               </svg>
               <h2 class="mt-4 text-lg font-semibold text-foreground">No recordings yet</h2>
               <p class="mt-2 text-sm text-muted-foreground">Upload lesson recordings from your companion apps.</p>
-              <button
-                (click)="view.set('upload')"
-                class="mt-4 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
-              >
+              <button hlmBtn class="mt-4" (click)="view.set('upload')">
                 Upload your first recording
               </button>
             </div>
@@ -50,11 +51,13 @@ type View = 'list' | 'upload' | 'detail';
             <div class="space-y-3">
               @for (rec of recordings(); track rec.id) {
                 <button
+                  hlmBtn
+                  variant="outline"
                   (click)="openDetail(rec.id)"
-                  class="flex w-full items-center gap-4 rounded-lg border border-border bg-card p-4 text-left transition-colors hover:bg-accent"
+                  class="h-auto w-full items-center justify-start gap-4 p-4 text-left"
                 >
-                  <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10">
-                    <svg class="h-5 w-5 text-primary" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                  <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10" aria-hidden="true">
+                    <svg class="h-5 w-5 text-primary" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true">
                       <path stroke-linecap="round" stroke-linejoin="round" d="M12 18.75a6 6 0 0 0 6-6v-1.5m-6 7.5a6 6 0 0 1-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 0 1-3-3V4.5a3 3 0 1 1 6 0v8.25a3 3 0 0 1-3 3Z" />
                     </svg>
                   </div>
@@ -83,67 +86,74 @@ type View = 'list' | 'upload' | 'detail';
         @case ('upload') {
           <div class="flex items-center gap-3">
             <button
+              hlmBtn
+              variant="ghost"
+              size="icon"
               (click)="view.set('list')"
-              class="rounded-md p-1 text-muted-foreground hover:bg-accent hover:text-foreground"
               aria-label="Back to recordings"
             >
-              <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" /></svg>
+              <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" /></svg>
             </button>
             <h1 class="text-2xl font-bold text-foreground">Upload Recording</h1>
           </div>
 
-          <div class="rounded-lg border border-border bg-card p-6">
+          <div hlmCard class="p-6">
             <div class="space-y-4">
-              <div>
-                <label for="title" class="block text-sm font-medium text-foreground">Title</label>
+              <div class="space-y-1.5">
+                <label hlmLabel for="title">Title</label>
                 <input
+                  hlmInput
                   #titleInput
                   id="title"
                   type="text"
                   placeholder="e.g. Math Lecture Week 5"
-                  class="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                  class="w-full"
                 />
               </div>
 
-              <div>
-                <label for="description" class="block text-sm font-medium text-foreground">Description (optional)</label>
+              <div class="space-y-1.5">
+                <label hlmLabel for="description">Description (optional)</label>
                 <textarea
+                  hlmTextarea
                   #descInput
                   id="description"
                   rows="2"
                   placeholder="Notes about this recording..."
-                  class="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                  class="w-full"
                 ></textarea>
               </div>
 
-              <div>
-                <label for="file" class="block text-sm font-medium text-foreground">Audio File</label>
+              <div class="space-y-1.5">
+                <label hlmLabel for="file">Audio File</label>
                 <div
-                  class="mt-1 flex items-center justify-center rounded-lg border-2 border-dashed border-border p-8 transition-colors"
+                  class="flex items-center justify-center rounded-lg border-2 border-dashed border-border p-8 transition-colors"
                   [class.border-primary]="selectedFile()"
-                  [class.bg-primary/5]="selectedFile()"
+                  [class.bg-primary\/5]="selectedFile()"
                 >
                   @if (selectedFile(); as f) {
                     <div class="text-center">
-                      <svg class="mx-auto h-8 w-8 text-primary" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                      <svg class="mx-auto h-8 w-8 text-primary" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
                       </svg>
                       <p class="mt-2 text-sm font-medium text-foreground">{{ f.name }}</p>
                       <p class="text-xs text-muted-foreground">{{ formatFileSize(f.size) }}</p>
                       <button
+                        hlmBtn
+                        variant="link"
+                        size="sm"
                         (click)="clearFile()"
-                        class="mt-2 text-xs text-primary hover:underline"
+                        class="mt-2"
                       >
                         Change file
                       </button>
                     </div>
                   } @else {
                     <div class="text-center">
-                      <svg class="mx-auto h-8 w-8 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                      <svg class="mx-auto h-8 w-8 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" />
                       </svg>
                       <p class="mt-2 text-sm text-muted-foreground">
-                        <button (click)="fileInput.click()" class="font-medium text-primary hover:underline">Click to upload</button>
+                        <button hlmBtn variant="link" size="sm" (click)="fileInput.click()">Click to upload</button>
                         or drag and drop
                       </p>
                       <p class="mt-1 text-xs text-muted-foreground">MP3, WAV, OGG, FLAC, AAC, M4A, WebM (max 500 MB)</p>
@@ -161,19 +171,20 @@ type View = 'list' | 'upload' | 'detail';
               </div>
 
               @if (uploadError()) {
-                <div class="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
+                <div class="rounded-md bg-destructive/10 p-3 text-sm text-destructive" role="alert">
                   {{ uploadError() }}
                 </div>
               }
 
               <button
+                hlmBtn
+                class="w-full"
                 (click)="upload(titleInput.value, descInput.value)"
                 [disabled]="uploading() || !selectedFile() || !titleInput.value.trim()"
-                class="w-full rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 @if (uploading()) {
                   <span class="flex items-center justify-center gap-2">
-                    <div class="h-4 w-4 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent"></div>
+                    <div class="h-4 w-4 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent" aria-hidden="true"></div>
                     Uploading...
                   </span>
                 } @else {
@@ -187,16 +198,20 @@ type View = 'list' | 'upload' | 'detail';
         @case ('detail') {
           @if (detailLoading()) {
             <div class="flex items-center justify-center py-12">
-              <div class="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+              <div class="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" role="status">
+                <span class="sr-only">Loading recording details...</span>
+              </div>
             </div>
           } @else if (detail(); as d) {
             <div class="flex items-center gap-3">
               <button
+                hlmBtn
+                variant="ghost"
+                size="icon"
                 (click)="view.set('list')"
-                class="rounded-md p-1 text-muted-foreground hover:bg-accent hover:text-foreground"
                 aria-label="Back to recordings"
               >
-                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" /></svg>
+                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" /></svg>
               </button>
               <h1 class="text-2xl font-bold text-foreground">{{ d.title }}</h1>
               <span
@@ -209,7 +224,7 @@ type View = 'list' | 'upload' | 'detail';
 
             <div class="grid gap-6 lg:grid-cols-3">
               <!-- Info card -->
-              <div class="rounded-lg border border-border bg-card p-5 lg:col-span-2">
+              <div hlmCard class="p-5 lg:col-span-2">
                 @if (d.description) {
                   <p class="text-sm text-muted-foreground">{{ d.description }}</p>
                 }
@@ -243,26 +258,22 @@ type View = 'list' | 'upload' | 'detail';
 
               <!-- Actions card -->
               <div class="space-y-3">
-                <div class="rounded-lg border border-border bg-card p-5">
+                <div hlmCard class="p-5">
                   <h2 class="text-sm font-semibold text-foreground">Actions</h2>
                   <div class="mt-3 space-y-2">
                     @if (d.status === 'Uploaded' || d.status === 'Failed') {
-                      <button
-                        (click)="retryTranscription(d.id)"
-                        class="w-full rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
-                      >
+                      <button hlmBtn class="w-full" (click)="retryTranscription(d.id)">
                         {{ d.status === 'Failed' ? 'Retry Transcription' : 'Start Transcription' }}
                       </button>
                     }
-                    <button
-                      (click)="downloadRecording(d.id)"
-                      class="w-full rounded-md border border-border px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-                    >
+                    <button hlmBtn variant="outline" class="w-full" (click)="downloadRecording(d.id)">
                       Download Audio
                     </button>
                     <button
+                      hlmBtn
+                      variant="outline"
+                      class="w-full border-destructive/30 text-destructive hover:bg-destructive/10"
                       (click)="confirmDelete(d.id)"
-                      class="w-full rounded-md border border-destructive/30 px-3 py-2 text-sm text-destructive transition-colors hover:bg-destructive/10"
                     >
                       Delete Recording
                     </button>
@@ -273,7 +284,7 @@ type View = 'list' | 'upload' | 'detail';
 
             <!-- Transcript Viewer -->
             @if (d.transcriptText) {
-              <div class="rounded-lg border border-border bg-card p-5">
+              <div hlmCard class="p-5">
                 <div class="flex items-center justify-between">
                   <h2 class="text-sm font-semibold text-foreground">Transcript</h2>
                   <div class="flex items-center gap-2">
@@ -281,9 +292,10 @@ type View = 'list' | 'upload' | 'detail';
                       <span class="text-xs text-muted-foreground">{{ d.transcribedAt | date:'medium' }}</span>
                     }
                     <button
+                      hlmBtn
+                      variant="outline"
+                      size="sm"
                       (click)="exportTranscript(d)"
-                      class="rounded-md border border-border px-2 py-1 text-xs text-muted-foreground hover:bg-accent hover:text-foreground"
-                      aria-label="Export transcript"
                     >
                       Export
                     </button>
@@ -293,11 +305,12 @@ type View = 'list' | 'upload' | 'detail';
                 <!-- Search -->
                 <div class="mt-3">
                   <input
+                    hlmInput
                     #searchInput
                     type="text"
                     placeholder="Search transcript..."
                     (input)="transcriptSearch.set(searchInput.value)"
-                    class="w-full rounded-md border border-border bg-background px-3 py-1.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                    class="w-full"
                   />
                   @if (transcriptSearch()) {
                     <p class="mt-1 text-xs text-muted-foreground">
@@ -311,11 +324,12 @@ type View = 'list' | 'upload' | 'detail';
                   @if (d.segments.length > 0) {
                     <div class="space-y-1">
                       @for (seg of getFilteredSegments(d.segments); track seg.id) {
-                        <div
-                          class="flex gap-3 rounded-md px-2 py-1.5 transition-colors hover:bg-accent"
-                        >
+                        <div class="flex gap-3 rounded-md px-2 py-1.5 transition-colors hover:bg-accent">
                           <button
-                            class="shrink-0 font-mono text-xs text-primary hover:underline"
+                            hlmBtn
+                            variant="link"
+                            size="sm"
+                            class="shrink-0 font-mono text-xs"
                             (click)="copyTimestamp(seg.startSeconds)"
                             [attr.aria-label]="'Copy timestamp ' + formatTimestamp(seg.startSeconds)"
                           >
@@ -333,12 +347,14 @@ type View = 'list' | 'upload' | 'detail';
                 </div>
               </div>
             } @else if (d.status === 'Transcribing') {
-              <div class="rounded-lg border border-border bg-card p-5 text-center">
-                <div class="mx-auto h-6 w-6 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
-                <p class="mt-2 text-sm text-muted-foreground">Transcription in progress...</p>
+              <div hlmCard class="p-5 text-center">
+                <div class="mx-auto h-6 w-6 animate-spin rounded-full border-4 border-primary border-t-transparent" role="status">
+                  <span class="sr-only">Transcription in progress...</span>
+                </div>
+                <p class="mt-2 text-sm text-muted-foreground" aria-hidden="true">Transcription in progress...</p>
               </div>
             } @else if (d.status === 'Failed' && d.errorMessage) {
-              <div class="rounded-md bg-destructive/10 p-4 text-sm text-destructive">
+              <div class="rounded-md bg-destructive/10 p-4 text-sm text-destructive" role="alert">
                 <p class="font-medium">Processing failed</p>
                 <p class="mt-1">{{ d.errorMessage }}</p>
               </div>

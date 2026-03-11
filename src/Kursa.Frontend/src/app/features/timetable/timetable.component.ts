@@ -1,10 +1,12 @@
 import { ChangeDetectionStrategy, Component, signal, computed, inject, OnInit } from '@angular/core';
+import { HlmButton } from '@spartan-ng/helm/button';
+import { HlmCardImports } from '@spartan-ng/helm/card';
 import { TimetableService, CalendarEventView } from '../../core/services/timetable.service';
 
 @Component({
   selector: 'app-timetable',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [],
+  imports: [HlmButton, ...HlmCardImports],
   template: `
     <div class="mx-auto max-w-7xl space-y-6 p-6">
       <div class="flex items-center justify-between">
@@ -13,28 +15,14 @@ import { TimetableService, CalendarEventView } from '../../core/services/timetab
           <p class="text-sm text-muted-foreground">Your weekly schedule</p>
         </div>
         <div class="flex items-center gap-2">
-          <button
-            type="button"
-            class="rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-            (click)="goToToday()"
-          >
+          <button hlmBtn variant="ghost" size="sm" type="button" (click)="goToToday()">
             Today
           </button>
-          <button
-            type="button"
-            class="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-            (click)="previousWeek()"
-            aria-label="Previous week"
-          >
+          <button hlmBtn variant="ghost" size="icon" type="button" (click)="previousWeek()" aria-label="Previous week">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>
           </button>
           <span class="min-w-48 text-center text-sm font-medium text-foreground">{{ weekLabel() }}</span>
-          <button
-            type="button"
-            class="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-            (click)="nextWeek()"
-            aria-label="Next week"
-          >
+          <button hlmBtn variant="ghost" size="icon" type="button" (click)="nextWeek()" aria-label="Next week">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg>
           </button>
         </div>
@@ -52,14 +40,14 @@ import { TimetableService, CalendarEventView } from '../../core/services/timetab
         </div>
       } @else {
         <!-- Weekly Grid -->
-        <div class="overflow-x-auto rounded-lg border border-border bg-card">
+        <div hlmCard class="p-0 gap-0 overflow-x-auto">
           <div class="grid min-w-[800px] grid-cols-8">
             <!-- Header row -->
             <div class="border-b border-r border-border p-2"></div>
             @for (day of weekDays(); track $index) {
               <div
                 class="border-b border-r border-border p-2 text-center last:border-r-0"
-                [class.bg-primary/5]="day.isToday"
+                [class.bg-primary\/5]="day.isToday"
               >
                 <div class="text-xs font-medium text-muted-foreground">{{ day.dayName }}</div>
                 <div
@@ -79,7 +67,7 @@ import { TimetableService, CalendarEventView } from '../../core/services/timetab
               @for (day of weekDays(); track $index) {
                 <div
                   class="relative min-h-12 border-b border-r border-border last:border-r-0"
-                  [class.bg-primary/5]="day.isToday"
+                  [class.bg-primary\/5]="day.isToday"
                 >
                   @for (event of getEventsForSlot(day.date, hour); track event.id) {
                     <div
@@ -105,8 +93,8 @@ import { TimetableService, CalendarEventView } from '../../core/services/timetab
             <h2 class="mb-3 text-sm font-medium text-muted-foreground">This week's events ({{ events().length }})</h2>
             <div class="space-y-2">
               @for (event of events(); track event.id) {
-                <div class="flex items-center gap-3 rounded-lg border border-border bg-card p-3">
-                  <div class="h-2 w-2 shrink-0 rounded-full" [class]="getEventDotColor(event.eventType)"></div>
+                <div hlmCard class="flex items-center gap-3 p-3">
+                  <div class="h-2 w-2 shrink-0 rounded-full" [class]="getEventDotColor(event.eventType)" aria-hidden="true"></div>
                   <div class="min-w-0 flex-1">
                     <p class="truncate text-sm font-medium text-foreground">{{ event.title }}</p>
                     <p class="text-xs text-muted-foreground">
@@ -121,7 +109,7 @@ import { TimetableService, CalendarEventView } from '../../core/services/timetab
             </div>
           </div>
         } @else {
-          <div class="rounded-lg border border-border bg-card p-6 text-center text-sm text-muted-foreground">
+          <div hlmCard class="p-6 text-center text-sm text-muted-foreground">
             No events this week.
           </div>
         }

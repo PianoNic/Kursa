@@ -1,6 +1,8 @@
 import { ChangeDetectionStrategy, Component, inject, signal, computed, OnInit } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
+import { HlmButton } from '@spartan-ng/helm/button';
+import { HlmCardImports } from '@spartan-ng/helm/card';
 import {
   Analytics,
   AnalyticsService,
@@ -11,7 +13,7 @@ import { SuggestionService, StudySuggestion } from '../../core/services/suggesti
 @Component({
   selector: 'app-dashboard',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DatePipe, RouterLink],
+  imports: [DatePipe, RouterLink, HlmButton, ...HlmCardImports],
   template: `
     <div class="space-y-6">
       <div class="flex items-center justify-between">
@@ -33,43 +35,43 @@ import { SuggestionService, StudySuggestion } from '../../core/services/suggesti
       } @else if (data(); as d) {
         <!-- Stat cards -->
         <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <div class="rounded-lg border border-border bg-card p-5">
+          <div hlmCard class="p-5 gap-2">
             <div class="flex items-center gap-2">
               <svg class="h-4 w-4 text-primary" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg>
               <span class="text-sm font-medium text-muted-foreground">Study Time</span>
             </div>
-            <p class="mt-2 text-2xl font-bold text-foreground">{{ formatDuration(d.overview.totalStudyTimeSeconds) }}</p>
-            <p class="mt-1 text-xs text-muted-foreground">{{ d.overview.totalPomodoros }} pomodoros</p>
+            <p class="text-2xl font-bold text-foreground">{{ formatDuration(d.overview.totalStudyTimeSeconds) }}</p>
+            <p class="text-xs text-muted-foreground">{{ d.overview.totalPomodoros }} pomodoros</p>
           </div>
-          <div class="rounded-lg border border-border bg-card p-5">
+          <div hlmCard class="p-5 gap-2">
             <div class="flex items-center gap-2">
               <svg class="h-4 w-4 text-primary" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 5.25h.008v.008H12v-.008Z" /></svg>
               <span class="text-sm font-medium text-muted-foreground">Quizzes</span>
             </div>
-            <p class="mt-2 text-2xl font-bold text-foreground">{{ d.overview.totalQuizzesTaken }}</p>
-            <p class="mt-1 text-xs text-muted-foreground">attempts taken</p>
+            <p class="text-2xl font-bold text-foreground">{{ d.overview.totalQuizzesTaken }}</p>
+            <p class="text-xs text-muted-foreground">attempts taken</p>
           </div>
-          <div class="rounded-lg border border-border bg-card p-5">
+          <div hlmCard class="p-5 gap-2">
             <div class="flex items-center gap-2">
               <svg class="h-4 w-4 text-primary" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6.429 9.75 2.25 12l4.179 2.25m0-4.5 5.571 3 5.571-3m-11.142 0L2.25 7.5 12 2.25l9.75 5.25-4.179 2.25m0 0L21.75 12l-4.179 2.25m0 0 4.179 2.25L12 21.75 2.25 16.5l4.179-2.25m11.142 0-5.571 3-5.571-3" /></svg>
               <span class="text-sm font-medium text-muted-foreground">Flashcards</span>
             </div>
-            <p class="mt-2 text-2xl font-bold text-foreground">{{ d.overview.totalCardsReviewed }}</p>
-            <p class="mt-1 text-xs text-muted-foreground">cards reviewed</p>
+            <p class="text-2xl font-bold text-foreground">{{ d.overview.totalCardsReviewed }}</p>
+            <p class="text-xs text-muted-foreground">cards reviewed</p>
           </div>
-          <div class="rounded-lg border border-border bg-card p-5">
+          <div hlmCard class="p-5 gap-2">
             <div class="flex items-center gap-2">
               <svg class="h-4 w-4 text-primary" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0Z" /></svg>
               <span class="text-sm font-medium text-muted-foreground">Pinned</span>
             </div>
-            <p class="mt-2 text-2xl font-bold text-foreground">{{ d.overview.totalPinnedContents }}</p>
-            <p class="mt-1 text-xs text-muted-foreground">materials saved</p>
+            <p class="text-2xl font-bold text-foreground">{{ d.overview.totalPinnedContents }}</p>
+            <p class="text-xs text-muted-foreground">materials saved</p>
           </div>
         </div>
 
         <div class="grid gap-6 lg:grid-cols-2">
           <!-- Weekly Activity Chart -->
-          <div class="rounded-lg border border-border bg-card p-5">
+          <div hlmCard class="p-5">
             <h2 class="text-sm font-semibold text-foreground">Weekly Activity</h2>
             <div class="mt-4 flex items-end gap-2" style="height: 120px">
               @for (day of d.weeklyActivity; track day.date) {
@@ -86,7 +88,7 @@ import { SuggestionService, StudySuggestion } from '../../core/services/suggesti
           </div>
 
           <!-- Flashcard Overview -->
-          <div class="rounded-lg border border-border bg-card p-5">
+          <div hlmCard class="p-5">
             <div class="flex items-center justify-between">
               <h2 class="text-sm font-semibold text-foreground">Flashcard Status</h2>
               @if (d.flashcardStats.dueToday > 0) {
@@ -140,7 +142,7 @@ import { SuggestionService, StudySuggestion } from '../../core/services/suggesti
           </div>
 
           <!-- Recent Quizzes -->
-          <div class="rounded-lg border border-border bg-card p-5">
+          <div hlmCard class="p-5">
             <div class="flex items-center justify-between">
               <h2 class="text-sm font-semibold text-foreground">Recent Quiz Results</h2>
               <a routerLink="/quizzes" class="text-xs font-medium text-primary hover:underline">View all</a>
@@ -168,7 +170,7 @@ import { SuggestionService, StudySuggestion } from '../../core/services/suggesti
           </div>
 
           <!-- AI Suggestions -->
-          <div class="rounded-lg border border-border bg-card p-5">
+          <div hlmCard class="p-5">
             <div class="flex items-center gap-2">
               <svg class="h-4 w-4 text-primary" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09ZM18.259 8.715 18 9.75l-.259-1.035a3.375 3.375 0 0 0-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 0 0 2.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 0 0 2.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 0 0-2.455 2.456Z" /></svg>
               <h2 class="text-sm font-semibold text-foreground">AI Study Suggestions</h2>
@@ -216,7 +218,7 @@ import { SuggestionService, StudySuggestion } from '../../core/services/suggesti
 
           <!-- Streaks & Quick Actions -->
           <div class="space-y-4">
-            <div class="rounded-lg border border-border bg-card p-5">
+            <div hlmCard class="p-5">
               <h2 class="text-sm font-semibold text-foreground">Streaks</h2>
               <div class="mt-3 grid grid-cols-2 gap-4">
                 <div class="text-center">
@@ -230,30 +232,38 @@ import { SuggestionService, StudySuggestion } from '../../core/services/suggesti
               </div>
             </div>
 
-            <div class="rounded-lg border border-border bg-card p-5">
+            <div hlmCard class="p-5">
               <h2 class="text-sm font-semibold text-foreground">Quick Actions</h2>
               <div class="mt-3 grid grid-cols-2 gap-2">
                 <a
+                  hlmBtn
+                  variant="outline"
                   routerLink="/study"
-                  class="rounded-md border border-border p-3 text-center text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                  class="h-auto flex-col py-3 text-xs font-medium"
                 >
                   Start Study Session
                 </a>
                 <a
+                  hlmBtn
+                  variant="outline"
                   routerLink="/quizzes"
-                  class="rounded-md border border-border p-3 text-center text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                  class="h-auto flex-col py-3 text-xs font-medium"
                 >
                   Take a Quiz
                 </a>
                 <a
+                  hlmBtn
+                  variant="outline"
                   routerLink="/flashcards"
-                  class="rounded-md border border-border p-3 text-center text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                  class="h-auto flex-col py-3 text-xs font-medium"
                 >
                   Review Flashcards
                 </a>
                 <a
+                  hlmBtn
+                  variant="outline"
                   routerLink="/courses"
-                  class="rounded-md border border-border p-3 text-center text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                  class="h-auto flex-col py-3 text-xs font-medium"
                 >
                   Browse Courses
                 </a>
@@ -262,7 +272,7 @@ import { SuggestionService, StudySuggestion } from '../../core/services/suggesti
           </div>
         </div>
       } @else {
-        <div class="rounded-lg border border-border bg-card p-6">
+        <div hlmCard class="p-6">
           <h2 class="text-lg font-semibold text-foreground">Welcome to Kursa</h2>
           <p class="mt-2 text-muted-foreground">
             Connect your Moodle account in Settings to start browsing courses.
