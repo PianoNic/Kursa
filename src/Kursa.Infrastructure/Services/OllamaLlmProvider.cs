@@ -75,6 +75,11 @@ public sealed class OllamaLlmProvider : ILlmProvider
         };
     }
 
+    public Task<LlmChatResponse> ChatWithToolsAsync(
+        LlmChatRequestWithTools request,
+        CancellationToken cancellationToken = default)
+        => throw new NotSupportedException("Ollama provider does not support tool calling. Use OpenRouter provider.");
+
     public async Task<IReadOnlyList<float>> GenerateEmbeddingAsync(
         string text,
         CancellationToken cancellationToken = default)
