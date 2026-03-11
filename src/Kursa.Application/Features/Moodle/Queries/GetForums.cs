@@ -26,11 +26,11 @@ public sealed class GetForumsHandler(
         if (user is null)
             return Result<IReadOnlyList<ForumViewDto>>.Failure("User not found.");
 
-        if (string.IsNullOrEmpty(user.MoodleToken) || string.IsNullOrEmpty(user.MoodleUrl))
+        if (string.IsNullOrEmpty(user.MoodleToken))
             return Result<IReadOnlyList<ForumViewDto>>.Failure("Moodle account is not linked.");
 
         IReadOnlyList<MoodleForumDto> forums = await moodleService.GetForumsAsync(
-            user.MoodleUrl, user.MoodleToken, request.CourseId, cancellationToken);
+            user.MoodleToken, request.CourseId, cancellationToken);
 
         var result = forums.Select(f => new ForumViewDto
         {

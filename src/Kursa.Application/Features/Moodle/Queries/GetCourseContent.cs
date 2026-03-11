@@ -35,11 +35,11 @@ public sealed class GetCourseContentHandler(
         if (user is null)
             return Result<IReadOnlyList<MoodleCourseSectionDto>>.Failure("User not found.");
 
-        if (string.IsNullOrEmpty(user.MoodleToken) || string.IsNullOrEmpty(user.MoodleUrl))
+        if (string.IsNullOrEmpty(user.MoodleToken))
             return Result<IReadOnlyList<MoodleCourseSectionDto>>.Failure("Moodle account is not linked.");
 
         var sections = await moodleService.GetCourseContentAsync(
-            user.MoodleUrl, user.MoodleToken, request.MoodleCourseId, cancellationToken);
+            user.MoodleToken, request.MoodleCourseId, cancellationToken);
 
         return Result<IReadOnlyList<MoodleCourseSectionDto>>.Success(sections);
     }

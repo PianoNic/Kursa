@@ -26,11 +26,11 @@ public sealed class GetEnrolledCoursesHandler(
         if (user is null)
             return Result<IReadOnlyList<MoodleCourseDto>>.Failure("User not found.");
 
-        if (string.IsNullOrEmpty(user.MoodleToken) || string.IsNullOrEmpty(user.MoodleUrl))
+        if (string.IsNullOrEmpty(user.MoodleToken))
             return Result<IReadOnlyList<MoodleCourseDto>>.Failure("Moodle account is not linked.");
 
         var courses = await moodleService.GetEnrolledCoursesAsync(
-            user.MoodleUrl, user.MoodleToken, cancellationToken);
+            user.MoodleToken, cancellationToken);
 
         return Result<IReadOnlyList<MoodleCourseDto>>.Success(courses);
     }
