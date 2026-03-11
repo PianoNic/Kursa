@@ -33,6 +33,8 @@ public static class DependencyInjection
 
         // Moodle bridge — Kiota-generated client via MoodlewareAPI
         services.AddHttpClient("Moodle");
+        // Direct Moodle file downloads (pluginfile.php proxy)
+        services.AddHttpClient("MoodleFile");
         services.AddSingleton<MoodlewareClientFactory>();
         services.AddScoped<IMoodleService, MoodleService>();
 

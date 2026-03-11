@@ -168,7 +168,16 @@ export class CourseDetailComponent implements OnInit {
   }
 
   primaryFileUrl(mod: MoodleModule): string | null {
-    return mod.contents?.find(c => c.fileUrl)?.fileUrl ?? null;
+    const raw = mod.contents?.find(c => c.fileUrl)?.fileUrl ?? null;
+    return raw ? this.proxyFileUrl(raw) : null;
+  }
+
+  /** Routes Moodle pluginfile.php URLs through the backend proxy to inject the auth token. */
+  proxyFileUrl(url: string): string {
+    if (url.includes('pluginfile.php')) {
+      return `/api/moodle/file?url=${encodeURIComponent(url)}`;
+    }
+    return url;
   }
 
   modLabel(modName: string): string {
