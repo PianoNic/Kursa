@@ -3,11 +3,13 @@ import { MoodleCourse, MoodleCourseSection, MoodleModule, MoodleContent, MoodleS
 import { PinnedContentService } from '../../core/services/pinned-content.service';
 import { AiContextService } from '../../core/services/ai-context.service';
 import { DecimalPipe } from '@angular/common';
+import { HlmButton } from '@spartan-ng/helm/button';
+import { HlmCardImports } from '@spartan-ng/helm/card';
 
 @Component({
   selector: 'app-course-detail',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DecimalPipe],
+  imports: [DecimalPipe, HlmButton, ...HlmCardImports],
   template: `
     <div class="space-y-6">
       <div class="flex items-center gap-3">
@@ -32,121 +34,132 @@ import { DecimalPipe } from '@angular/common';
       } @else {
         @for (section of sections(); track section.id) {
           @if (section.visible !== 0 && section.modules.length > 0) {
-            <div class="rounded-lg border border-border bg-card">
-              <div class="border-b border-border p-4">
-                <h2 class="font-semibold text-foreground">{{ section.name }}</h2>
+            <div hlmCard>
+              <div hlmCardHeader>
+                <h2 hlmCardTitle>{{ section.name }}</h2>
                 @if (section.summary) {
-                  <p class="mt-1 text-sm text-muted-foreground" [innerHTML]="section.summary"></p>
+                  <p hlmCardDescription [innerHTML]="section.summary"></p>
                 }
               </div>
 
-              <ul class="divide-y divide-border" role="list">
-                @for (mod of section.modules; track mod.id) {
-                  @if (mod.visible !== 0) {
-                    <li class="flex items-start gap-3 p-4 hover:bg-accent/50 transition-colors">
-                      <!-- Module type icon -->
-                      <div
-                        class="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg"
-                        [class]="modIconBg(mod.modName)"
-                        aria-hidden="true"
-                      >
-                        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                          <path stroke-linecap="round" stroke-linejoin="round" [attr.d]="modIconPath(mod.modName)" />
-                        </svg>
-                      </div>
-
-                      <!-- Name + meta -->
-                      <div class="min-w-0 flex-1">
-                        <p class="font-medium text-foreground">{{ mod.name }}</p>
-                        <p class="mt-0.5 text-xs text-muted-foreground capitalize">
-                          {{ modLabel(mod.modName) }}
-                          @if (mod.contents && mod.contents.length > 0) {
-                            &middot; {{ mod.contents.length }} file{{ mod.contents.length === 1 ? '' : 's' }}
-                            @if (totalFileSize(mod.contents) > 0) {
-                              &middot; {{ totalFileSize(mod.contents) | number:'1.0-1' }} KB
-                            }
-                          }
-                        </p>
-                        @if (mod.description) {
-                          <p class="mt-1 text-xs text-muted-foreground line-clamp-2" [innerHTML]="mod.description"></p>
-                        }
-                      </div>
-
-                      <!-- Actions -->
-                      <div class="flex shrink-0 items-center gap-2">
-                        @if (isQuiz(mod.modName) && mod.url) {
-                          <a
-                            [href]="mod.url"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            class="rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
-                          >
-                            Start quiz
-                          </a>
-                        } @else if (isAssignment(mod.modName) && mod.url) {
-                          <a
-                            [href]="mod.url"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            class="rounded-md bg-amber-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-amber-700 transition-colors"
-                          >
-                            View task
-                          </a>
-                        } @else if (hasFiles(mod) && primaryFileUrl(mod)) {
-                          <a
-                            [href]="primaryFileUrl(mod)!"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            class="rounded-md border border-border px-3 py-1.5 text-xs font-medium text-foreground hover:bg-accent transition-colors"
-                          >
-                            Open
-                          </a>
-                        } @else if (mod.url) {
-                          <a
-                            [href]="mod.url"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            class="rounded-md border border-border px-3 py-1.5 text-xs font-medium text-foreground hover:bg-accent transition-colors"
-                          >
-                            Open
-                          </a>
-                        }
-                        <!-- Pin for AI button -->
-                        <button
-                          (click)="pinModule(mod)"
-                          [disabled]="pinningModuleId() === mod.id"
-                          [title]="pinnedModuleIds().has(mod.id) ? 'Pinned for AI' : 'Pin for AI'"
-                          [class]="pinnedModuleIds().has(mod.id)
-                            ? 'rounded-md px-2 py-1.5 text-xs transition-colors text-emerald-400 hover:bg-accent'
-                            : 'rounded-md px-2 py-1.5 text-xs transition-colors text-muted-foreground hover:text-foreground hover:bg-accent'"
-                          aria-label="Pin module for AI search"
+              <div hlmCardContent>
+                <ul class="divide-y divide-border -mx-6" role="list">
+                  @for (mod of section.modules; track mod.id) {
+                    @if (mod.visible !== 0) {
+                      <li class="flex items-start gap-3 px-6 py-4 hover:bg-accent/50 transition-colors">
+                        <!-- Module type icon -->
+                        <div
+                          class="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg"
+                          [class]="modIconBg(mod.modName)"
+                          aria-hidden="true"
                         >
-                          @if (pinningModuleId() === mod.id) {
-                            <svg class="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
-                              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
-                            </svg>
-                          } @else if (pinnedModuleIds().has(mod.id)) {
-                            <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                              <path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z"/>
-                            </svg>
-                          } @else {
-                            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
-                              <path stroke-linecap="round" stroke-linejoin="round" d="M11.48 3.499a.562.562 0 0 1 1.04 0l2.125 5.111a.563.563 0 0 0 .475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 0 0-.182.557l1.285 5.385a.562.562 0 0 1-.84.61l-4.725-3.275a.562.562 0 0 0-.652 0L4.63 20.04a.562.562 0 0 1-.84-.61l1.285-5.386a.562.562 0 0 0-.182-.557L.476 9.996a.563.563 0 0 1 .321-.988l5.518-.442a.563.563 0 0 0 .475-.345L11.48 3.5Z"/>
-                            </svg>
+                          <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" [attr.d]="modIconPath(mod.modName)" />
+                          </svg>
+                        </div>
+
+                        <!-- Name + meta -->
+                        <div class="min-w-0 flex-1">
+                          <p class="font-medium text-foreground">{{ mod.name }}</p>
+                          <p class="mt-0.5 text-xs text-muted-foreground capitalize">
+                            {{ modLabel(mod.modName) }}
+                            @if (mod.contents && mod.contents.length > 0) {
+                              &middot; {{ mod.contents.length }} file{{ mod.contents.length === 1 ? '' : 's' }}
+                              @if (totalFileSize(mod.contents) > 0) {
+                                &middot; {{ totalFileSize(mod.contents) | number:'1.0-1' }} KB
+                              }
+                            }
+                          </p>
+                          @if (mod.description) {
+                            <p class="mt-1 text-xs text-muted-foreground line-clamp-2" [innerHTML]="mod.description"></p>
                           }
-                        </button>
-                      </div>
-                    </li>
+                        </div>
+
+                        <!-- Actions -->
+                        <div class="flex shrink-0 items-center gap-2">
+                          @if (isQuiz(mod.modName) && mod.url) {
+                            <a
+                              [href]="mod.url"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              hlmBtn
+                              size="sm"
+                              class="text-xs"
+                            >
+                              Start quiz
+                            </a>
+                          } @else if (isAssignment(mod.modName) && mod.url) {
+                            <a
+                              [href]="mod.url"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              class="rounded-md bg-amber-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-amber-700 transition-colors"
+                            >
+                              View task
+                            </a>
+                          } @else if (hasFiles(mod) && primaryFileUrl(mod)) {
+                            <a
+                              [href]="primaryFileUrl(mod)!"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              hlmBtn
+                              variant="outline"
+                              size="sm"
+                              class="text-xs"
+                            >
+                              Open
+                            </a>
+                          } @else if (mod.url) {
+                            <a
+                              [href]="mod.url"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              hlmBtn
+                              variant="outline"
+                              size="sm"
+                              class="text-xs"
+                            >
+                              Open
+                            </a>
+                          }
+                          <!-- Pin for AI button -->
+                          <button
+                            hlmBtn
+                            variant="ghost"
+                            size="icon"
+                            (click)="pinModule(mod)"
+                            [disabled]="pinningModuleId() === mod.id"
+                            [title]="pinnedModuleIds().has(mod.id) ? 'Pinned for AI' : 'Pin for AI'"
+                            [class]="pinnedModuleIds().has(mod.id) ? 'text-emerald-400' : 'text-muted-foreground'"
+                            aria-label="Pin module for AI search"
+                          >
+                            @if (pinningModuleId() === mod.id) {
+                              <svg class="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+                              </svg>
+                            } @else if (pinnedModuleIds().has(mod.id)) {
+                              <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                <path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z"/>
+                              </svg>
+                            } @else {
+                              <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M11.48 3.499a.562.562 0 0 1 1.04 0l2.125 5.111a.563.563 0 0 0 .475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 0 0-.182.557l1.285 5.385a.562.562 0 0 1-.84.61l-4.725-3.275a.562.562 0 0 0-.652 0L4.63 20.04a.562.562 0 0 1-.84-.61l1.285-5.386a.562.562 0 0 0-.182-.557L.476 9.996a.563.563 0 0 1 .321-.988l5.518-.442a.563.563 0 0 0 .475-.345L11.48 3.5Z"/>
+                              </svg>
+                            }
+                          </button>
+                        </div>
+                      </li>
+                    }
                   }
-                }
-              </ul>
+                </ul>
+              </div>
             </div>
           }
         }
 
         @if (sections().length === 0) {
-          <div class="rounded-lg border border-border bg-card p-8 text-center">
+          <div hlmCard class="p-8 text-center">
             <p class="text-muted-foreground">No content found for this course.</p>
           </div>
         }

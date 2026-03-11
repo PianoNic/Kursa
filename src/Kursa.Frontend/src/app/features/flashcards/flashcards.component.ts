@@ -1,6 +1,11 @@
 import { ChangeDetectionStrategy, Component, inject, signal, computed, OnInit } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { HlmButton } from '@spartan-ng/helm/button';
+import { HlmCardImports } from '@spartan-ng/helm/card';
+import { HlmInput } from '@spartan-ng/helm/input';
+import { HlmLabel } from '@spartan-ng/helm/label';
+import { HlmTextarea } from '@spartan-ng/helm/textarea';
 import {
   FlashcardDeck,
   Flashcard,
@@ -13,19 +18,14 @@ type View = 'decks' | 'generate' | 'review' | 'add-card';
 @Component({
   selector: 'app-flashcards',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DatePipe, FormsModule],
+  imports: [DatePipe, FormsModule, HlmButton, ...HlmCardImports, HlmInput, HlmLabel, HlmTextarea],
   template: `
     <div class="space-y-6">
       @switch (view()) {
         @case ('decks') {
           <div class="flex items-center justify-between">
             <h1 class="text-2xl font-bold text-foreground">Flashcards</h1>
-            <button
-              (click)="showGenerate()"
-              class="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
-            >
-              Generate Deck
-            </button>
+            <button hlmBtn (click)="showGenerate()">Generate Deck</button>
           </div>
 
           @if (loading()) {
@@ -34,7 +34,7 @@ type View = 'decks' | 'generate' | 'review' | 'add-card';
               <span class="ml-3 text-muted-foreground">Loading decks...</span>
             </div>
           } @else if (decks().length === 0) {
-            <div class="rounded-lg border border-border bg-card p-8 text-center">
+            <div hlmCard class="p-8 text-center">
               <svg class="mx-auto h-12 w-12 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M6.429 9.75 2.25 12l4.179 2.25m0-4.5 5.571 3 5.571-3m-11.142 0L2.25 7.5 12 2.25l9.75 5.25-4.179 2.25m0 0L21.75 12l-4.179 2.25m0 0 4.179 2.25L12 21.75 2.25 16.5l4.179-2.25m11.142 0-5.571 3-5.571-3" />
               </svg>
@@ -42,17 +42,12 @@ type View = 'decks' | 'generate' | 'review' | 'add-card';
               <p class="mt-2 text-sm text-muted-foreground">
                 Generate flashcards from your pinned course materials for spaced repetition study.
               </p>
-              <button
-                (click)="showGenerate()"
-                class="mt-4 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
-              >
-                Generate Your First Deck
-              </button>
+              <button hlmBtn (click)="showGenerate()" class="mt-4">Generate Your First Deck</button>
             </div>
           } @else {
             <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               @for (deck of decks(); track deck.id) {
-                <div class="rounded-lg border border-border bg-card p-5 transition-colors hover:border-primary/50">
+                <div hlmCard class="p-5">
                   <h3 class="font-semibold text-foreground">{{ deck.title }}</h3>
                   @if (deck.description) {
                     <p class="mt-1 text-xs text-muted-foreground">{{ deck.description }}</p>
@@ -67,18 +62,14 @@ type View = 'decks' | 'generate' | 'review' | 'add-card';
                   </div>
                   <div class="mt-4 flex gap-2">
                     <button
+                      hlmBtn
                       (click)="startReview(deck.id)"
                       [disabled]="deck.dueCount === 0"
-                      class="flex-1 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+                      class="flex-1 text-xs"
                     >
                       Review ({{ deck.dueCount }})
                     </button>
-                    <button
-                      (click)="showAddCard(deck.id)"
-                      class="rounded-md border border-border px-3 py-1.5 text-xs font-medium text-muted-foreground hover:bg-accent"
-                    >
-                      Add Card
-                    </button>
+                    <button hlmBtn variant="outline" (click)="showAddCard(deck.id)" class="text-xs">Add Card</button>
                   </div>
                   <p class="mt-2 text-xs text-muted-foreground">{{ deck.createdAt | date:'mediumDate' }}</p>
                 </div>
@@ -89,11 +80,7 @@ type View = 'decks' | 'generate' | 'review' | 'add-card';
 
         @case ('generate') {
           <div class="flex items-center gap-3">
-            <button
-              (click)="view.set('decks')"
-              class="rounded-md p-2 text-muted-foreground hover:bg-accent"
-              aria-label="Back to decks"
-            >
+            <button hlmBtn variant="ghost" size="icon" (click)="view.set('decks')" aria-label="Back to decks">
               <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" />
               </svg>
@@ -106,67 +93,72 @@ type View = 'decks' | 'generate' | 'review' | 'add-card';
               <div class="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
             </div>
           } @else if (indexedItems().length === 0) {
-            <div class="rounded-lg border border-border bg-card p-8 text-center">
+            <div hlmCard class="p-8 text-center">
               <h2 class="text-lg font-semibold text-foreground">No indexed content</h2>
               <p class="mt-2 text-sm text-muted-foreground">Pin and index course materials first.</p>
             </div>
           } @else {
-            <div class="mx-auto max-w-lg space-y-6 rounded-lg border border-border bg-card p-6">
-              <div>
-                <label for="fc-content" class="block text-sm font-medium text-foreground">Select Material</label>
-                <select
-                  id="fc-content"
-                  [(ngModel)]="selectedContentId"
-                  class="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-                >
-                  <option value="">Choose pinned content...</option>
-                  @for (item of indexedItems(); track item.contentId) {
-                    <option [value]="item.contentId">{{ item.contentTitle }}</option>
-                  }
-                </select>
-              </div>
-              <div>
-                <label for="fc-count" class="block text-sm font-medium text-foreground">Number of Cards</label>
-                <input
-                  id="fc-count"
-                  type="number"
-                  [(ngModel)]="cardCount"
-                  min="1"
-                  max="100"
-                  class="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-                />
-              </div>
-              <div>
-                <label for="fc-topic" class="block text-sm font-medium text-foreground">Topic (optional)</label>
-                <input
-                  id="fc-topic"
-                  type="text"
-                  [(ngModel)]="topicInput"
-                  placeholder="Focus on a specific topic..."
-                  class="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-                />
-              </div>
-
-              @if (error()) {
-                <div class="rounded-md border border-destructive/50 bg-destructive/10 p-3">
-                  <p class="text-sm text-destructive">{{ error() }}</p>
+            <div hlmCard class="mx-auto max-w-lg p-6">
+              <div class="space-y-4">
+                <div>
+                  <label hlmLabel for="fc-content">Select Material</label>
+                  <select
+                    id="fc-content"
+                    [(ngModel)]="selectedContentId"
+                    class="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                  >
+                    <option value="">Choose pinned content...</option>
+                    @for (item of indexedItems(); track item.contentId) {
+                      <option [value]="item.contentId">{{ item.contentTitle }}</option>
+                    }
+                  </select>
                 </div>
-              }
+                <div>
+                  <label hlmLabel for="fc-count">Number of Cards</label>
+                  <input
+                    hlmInput
+                    id="fc-count"
+                    type="number"
+                    [(ngModel)]="cardCount"
+                    min="1"
+                    max="100"
+                    class="mt-1 w-full"
+                  />
+                </div>
+                <div>
+                  <label hlmLabel for="fc-topic">Topic (optional)</label>
+                  <input
+                    hlmInput
+                    id="fc-topic"
+                    type="text"
+                    [(ngModel)]="topicInput"
+                    placeholder="Focus on a specific topic..."
+                    class="mt-1 w-full"
+                  />
+                </div>
 
-              <button
-                (click)="generateDeck()"
-                [disabled]="generating() || !selectedContentId"
-                class="w-full rounded-md bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
-              >
-                @if (generating()) {
-                  <span class="flex items-center justify-center gap-2">
-                    <span class="h-4 w-4 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent"></span>
-                    Generating...
-                  </span>
-                } @else {
-                  Generate Flashcards
+                @if (error()) {
+                  <div class="rounded-md border border-destructive/50 bg-destructive/10 p-3">
+                    <p class="text-sm text-destructive">{{ error() }}</p>
+                  </div>
                 }
-              </button>
+
+                <button
+                  hlmBtn
+                  (click)="generateDeck()"
+                  [disabled]="generating() || !selectedContentId"
+                  class="w-full"
+                >
+                  @if (generating()) {
+                    <span class="flex items-center justify-center gap-2">
+                      <span class="h-4 w-4 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent"></span>
+                      Generating...
+                    </span>
+                  } @else {
+                    Generate Flashcards
+                  }
+                </button>
+              </div>
             </div>
           }
         }
@@ -176,11 +168,7 @@ type View = 'decks' | 'generate' | 'review' | 'add-card';
             <div class="mx-auto max-w-xl space-y-6">
               <div class="flex items-center justify-between">
                 <div class="flex items-center gap-3">
-                  <button
-                    (click)="backToDecks()"
-                    class="rounded-md p-2 text-muted-foreground hover:bg-accent"
-                    aria-label="Back to decks"
-                  >
+                  <button hlmBtn variant="ghost" size="icon" (click)="backToDecks()" aria-label="Back to decks">
                     <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                       <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" />
                     </svg>
@@ -253,7 +241,7 @@ type View = 'decks' | 'generate' | 'review' | 'add-card';
             </div>
           } @else {
             <div class="mx-auto max-w-xl text-center">
-              <div class="rounded-lg border border-border bg-card p-8">
+              <div hlmCard class="p-8">
                 <svg class="mx-auto h-12 w-12 text-green-500" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
                 </svg>
@@ -261,12 +249,7 @@ type View = 'decks' | 'generate' | 'review' | 'add-card';
                 <p class="mt-2 text-sm text-muted-foreground">
                   You reviewed {{ reviewedCount() }} card{{ reviewedCount() === 1 ? '' : 's' }}. Great work!
                 </p>
-                <button
-                  (click)="backToDecks()"
-                  class="mt-4 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
-                >
-                  Back to Decks
-                </button>
+                <button hlmBtn (click)="backToDecks()" class="mt-4">Back to Decks</button>
               </div>
             </div>
           }
@@ -274,11 +257,7 @@ type View = 'decks' | 'generate' | 'review' | 'add-card';
 
         @case ('add-card') {
           <div class="flex items-center gap-3">
-            <button
-              (click)="backToDecks()"
-              class="rounded-md p-2 text-muted-foreground hover:bg-accent"
-              aria-label="Back to decks"
-            >
+            <button hlmBtn variant="ghost" size="icon" (click)="backToDecks()" aria-label="Back to decks">
               <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" />
               </svg>
@@ -286,47 +265,52 @@ type View = 'decks' | 'generate' | 'review' | 'add-card';
             <h1 class="text-2xl font-bold text-foreground">Add Flashcard</h1>
           </div>
 
-          <div class="mx-auto max-w-lg space-y-6 rounded-lg border border-border bg-card p-6">
-            <div>
-              <label for="card-front" class="block text-sm font-medium text-foreground">Front (Question)</label>
-              <textarea
-                id="card-front"
-                [(ngModel)]="newCardFront"
-                rows="3"
-                placeholder="Enter the question or prompt..."
-                class="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-              ></textarea>
-            </div>
-            <div>
-              <label for="card-back" class="block text-sm font-medium text-foreground">Back (Answer)</label>
-              <textarea
-                id="card-back"
-                [(ngModel)]="newCardBack"
-                rows="3"
-                placeholder="Enter the answer..."
-                class="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-              ></textarea>
-            </div>
-
-            @if (error()) {
-              <div class="rounded-md border border-destructive/50 bg-destructive/10 p-3">
-                <p class="text-sm text-destructive">{{ error() }}</p>
+          <div hlmCard class="mx-auto max-w-lg p-6">
+            <div class="space-y-4">
+              <div>
+                <label hlmLabel for="card-front">Front (Question)</label>
+                <textarea
+                  hlmTextarea
+                  id="card-front"
+                  [(ngModel)]="newCardFront"
+                  rows="3"
+                  placeholder="Enter the question or prompt..."
+                  class="mt-1 w-full"
+                ></textarea>
               </div>
-            }
-
-            @if (cardAdded()) {
-              <div class="rounded-md border border-green-500/50 bg-green-500/10 p-3">
-                <p class="text-sm text-green-500">Card added successfully!</p>
+              <div>
+                <label hlmLabel for="card-back">Back (Answer)</label>
+                <textarea
+                  hlmTextarea
+                  id="card-back"
+                  [(ngModel)]="newCardBack"
+                  rows="3"
+                  placeholder="Enter the answer..."
+                  class="mt-1 w-full"
+                ></textarea>
               </div>
-            }
 
-            <button
-              (click)="addCard()"
-              [disabled]="!newCardFront.trim() || !newCardBack.trim()"
-              class="w-full rounded-md bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
-            >
-              Add Card
-            </button>
+              @if (error()) {
+                <div class="rounded-md border border-destructive/50 bg-destructive/10 p-3">
+                  <p class="text-sm text-destructive">{{ error() }}</p>
+                </div>
+              }
+
+              @if (cardAdded()) {
+                <div class="rounded-md border border-green-500/50 bg-green-500/10 p-3">
+                  <p class="text-sm text-green-500">Card added successfully!</p>
+                </div>
+              }
+
+              <button
+                hlmBtn
+                (click)="addCard()"
+                [disabled]="!newCardFront.trim() || !newCardBack.trim()"
+                class="w-full"
+              >
+                Add Card
+              </button>
+            </div>
           </div>
         }
       }

@@ -2,13 +2,15 @@ import { ChangeDetectionStrategy, Component, inject, signal, ElementRef, viewChi
 import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { marked } from 'marked';
+import { HlmButton } from '@spartan-ng/helm/button';
+import { HlmInput } from '@spartan-ng/helm/input';
 import { AiContextService, ViewContext } from '../core/services/ai-context.service';
 import { ChatService, ChatMessage, Citation, ChatResponse } from '../core/services/chat.service';
 
 @Component({
   selector: 'app-ai-panel',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule],
+  imports: [FormsModule, HlmButton, HlmInput],
   template: `
     <aside
       class="fixed inset-y-0 right-0 z-30 flex w-96 flex-col border-l border-border bg-card transition-transform duration-300"
@@ -26,8 +28,10 @@ import { ChatService, ChatMessage, Citation, ChatResponse } from '../core/servic
           <span class="text-sm font-semibold text-foreground">Kursa AI</span>
         </div>
         <button
+          hlmBtn
+          variant="ghost"
+          size="icon"
           (click)="contextService.closePanel()"
-          class="rounded-md p-1 text-muted-foreground hover:bg-accent hover:text-foreground"
           aria-label="Close AI panel"
         >
           <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
@@ -114,18 +118,19 @@ import { ChatService, ChatMessage, Citation, ChatResponse } from '../core/servic
         <form (submit)="send($event)" class="flex gap-2">
           <label for="ai-panel-input" class="sr-only">Ask Kursa AI</label>
           <input
+            hlmInput
             id="ai-panel-input"
             type="text"
             [(ngModel)]="inputMessage"
             name="message"
             [placeholder]="inputPlaceholder()"
             [disabled]="loading()"
-            class="flex-1 rounded-md border border-input bg-background px-3 py-1.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary disabled:opacity-50"
+            class="flex-1 py-1.5"
           />
           <button
+            hlmBtn
             type="submit"
             [disabled]="loading() || !inputMessage.trim()"
-            class="rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
             aria-label="Send message"
           >
             <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">

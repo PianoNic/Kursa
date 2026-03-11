@@ -1,4 +1,6 @@
 import { ChangeDetectionStrategy, Component, signal, computed, inject, OnInit } from '@angular/core';
+import { HlmButton } from '@spartan-ng/helm/button';
+import { HlmCardImports } from '@spartan-ng/helm/card';
 import { AssignmentService, AssignmentView } from '../../core/services/assignment.service';
 
 interface CalendarDay {
@@ -11,7 +13,7 @@ interface CalendarDay {
 @Component({
   selector: 'app-assignments',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [],
+  imports: [HlmButton, ...HlmCardImports],
   template: `
     <div class="mx-auto max-w-7xl space-y-6 p-6">
       <div class="flex items-center justify-between">
@@ -19,19 +21,21 @@ interface CalendarDay {
           <h1 class="text-2xl font-bold text-foreground">Assignments</h1>
           <p class="text-sm text-muted-foreground">Track your deadlines and submissions</p>
         </div>
-        <div class="flex items-center gap-2 rounded-lg border border-border bg-card p-1">
+        <div class="flex items-center gap-2 rounded-lg border border-border bg-card p-1" role="group" aria-label="View selection">
           <button
+            hlmBtn
             type="button"
-            class="rounded-md px-3 py-1.5 text-sm font-medium transition-colors"
-            [class]="activeView() === 'list' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'"
+            [variant]="activeView() === 'list' ? 'default' : 'ghost'"
+            size="sm"
             (click)="activeView.set('list')"
           >
             List
           </button>
           <button
+            hlmBtn
             type="button"
-            class="rounded-md px-3 py-1.5 text-sm font-medium transition-colors"
-            [class]="activeView() === 'calendar' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'"
+            [variant]="activeView() === 'calendar' ? 'default' : 'ghost'"
+            size="sm"
             (click)="activeView.set('calendar')"
           >
             Calendar
@@ -51,35 +55,43 @@ interface CalendarDay {
         </div>
       } @else if (activeView() === 'list') {
         <!-- Filter tabs -->
-        <div class="flex gap-2">
+        <div class="flex gap-2" role="group" aria-label="Assignment filters">
           <button
+            hlmBtn
             type="button"
-            class="rounded-full px-3 py-1 text-xs font-medium transition-colors"
-            [class]="filter() === 'all' ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:text-foreground'"
+            [variant]="filter() === 'all' ? 'default' : 'ghost'"
+            size="sm"
+            class="rounded-full"
             (click)="filter.set('all')"
           >
             All ({{ assignments().length }})
           </button>
           <button
+            hlmBtn
             type="button"
-            class="rounded-full px-3 py-1 text-xs font-medium transition-colors"
-            [class]="filter() === 'upcoming' ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:text-foreground'"
+            [variant]="filter() === 'upcoming' ? 'default' : 'ghost'"
+            size="sm"
+            class="rounded-full"
             (click)="filter.set('upcoming')"
           >
             Upcoming ({{ upcomingCount() }})
           </button>
           <button
+            hlmBtn
             type="button"
-            class="rounded-full px-3 py-1 text-xs font-medium transition-colors"
-            [class]="filter() === 'overdue' ? 'bg-destructive text-destructive-foreground' : 'bg-muted text-muted-foreground hover:text-foreground'"
+            [variant]="filter() === 'overdue' ? 'destructive' : 'ghost'"
+            size="sm"
+            class="rounded-full"
             (click)="filter.set('overdue')"
           >
             Overdue ({{ overdueCount() }})
           </button>
           <button
+            hlmBtn
             type="button"
-            class="rounded-full px-3 py-1 text-xs font-medium transition-colors"
-            [class]="filter() === 'no-date' ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:text-foreground'"
+            [variant]="filter() === 'no-date' ? 'default' : 'ghost'"
+            size="sm"
+            class="rounded-full"
             (click)="filter.set('no-date')"
           >
             No deadline ({{ noDateCount() }})
@@ -87,13 +99,13 @@ interface CalendarDay {
         </div>
 
         @if (filteredAssignments().length === 0) {
-          <div class="rounded-lg border border-border bg-card p-8 text-center text-muted-foreground">
+          <div hlmCard class="p-8 text-center text-muted-foreground">
             No assignments found.
           </div>
         } @else {
           <div class="space-y-3">
             @for (assignment of filteredAssignments(); track assignment.id) {
-              <div class="rounded-lg border border-border bg-card p-4 transition-colors hover:bg-accent/50">
+              <div hlmCard class="p-4 transition-colors hover:bg-accent/50">
                 <div class="flex items-start justify-between gap-4">
                   <div class="min-w-0 flex-1">
                     <div class="flex items-center gap-2">
@@ -126,11 +138,13 @@ interface CalendarDay {
         }
       } @else {
         <!-- Calendar View -->
-        <div class="rounded-lg border border-border bg-card">
+        <div hlmCard class="p-0 gap-0 overflow-hidden">
           <div class="flex items-center justify-between border-b border-border p-4">
             <button
+              hlmBtn
+              variant="ghost"
+              size="icon"
               type="button"
-              class="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
               (click)="previousMonth()"
               aria-label="Previous month"
             >
@@ -138,8 +152,10 @@ interface CalendarDay {
             </button>
             <h2 class="text-lg font-semibold text-foreground">{{ monthLabel() }}</h2>
             <button
+              hlmBtn
+              variant="ghost"
+              size="icon"
               type="button"
-              class="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
               (click)="nextMonth()"
               aria-label="Next month"
             >
@@ -147,22 +163,25 @@ interface CalendarDay {
             </button>
           </div>
 
-          <div class="grid grid-cols-7 border-b border-border">
+          <div class="grid grid-cols-7 border-b border-border" role="row">
             @for (day of weekDays; track day) {
-              <div class="p-2 text-center text-xs font-medium text-muted-foreground">{{ day }}</div>
+              <div class="p-2 text-center text-xs font-medium text-muted-foreground" role="columnheader">{{ day }}</div>
             }
           </div>
 
-          <div class="grid grid-cols-7">
+          <div class="grid grid-cols-7" role="grid">
             @for (day of calendarDays(); track $index) {
               <div
                 class="min-h-24 border-b border-r border-border p-1.5 last:border-r-0 [&:nth-child(7n)]:border-r-0"
-                [class.bg-accent/30]="day.isToday"
+                [class.bg-accent\/30]="day.isToday"
                 [class.opacity-40]="!day.isCurrentMonth"
+                role="gridcell"
+                [attr.aria-label]="day.date.toLocaleDateString()"
               >
                 <span
                   class="inline-flex h-6 w-6 items-center justify-center rounded-full text-xs"
                   [class]="day.isToday ? 'bg-primary text-primary-foreground font-bold' : 'text-foreground'"
+                  aria-hidden="true"
                 >
                   {{ day.date.getDate() }}
                 </span>

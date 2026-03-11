@@ -3,19 +3,23 @@ import { FormsModule } from '@angular/forms';
 import { DatePipe } from '@angular/common';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { marked } from 'marked';
+import { HlmButton } from '@spartan-ng/helm/button';
+import { HlmInput } from '@spartan-ng/helm/input';
+import { HlmCardImports } from '@spartan-ng/helm/card';
 import { ChatService, ChatThread, ChatMessage, Citation, ChatResponse } from '../../core/services/chat.service';
 
 @Component({
   selector: 'app-chat',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, DatePipe],
+  imports: [FormsModule, DatePipe, HlmButton, HlmInput, ...HlmCardImports],
   template: `
     <div class="flex h-full">
       <!-- Thread sidebar -->
       <aside class="w-64 shrink-0 border-r border-border bg-card p-4" role="complementary" aria-label="Chat threads">
         <button
+          hlmBtn
           (click)="newThread()"
-          class="mb-4 w-full rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+          class="mb-4 w-full"
         >
           New Chat
         </button>
@@ -25,9 +29,11 @@ import { ChatService, ChatThread, ChatMessage, Citation, ChatResponse } from '..
             @for (thread of threads(); track thread.id) {
               <li>
                 <button
+                  hlmBtn
+                  variant="ghost"
                   (click)="selectThread(thread)"
-                  class="w-full rounded-md px-3 py-2 text-left text-sm transition-colors"
-                  [class]="thread.id === activeThreadId() ? 'bg-accent text-accent-foreground' : 'text-muted-foreground hover:bg-accent/50'"
+                  class="w-full justify-start"
+                  [class]="thread.id === activeThreadId() ? 'bg-accent text-accent-foreground' : 'text-muted-foreground'"
                 >
                   <span class="line-clamp-1">{{ thread.title }}</span>
                 </button>
@@ -70,7 +76,7 @@ import { ChatService, ChatThread, ChatMessage, Citation, ChatResponse } from '..
           }
 
           @if (activeSources().length > 0) {
-            <div class="rounded-lg border border-border bg-card p-4">
+            <div hlmCard class="p-4">
               <h4 class="mb-2 text-sm font-medium text-foreground">Sources</h4>
               <ul class="space-y-2" role="list">
                 @for (source of activeSources(); track source.contentId; let i = $index) {
@@ -102,18 +108,19 @@ import { ChatService, ChatThread, ChatMessage, Citation, ChatResponse } from '..
           <form (submit)="send($event)" class="flex gap-3">
             <label for="chat-input" class="sr-only">Type your message</label>
             <input
+              hlmInput
               id="chat-input"
               type="text"
               [(ngModel)]="inputMessage"
               name="message"
               placeholder="Ask about your course materials..."
               [disabled]="loading()"
-              class="flex-1 rounded-md border border-input bg-background px-4 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary disabled:opacity-50"
+              class="flex-1"
             />
             <button
+              hlmBtn
               type="submit"
               [disabled]="loading() || !inputMessage.trim()"
-              class="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
             >
               Send
             </button>

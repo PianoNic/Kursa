@@ -1,11 +1,13 @@
-import { ChangeDetectionStrategy, Component, signal, computed, inject, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, signal, inject, OnInit } from '@angular/core';
+import { HlmButton } from '@spartan-ng/helm/button';
+import { HlmCardImports } from '@spartan-ng/helm/card';
 import { ForumService, ForumView, DiscussionView } from '../../core/services/forum.service';
 import { MoodleService, MoodleCourse } from '../../core/services/moodle.service';
 
 @Component({
   selector: 'app-forums',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [],
+  imports: [HlmButton, ...HlmCardImports],
   template: `
     <div class="mx-auto max-w-7xl space-y-6 p-6">
       <div>
@@ -26,19 +28,21 @@ import { MoodleService, MoodleCourse } from '../../core/services/moodle.service'
       } @else if (activeView() === 'courses') {
         <!-- Course Selection -->
         @if (courses().length === 0) {
-          <div class="rounded-lg border border-border bg-card p-8 text-center text-muted-foreground">
+          <div hlmCard class="p-8 text-center text-muted-foreground">
             No courses found. Link your Moodle account first.
           </div>
         } @else {
           <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             @for (course of courses(); track course.id) {
               <button
+                hlmBtn
+                variant="outline"
                 type="button"
-                class="rounded-lg border border-border bg-card p-4 text-left transition-colors hover:bg-accent/50"
+                class="h-auto flex-col items-start p-4 text-left"
                 (click)="selectCourse(course)"
               >
                 <h3 class="font-medium text-foreground">{{ course.shortName }}</h3>
-                <p class="mt-1 text-sm text-muted-foreground line-clamp-2">{{ course.fullName }}</p>
+                <p class="mt-1 line-clamp-2 text-sm text-muted-foreground">{{ course.fullName }}</p>
               </button>
             }
           </div>
@@ -47,8 +51,10 @@ import { MoodleService, MoodleCourse } from '../../core/services/moodle.service'
         <!-- Forum List -->
         <div class="flex items-center gap-2">
           <button
+            hlmBtn
+            variant="ghost"
+            size="icon"
             type="button"
-            class="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
             (click)="backToCourses()"
             aria-label="Back to courses"
           >
@@ -58,29 +64,29 @@ import { MoodleService, MoodleCourse } from '../../core/services/moodle.service'
         </div>
 
         @if (forums().length === 0) {
-          <div class="rounded-lg border border-border bg-card p-8 text-center text-muted-foreground">
+          <div hlmCard class="p-8 text-center text-muted-foreground">
             No forums in this course.
           </div>
         } @else {
           <div class="space-y-3">
             @for (forum of forums(); track forum.id) {
               <button
+                hlmBtn
+                variant="outline"
                 type="button"
-                class="w-full rounded-lg border border-border bg-card p-4 text-left transition-colors hover:bg-accent/50"
+                class="h-auto w-full flex-row items-start justify-between p-4 text-left"
                 (click)="selectForum(forum)"
               >
-                <div class="flex items-start justify-between gap-4">
-                  <div class="min-w-0 flex-1">
-                    <h3 class="font-medium text-foreground">{{ forum.name }}</h3>
-                    @if (forum.description) {
-                      <p class="mt-1 line-clamp-2 text-sm text-muted-foreground" [innerHTML]="forum.description"></p>
-                    }
-                  </div>
-                  <div class="shrink-0 text-right">
-                    <span class="rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
-                      {{ forum.discussionCount }} discussions
-                    </span>
-                  </div>
+                <div class="min-w-0 flex-1">
+                  <h3 class="font-medium text-foreground">{{ forum.name }}</h3>
+                  @if (forum.description) {
+                    <p class="mt-1 line-clamp-2 text-sm text-muted-foreground" [innerHTML]="forum.description"></p>
+                  }
+                </div>
+                <div class="shrink-0 text-right">
+                  <span class="rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
+                    {{ forum.discussionCount }} discussions
+                  </span>
                 </div>
               </button>
             }
@@ -90,8 +96,10 @@ import { MoodleService, MoodleCourse } from '../../core/services/moodle.service'
         <!-- Discussion List -->
         <div class="flex items-center gap-2">
           <button
+            hlmBtn
+            variant="ghost"
+            size="icon"
             type="button"
-            class="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
             (click)="backToForums()"
             aria-label="Back to forums"
           >
@@ -107,13 +115,13 @@ import { MoodleService, MoodleCourse } from '../../core/services/moodle.service'
             </div>
           </div>
         } @else if (discussions().length === 0) {
-          <div class="rounded-lg border border-border bg-card p-8 text-center text-muted-foreground">
+          <div hlmCard class="p-8 text-center text-muted-foreground">
             No discussions yet in this forum.
           </div>
         } @else {
           <div class="space-y-3">
             @for (discussion of discussions(); track discussion.id) {
-              <div class="rounded-lg border border-border bg-card p-4">
+              <div hlmCard class="p-4">
                 <div class="flex items-start gap-3">
                   @if (discussion.authorAvatar) {
                     <img
@@ -122,7 +130,7 @@ import { MoodleService, MoodleCourse } from '../../core/services/moodle.service'
                       class="h-10 w-10 rounded-full"
                     />
                   } @else {
-                    <div class="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-sm font-medium text-primary">
+                    <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-medium text-primary" aria-hidden="true">
                       {{ getInitials(discussion.author) }}
                     </div>
                   }

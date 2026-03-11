@@ -1,6 +1,11 @@
 import { ChangeDetectionStrategy, Component, inject, signal, computed, OnInit } from '@angular/core';
 import { DatePipe, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { HlmButton } from '@spartan-ng/helm/button';
+import { HlmCardImports } from '@spartan-ng/helm/card';
+import { HlmInput } from '@spartan-ng/helm/input';
+import { HlmLabel } from '@spartan-ng/helm/label';
+import { HlmTextarea } from '@spartan-ng/helm/textarea';
 import {
   Quiz,
   QuizDetail,
@@ -16,19 +21,14 @@ type View = 'list' | 'generate' | 'taking' | 'results';
 @Component({
   selector: 'app-quizzes',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DatePipe, DecimalPipe, FormsModule],
+  imports: [DatePipe, DecimalPipe, FormsModule, HlmButton, ...HlmCardImports, HlmInput, HlmLabel, HlmTextarea],
   template: `
     <div class="space-y-6">
       @switch (view()) {
         @case ('list') {
           <div class="flex items-center justify-between">
             <h1 class="text-2xl font-bold text-foreground">Quizzes</h1>
-            <button
-              (click)="showGenerate()"
-              class="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
-            >
-              Generate Quiz
-            </button>
+            <button hlmBtn (click)="showGenerate()">Generate Quiz</button>
           </div>
 
           @if (loading()) {
@@ -37,7 +37,7 @@ type View = 'list' | 'generate' | 'taking' | 'results';
               <span class="ml-3 text-muted-foreground">Loading quizzes...</span>
             </div>
           } @else if (quizzes().length === 0) {
-            <div class="rounded-lg border border-border bg-card p-8 text-center">
+            <div hlmCard class="p-8 text-center">
               <svg class="mx-auto h-12 w-12 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 5.25h.008v.008H12v-.008Z" />
               </svg>
@@ -45,17 +45,12 @@ type View = 'list' | 'generate' | 'taking' | 'results';
               <p class="mt-2 text-sm text-muted-foreground">
                 Generate a quiz from your pinned course materials to test your knowledge.
               </p>
-              <button
-                (click)="showGenerate()"
-                class="mt-4 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
-              >
-                Generate Your First Quiz
-              </button>
+              <button hlmBtn (click)="showGenerate()" class="mt-4">Generate Your First Quiz</button>
             </div>
           } @else {
             <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               @for (quiz of quizzes(); track quiz.id) {
-                <div class="rounded-lg border border-border bg-card p-5 transition-colors hover:border-primary/50">
+                <div hlmCard class="p-5">
                   <h3 class="font-semibold text-foreground">{{ quiz.title }}</h3>
                   @if (quiz.topic) {
                     <p class="mt-1 text-xs text-muted-foreground">{{ quiz.topic }}</p>
@@ -82,17 +77,13 @@ type View = 'list' | 'generate' | 'taking' | 'results';
                     </div>
                   }
                   <div class="mt-4 flex gap-2">
+                    <button hlmBtn (click)="startQuiz(quiz.id)" class="flex-1 text-xs">Take Quiz</button>
                     <button
-                      (click)="startQuiz(quiz.id)"
-                      class="flex-1 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90"
-                    >
-                      Take Quiz
-                    </button>
-                    <button
+                      hlmBtn
+                      variant="outline"
                       (click)="viewResults(quiz.id)"
-                      class="rounded-md border border-border px-3 py-1.5 text-xs font-medium text-muted-foreground hover:bg-accent"
                       [disabled]="quiz.attemptCount === 0"
-                      [class.opacity-50]="quiz.attemptCount === 0"
+                      class="text-xs"
                     >
                       Results
                     </button>
@@ -106,11 +97,7 @@ type View = 'list' | 'generate' | 'taking' | 'results';
 
         @case ('generate') {
           <div class="flex items-center gap-3">
-            <button
-              (click)="view.set('list')"
-              class="rounded-md p-2 text-muted-foreground hover:bg-accent"
-              aria-label="Back to quizzes"
-            >
+            <button hlmBtn variant="ghost" size="icon" (click)="view.set('list')" aria-label="Back to quizzes">
               <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" />
               </svg>
@@ -124,80 +111,86 @@ type View = 'list' | 'generate' | 'taking' | 'results';
               <span class="ml-3 text-muted-foreground">Loading pinned content...</span>
             </div>
           } @else if (pinnedItems().length === 0) {
-            <div class="rounded-lg border border-border bg-card p-8 text-center">
+            <div hlmCard class="p-8 text-center">
               <h2 class="mt-4 text-lg font-semibold text-foreground">No pinned content</h2>
               <p class="mt-2 text-sm text-muted-foreground">
                 Pin and index some course materials first to generate quizzes.
               </p>
             </div>
           } @else {
-            <div class="mx-auto max-w-lg space-y-6 rounded-lg border border-border bg-card p-6">
-              <div>
-                <label for="content-select" class="block text-sm font-medium text-foreground">Select Material</label>
-                <select
-                  id="content-select"
-                  [(ngModel)]="selectedContentId"
-                  class="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-                >
-                  <option value="">Choose pinned content...</option>
-                  @for (item of indexedItems(); track item.contentId) {
-                    <option [value]="item.contentId">{{ item.contentTitle }}</option>
-                  }
-                </select>
-              </div>
-              <div>
-                <label for="question-count" class="block text-sm font-medium text-foreground">Number of Questions</label>
-                <input
-                  id="question-count"
-                  type="number"
-                  [(ngModel)]="questionCount"
-                  min="1"
-                  max="50"
-                  class="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-                />
-              </div>
-              <div>
-                <label for="topic" class="block text-sm font-medium text-foreground">Topic (optional)</label>
-                <input
-                  id="topic"
-                  type="text"
-                  [(ngModel)]="topicInput"
-                  placeholder="Focus on a specific topic..."
-                  class="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-                />
-              </div>
-              <div>
-                <label for="duration" class="block text-sm font-medium text-foreground">Time Limit (minutes)</label>
-                <input
-                  id="duration"
-                  type="number"
-                  [(ngModel)]="durationMinutes"
-                  min="1"
-                  max="120"
-                  class="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-                />
-              </div>
-
-              @if (error()) {
-                <div class="rounded-md border border-destructive/50 bg-destructive/10 p-3">
-                  <p class="text-sm text-destructive">{{ error() }}</p>
+            <div hlmCard class="mx-auto max-w-lg p-6">
+              <div class="space-y-4">
+                <div>
+                  <label hlmLabel for="content-select">Select Material</label>
+                  <select
+                    id="content-select"
+                    [(ngModel)]="selectedContentId"
+                    class="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                  >
+                    <option value="">Choose pinned content...</option>
+                    @for (item of indexedItems(); track item.contentId) {
+                      <option [value]="item.contentId">{{ item.contentTitle }}</option>
+                    }
+                  </select>
                 </div>
-              }
+                <div>
+                  <label hlmLabel for="question-count">Number of Questions</label>
+                  <input
+                    hlmInput
+                    id="question-count"
+                    type="number"
+                    [(ngModel)]="questionCount"
+                    min="1"
+                    max="50"
+                    class="mt-1 w-full"
+                  />
+                </div>
+                <div>
+                  <label hlmLabel for="topic">Topic (optional)</label>
+                  <input
+                    hlmInput
+                    id="topic"
+                    type="text"
+                    [(ngModel)]="topicInput"
+                    placeholder="Focus on a specific topic..."
+                    class="mt-1 w-full"
+                  />
+                </div>
+                <div>
+                  <label hlmLabel for="duration">Time Limit (minutes)</label>
+                  <input
+                    hlmInput
+                    id="duration"
+                    type="number"
+                    [(ngModel)]="durationMinutes"
+                    min="1"
+                    max="120"
+                    class="mt-1 w-full"
+                  />
+                </div>
 
-              <button
-                (click)="generateQuiz()"
-                [disabled]="generating() || !selectedContentId"
-                class="w-full rounded-md bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
-              >
-                @if (generating()) {
-                  <span class="flex items-center justify-center gap-2">
-                    <span class="h-4 w-4 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent"></span>
-                    Generating quiz...
-                  </span>
-                } @else {
-                  Generate Quiz
+                @if (error()) {
+                  <div class="rounded-md border border-destructive/50 bg-destructive/10 p-3">
+                    <p class="text-sm text-destructive">{{ error() }}</p>
+                  </div>
                 }
-              </button>
+
+                <button
+                  hlmBtn
+                  (click)="generateQuiz()"
+                  [disabled]="generating() || !selectedContentId"
+                  class="w-full"
+                >
+                  @if (generating()) {
+                    <span class="flex items-center justify-center gap-2">
+                      <span class="h-4 w-4 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent"></span>
+                      Generating quiz...
+                    </span>
+                  } @else {
+                    Generate Quiz
+                  }
+                </button>
+              </div>
             </div>
           }
         }
@@ -226,7 +219,7 @@ type View = 'list' | 'generate' | 'taking' | 'results';
               </div>
 
               @if (currentQuestion(); as q) {
-                <div class="rounded-lg border border-border bg-card p-6">
+                <div hlmCard class="p-6">
                   <p class="text-lg font-medium text-foreground">{{ q.questionText }}</p>
 
                   <div class="mt-6 space-y-3">
@@ -271,20 +264,22 @@ type View = 'list' | 'generate' | 'taking' | 'results';
                       }
                       @case ('FillInTheBlank') {
                         <input
+                          hlmInput
                           type="text"
                           [value]="answers()[q.id] || ''"
                           (input)="onInputAnswer($event)"
                           placeholder="Type your answer..."
-                          class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                          class="w-full"
                         />
                       }
                       @default {
                         <textarea
+                          hlmTextarea
                           [value]="answers()[q.id] || ''"
                           (input)="onInputAnswer($event)"
                           placeholder="Write your answer..."
                           rows="4"
-                          class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                          class="w-full"
                         ></textarea>
                       }
                     }
@@ -293,19 +288,15 @@ type View = 'list' | 'generate' | 'taking' | 'results';
 
                 <div class="flex justify-between">
                   <button
+                    hlmBtn
+                    variant="outline"
                     (click)="prevQuestion()"
                     [disabled]="currentQuestionIndex() === 0"
-                    class="rounded-md border border-border px-4 py-2 text-sm font-medium text-muted-foreground hover:bg-accent disabled:opacity-50"
                   >
                     Previous
                   </button>
                   @if (currentQuestionIndex() < currentQuiz()!.questions.length - 1) {
-                    <button
-                      (click)="nextQuestion()"
-                      class="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
-                    >
-                      Next
-                    </button>
+                    <button hlmBtn (click)="nextQuestion()">Next</button>
                   } @else {
                     <button
                       (click)="submitQuiz()"
@@ -329,11 +320,7 @@ type View = 'list' | 'generate' | 'taking' | 'results';
           @if (attemptResult()) {
             <div class="mx-auto max-w-2xl space-y-6">
               <div class="flex items-center gap-3">
-                <button
-                  (click)="backToList()"
-                  class="rounded-md p-2 text-muted-foreground hover:bg-accent"
-                  aria-label="Back to quizzes"
-                >
+                <button hlmBtn variant="ghost" size="icon" (click)="backToList()" aria-label="Back to quizzes">
                   <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" />
                   </svg>
@@ -342,7 +329,7 @@ type View = 'list' | 'generate' | 'taking' | 'results';
               </div>
 
               <!-- Score card -->
-              <div class="rounded-lg border border-border bg-card p-6 text-center">
+              <div hlmCard class="p-6 text-center">
                 <div
                   class="mx-auto flex h-24 w-24 items-center justify-center rounded-full"
                   [class]="scorePercentage() >= 70 ? 'bg-green-500/10' : scorePercentage() >= 40 ? 'bg-orange-500/10' : 'bg-destructive/10'"
@@ -411,18 +398,8 @@ type View = 'list' | 'generate' | 'taking' | 'results';
               </div>
 
               <div class="flex gap-3">
-                <button
-                  (click)="retakeQuiz()"
-                  class="flex-1 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
-                >
-                  Retake Quiz
-                </button>
-                <button
-                  (click)="backToList()"
-                  class="flex-1 rounded-md border border-border px-4 py-2 text-sm font-medium text-muted-foreground hover:bg-accent"
-                >
-                  Back to Quizzes
-                </button>
+                <button hlmBtn (click)="retakeQuiz()" class="flex-1">Retake Quiz</button>
+                <button hlmBtn variant="outline" (click)="backToList()" class="flex-1">Back to Quizzes</button>
               </div>
             </div>
           }
