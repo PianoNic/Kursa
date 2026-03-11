@@ -1,18 +1,18 @@
 using Kursa.Application.Common.Interfaces;
 using Kursa.Application.Common.Models;
 using Kursa.Domain.Entities;
-using MediatR;
+using Mediator;
 using Microsoft.EntityFrameworkCore;
 
 namespace Kursa.Application.Features.Users.Queries;
 
-public sealed record GetCurrentUserQuery : IRequest<Result<UserDto>>;
+public sealed record GetCurrentUserQuery : IQuery<Result<UserDto>>;
 
 public sealed class GetCurrentUserHandler(
     ICurrentUserService currentUserService,
-    IUserSyncService userSyncService) : IRequestHandler<GetCurrentUserQuery, Result<UserDto>>
+    IUserSyncService userSyncService) : IQueryHandler<GetCurrentUserQuery, Result<UserDto>>
 {
-    public async Task<Result<UserDto>> Handle(GetCurrentUserQuery request, CancellationToken cancellationToken)
+    public async ValueTask<Result<UserDto>> Handle(GetCurrentUserQuery request, CancellationToken cancellationToken)
     {
         if (currentUserService.ExternalId is null || currentUserService.Email is null)
         {

@@ -1,18 +1,18 @@
 using Kursa.Application.Common.Interfaces;
 using Kursa.Application.Common.Models;
-using MediatR;
+using Mediator;
 using Microsoft.EntityFrameworkCore;
 
 namespace Kursa.Application.Features.Recordings.Queries;
 
-public sealed record GetRecordingDownloadUrlQuery(Guid RecordingId) : IRequest<Result<string>>;
+public sealed record GetRecordingDownloadUrlQuery(Guid RecordingId) : IQuery<Result<string>>;
 
 public sealed class GetRecordingDownloadUrlHandler(
     ICurrentUserService currentUserService,
     IAppDbContext dbContext,
-    IFileStorageService fileStorage) : IRequestHandler<GetRecordingDownloadUrlQuery, Result<string>>
+    IFileStorageService fileStorage) : IQueryHandler<GetRecordingDownloadUrlQuery, Result<string>>
 {
-    public async Task<Result<string>> Handle(GetRecordingDownloadUrlQuery request, CancellationToken cancellationToken)
+    public async ValueTask<Result<string>> Handle(GetRecordingDownloadUrlQuery request, CancellationToken cancellationToken)
     {
         if (!currentUserService.IsAuthenticated || currentUserService.ExternalId is null)
             return Result<string>.Failure("User is not authenticated.");

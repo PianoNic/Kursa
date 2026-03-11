@@ -1,7 +1,7 @@
 using Kursa.Application.Common.Interfaces;
 using Kursa.Application.Common.Models;
 using Kursa.Domain.Entities;
-using MediatR;
+using Mediator;
 using Microsoft.EntityFrameworkCore;
 
 namespace Kursa.Application.Features.Recordings.Commands;
@@ -13,13 +13,13 @@ public sealed record UploadRecordingCommand(
     string FileName,
     string ContentType,
     long FileSizeBytes,
-    Stream FileStream) : IRequest<Result<RecordingDto>>;
+    Stream FileStream) : ICommand<Result<RecordingDto>>;
 
 public sealed class UploadRecordingHandler(
     ICurrentUserService currentUserService,
     IAppDbContext dbContext,
     IFileStorageService fileStorage,
-    ITranscriptionQueue transcriptionQueue) : IRequestHandler<UploadRecordingCommand, Result<RecordingDto>>
+    ITranscriptionQueue transcriptionQueue) : ICommandHandler<UploadRecordingCommand, Result<RecordingDto>>
 {
     private static readonly HashSet<string> AllowedContentTypes = new(StringComparer.OrdinalIgnoreCase)
     {
@@ -37,7 +37,7 @@ public sealed class UploadRecordingHandler(
 
     private const long MaxFileSizeBytes = 500 * 1024 * 1024; // 500 MB
 
-    public async Task<Result<RecordingDto>> Handle(UploadRecordingCommand request, CancellationToken cancellationToken)
+    public async ValueTask<Result<RecordingDto>> Handle(UploadRecordingCommand request, CancellationToken cancellationToken)
     {
         if (!currentUserService.IsAuthenticated || currentUserService.ExternalId is null)
             return Result<RecordingDto>.Failure("User is not authenticated.");

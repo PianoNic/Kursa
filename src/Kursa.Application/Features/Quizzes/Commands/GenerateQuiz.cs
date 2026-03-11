@@ -3,7 +3,7 @@ using FluentValidation;
 using Kursa.Application.Common.Interfaces;
 using Kursa.Application.Common.Models;
 using Kursa.Domain.Entities;
-using MediatR;
+using Mediator;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.SemanticKernel.ChatCompletion;
@@ -16,7 +16,7 @@ public sealed record GenerateQuizCommand(
     Guid ContentId,
     int QuestionCount = 10,
     string? Topic = null,
-    int DurationSeconds = 600) : IRequest<Result<QuizDetailDto>>;
+    int DurationSeconds = 600) : ICommand<Result<QuizDetailDto>>;
 
 public sealed class GenerateQuizValidator : AbstractValidator<GenerateQuizCommand>
 {
@@ -34,7 +34,7 @@ public sealed class GenerateQuizHandler(
     IChatCompletionService chatCompletionService,
     ITextEmbeddingGenerationService embeddingService,
     IVectorStore vectorStore,
-    ILogger<GenerateQuizHandler> logger) : IRequestHandler<GenerateQuizCommand, Result<QuizDetailDto>>
+    ILogger<GenerateQuizHandler> logger) : ICommandHandler<GenerateQuizCommand, Result<QuizDetailDto>>
 {
     private const string CollectionName = "content_chunks";
 
@@ -66,7 +66,7 @@ public sealed class GenerateQuizHandler(
         }
         """;
 
-    public async Task<Result<QuizDetailDto>> Handle(GenerateQuizCommand request, CancellationToken cancellationToken)
+    public async ValueTask<Result<QuizDetailDto>> Handle(GenerateQuizCommand request, CancellationToken cancellationToken)
     {
         if (!currentUserService.IsAuthenticated || currentUserService.ExternalId is null)
             return Result<QuizDetailDto>.Failure("User is not authenticated.");

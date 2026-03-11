@@ -1,6 +1,6 @@
 using Kursa.Application.Features.Moodle.Commands;
 using Kursa.Application.Features.Moodle.Queries;
-using MediatR;
+using Mediator;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 

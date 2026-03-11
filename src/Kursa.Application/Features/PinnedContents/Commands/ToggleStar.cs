@@ -1,12 +1,12 @@
 using FluentValidation;
 using Kursa.Application.Common.Interfaces;
 using Kursa.Application.Common.Models;
-using MediatR;
+using Mediator;
 using Microsoft.EntityFrameworkCore;
 
 namespace Kursa.Application.Features.PinnedContents.Commands;
 
-public sealed record ToggleStarCommand(Guid ContentId) : IRequest<Result<bool>>;
+public sealed record ToggleStarCommand(Guid ContentId) : ICommand<Result<bool>>;
 
 public sealed class ToggleStarValidator : AbstractValidator<ToggleStarCommand>
 {
@@ -18,9 +18,9 @@ public sealed class ToggleStarValidator : AbstractValidator<ToggleStarCommand>
 
 public sealed class ToggleStarHandler(
     ICurrentUserService currentUserService,
-    IAppDbContext dbContext) : IRequestHandler<ToggleStarCommand, Result<bool>>
+    IAppDbContext dbContext) : ICommandHandler<ToggleStarCommand, Result<bool>>
 {
-    public async Task<Result<bool>> Handle(ToggleStarCommand request, CancellationToken cancellationToken)
+    public async ValueTask<Result<bool>> Handle(ToggleStarCommand request, CancellationToken cancellationToken)
     {
         if (!currentUserService.IsAuthenticated || currentUserService.ExternalId is null)
             return Result<bool>.Failure("User is not authenticated.");

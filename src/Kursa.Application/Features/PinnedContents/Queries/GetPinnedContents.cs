@@ -1,17 +1,17 @@
 using Kursa.Application.Common.Interfaces;
 using Kursa.Application.Common.Models;
-using MediatR;
+using Mediator;
 using Microsoft.EntityFrameworkCore;
 
 namespace Kursa.Application.Features.PinnedContents.Queries;
 
-public sealed record GetPinnedContentsQuery : IRequest<Result<IReadOnlyList<PinnedContentDto>>>;
+public sealed record GetPinnedContentsQuery : IQuery<Result<IReadOnlyList<PinnedContentDto>>>;
 
 public sealed class GetPinnedContentsHandler(
     ICurrentUserService currentUserService,
-    IAppDbContext dbContext) : IRequestHandler<GetPinnedContentsQuery, Result<IReadOnlyList<PinnedContentDto>>>
+    IAppDbContext dbContext) : IQueryHandler<GetPinnedContentsQuery, Result<IReadOnlyList<PinnedContentDto>>>
 {
-    public async Task<Result<IReadOnlyList<PinnedContentDto>>> Handle(
+    public async ValueTask<Result<IReadOnlyList<PinnedContentDto>>> Handle(
         GetPinnedContentsQuery request, CancellationToken cancellationToken)
     {
         if (!currentUserService.IsAuthenticated || currentUserService.ExternalId is null)

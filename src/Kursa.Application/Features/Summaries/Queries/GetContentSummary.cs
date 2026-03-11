@@ -1,19 +1,19 @@
 using Kursa.Application.Common.Interfaces;
 using Kursa.Application.Common.Models;
-using MediatR;
+using Mediator;
 using Microsoft.EntityFrameworkCore;
 
 namespace Kursa.Application.Features.Summaries.Queries;
 
 public sealed record ContentSummaryDto(Guid Id, Guid ContentId, string ContentTitle, string Summary, int TokensUsed, DateTime GeneratedAt);
 
-public sealed record GetContentSummaryQuery(Guid ContentId) : IRequest<Result<ContentSummaryDto>>;
+public sealed record GetContentSummaryQuery(Guid ContentId) : IQuery<Result<ContentSummaryDto>>;
 
 public sealed class GetContentSummaryHandler(
     ICurrentUserService currentUserService,
-    IAppDbContext dbContext) : IRequestHandler<GetContentSummaryQuery, Result<ContentSummaryDto>>
+    IAppDbContext dbContext) : IQueryHandler<GetContentSummaryQuery, Result<ContentSummaryDto>>
 {
-    public async Task<Result<ContentSummaryDto>> Handle(GetContentSummaryQuery request, CancellationToken cancellationToken)
+    public async ValueTask<Result<ContentSummaryDto>> Handle(GetContentSummaryQuery request, CancellationToken cancellationToken)
     {
         if (!currentUserService.IsAuthenticated || currentUserService.ExternalId is null)
             return Result<ContentSummaryDto>.Failure("User is not authenticated.");

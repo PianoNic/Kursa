@@ -3,7 +3,7 @@ using FluentValidation;
 using Kursa.Application.Common.Interfaces;
 using Kursa.Application.Common.Models;
 using Kursa.Domain.Entities;
-using MediatR;
+using Mediator;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.SemanticKernel.ChatCompletion;
@@ -15,7 +15,7 @@ namespace Kursa.Application.Features.Flashcards.Commands;
 public sealed record GenerateFlashcardsCommand(
     Guid ContentId,
     int CardCount = 20,
-    string? Topic = null) : IRequest<Result<FlashcardDeckDetailDto>>;
+    string? Topic = null) : ICommand<Result<FlashcardDeckDetailDto>>;
 
 public sealed class GenerateFlashcardsValidator : AbstractValidator<GenerateFlashcardsCommand>
 {
@@ -32,7 +32,7 @@ public sealed class GenerateFlashcardsHandler(
     IChatCompletionService chatCompletionService,
     ITextEmbeddingGenerationService embeddingService,
     IVectorStore vectorStore,
-    ILogger<GenerateFlashcardsHandler> logger) : IRequestHandler<GenerateFlashcardsCommand, Result<FlashcardDeckDetailDto>>
+    ILogger<GenerateFlashcardsHandler> logger) : ICommandHandler<GenerateFlashcardsCommand, Result<FlashcardDeckDetailDto>>
 {
     private const string CollectionName = "content_chunks";
 
@@ -60,7 +60,7 @@ public sealed class GenerateFlashcardsHandler(
         }
         """;
 
-    public async Task<Result<FlashcardDeckDetailDto>> Handle(GenerateFlashcardsCommand request, CancellationToken cancellationToken)
+    public async ValueTask<Result<FlashcardDeckDetailDto>> Handle(GenerateFlashcardsCommand request, CancellationToken cancellationToken)
     {
         if (!currentUserService.IsAuthenticated || currentUserService.ExternalId is null)
             return Result<FlashcardDeckDetailDto>.Failure("User is not authenticated.");

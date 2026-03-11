@@ -23,7 +23,7 @@ public sealed class KursaAgentPlugin(
 
     [KernelFunction("search_course_materials")]
     [Description("Semantically searches the user's pinned and indexed course documents. Returns the most relevant chunks of text with source titles and relevance scores. Use this when the user asks about specific course content, topics, or study material.")]
-    public async Task<string> SearchCourseMaterialsAsync(
+    public async ValueTask<string> SearchCourseMaterialsAsync(
         [Description("The search query optimised for semantic retrieval, e.g. 'learning objectives for marketing' or 'Break-even point formula'")] string query,
         [Description("Maximum number of results to return (1-10, default 5)")] int limit = 5,
         CancellationToken cancellationToken = default)
@@ -54,7 +54,7 @@ public sealed class KursaAgentPlugin(
 
     [KernelFunction("list_enrolled_courses")]
     [Description("Returns a list of all Moodle courses the user is enrolled in, including course IDs, names, and completion progress. Use this when the user asks what courses they have or needs a course ID.")]
-    public async Task<string> ListEnrolledCoursesAsync(CancellationToken cancellationToken = default)
+    public async ValueTask<string> ListEnrolledCoursesAsync(CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrEmpty(user.MoodleToken))
             return "User has not linked their Moodle account yet.";
@@ -74,7 +74,7 @@ public sealed class KursaAgentPlugin(
 
     [KernelFunction("get_course_content")]
     [Description("Returns the sections and modules of a specific Moodle course by its numeric ID. Includes module names, types, and descriptions. Use this when the user asks about the structure or contents of a course.")]
-    public async Task<string> GetCourseContentAsync(
+    public async ValueTask<string> GetCourseContentAsync(
         [Description("The numeric Moodle course ID (obtain from list_enrolled_courses if unknown)")] int courseId,
         CancellationToken cancellationToken = default)
     {

@@ -1,6 +1,6 @@
 using Kursa.Application.Features.Quizzes.Commands;
 using Kursa.Application.Features.Quizzes.Queries;
-using MediatR;
+using Mediator;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 

@@ -1,19 +1,19 @@
 using Kursa.Application.Common.Interfaces;
 using Kursa.Application.Common.Models;
-using MediatR;
+using Mediator;
 using Microsoft.EntityFrameworkCore;
 
 namespace Kursa.Application.Features.Recordings.Commands;
 
-public sealed record DeleteRecordingCommand(Guid RecordingId) : IRequest<Result<bool>>;
+public sealed record DeleteRecordingCommand(Guid RecordingId) : ICommand<Result<bool>>;
 
 public sealed class DeleteRecordingHandler(
     ICurrentUserService currentUserService,
     IAppDbContext dbContext,
     IFileStorageService fileStorage,
-    IRecordingIndexingService recordingIndexing) : IRequestHandler<DeleteRecordingCommand, Result<bool>>
+    IRecordingIndexingService recordingIndexing) : ICommandHandler<DeleteRecordingCommand, Result<bool>>
 {
-    public async Task<Result<bool>> Handle(DeleteRecordingCommand request, CancellationToken cancellationToken)
+    public async ValueTask<Result<bool>> Handle(DeleteRecordingCommand request, CancellationToken cancellationToken)
     {
         if (!currentUserService.IsAuthenticated || currentUserService.ExternalId is null)
             return Result<bool>.Failure("User is not authenticated.");

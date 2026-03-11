@@ -1,20 +1,20 @@
 using Kursa.Application.Common.Interfaces;
 using Kursa.Application.Common.Models;
-using MediatR;
+using Mediator;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
 namespace Kursa.Application.Features.PinnedContents.Commands;
 
-public sealed record IndexPinnedContentCommand(Guid ContentId) : IRequest<Result>;
+public sealed record IndexPinnedContentCommand(Guid ContentId) : ICommand<Result>;
 
 public sealed class IndexPinnedContentHandler(
     ICurrentUserService currentUserService,
     IAppDbContext dbContext,
     IContentPipeline contentPipeline,
-    ILogger<IndexPinnedContentHandler> logger) : IRequestHandler<IndexPinnedContentCommand, Result>
+    ILogger<IndexPinnedContentHandler> logger) : ICommandHandler<IndexPinnedContentCommand, Result>
 {
-    public async Task<Result> Handle(IndexPinnedContentCommand request, CancellationToken cancellationToken)
+    public async ValueTask<Result> Handle(IndexPinnedContentCommand request, CancellationToken cancellationToken)
     {
         if (!currentUserService.IsAuthenticated || currentUserService.ExternalId is null)
             return Result.Failure("User is not authenticated.");

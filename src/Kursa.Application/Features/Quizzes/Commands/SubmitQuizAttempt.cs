@@ -2,7 +2,7 @@ using FluentValidation;
 using Kursa.Application.Common.Interfaces;
 using Kursa.Application.Common.Models;
 using Kursa.Domain.Entities;
-using MediatR;
+using Mediator;
 using Microsoft.EntityFrameworkCore;
 
 namespace Kursa.Application.Features.Quizzes.Commands;
@@ -10,7 +10,7 @@ namespace Kursa.Application.Features.Quizzes.Commands;
 public sealed record SubmitQuizAttemptCommand(
     Guid QuizId,
     IReadOnlyList<AnswerSubmission> Answers,
-    int DurationSeconds) : IRequest<Result<QuizAttemptDetailDto>>;
+    int DurationSeconds) : ICommand<Result<QuizAttemptDetailDto>>;
 
 public sealed record AnswerSubmission(Guid QuestionId, string Answer);
 
@@ -26,9 +26,9 @@ public sealed class SubmitQuizAttemptValidator : AbstractValidator<SubmitQuizAtt
 
 public sealed class SubmitQuizAttemptHandler(
     ICurrentUserService currentUserService,
-    IAppDbContext dbContext) : IRequestHandler<SubmitQuizAttemptCommand, Result<QuizAttemptDetailDto>>
+    IAppDbContext dbContext) : ICommandHandler<SubmitQuizAttemptCommand, Result<QuizAttemptDetailDto>>
 {
-    public async Task<Result<QuizAttemptDetailDto>> Handle(SubmitQuizAttemptCommand request, CancellationToken cancellationToken)
+    public async ValueTask<Result<QuizAttemptDetailDto>> Handle(SubmitQuizAttemptCommand request, CancellationToken cancellationToken)
     {
         if (!currentUserService.IsAuthenticated || currentUserService.ExternalId is null)
             return Result<QuizAttemptDetailDto>.Failure("User is not authenticated.");

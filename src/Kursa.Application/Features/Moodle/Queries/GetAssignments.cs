@@ -1,19 +1,19 @@
 using Kursa.Application.Common.Interfaces;
 using Kursa.Application.Common.Models;
 using Kursa.Application.Features.Moodle.Models;
-using MediatR;
+using Mediator;
 using Microsoft.EntityFrameworkCore;
 
 namespace Kursa.Application.Features.Moodle.Queries;
 
-public sealed record GetAssignmentsQuery(int? CourseId = null) : IRequest<Result<IReadOnlyList<AssignmentViewDto>>>;
+public sealed record GetAssignmentsQuery(int? CourseId = null) : IQuery<Result<IReadOnlyList<AssignmentViewDto>>>;
 
 public sealed class GetAssignmentsHandler(
     ICurrentUserService currentUserService,
     IAppDbContext dbContext,
-    IMoodleService moodleService) : IRequestHandler<GetAssignmentsQuery, Result<IReadOnlyList<AssignmentViewDto>>>
+    IMoodleService moodleService) : IQueryHandler<GetAssignmentsQuery, Result<IReadOnlyList<AssignmentViewDto>>>
 {
-    public async Task<Result<IReadOnlyList<AssignmentViewDto>>> Handle(
+    public async ValueTask<Result<IReadOnlyList<AssignmentViewDto>>> Handle(
         GetAssignmentsQuery request, CancellationToken cancellationToken)
     {
         if (!currentUserService.IsAuthenticated || currentUserService.ExternalId is null)

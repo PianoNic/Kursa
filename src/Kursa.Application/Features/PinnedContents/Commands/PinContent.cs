@@ -2,12 +2,12 @@ using FluentValidation;
 using Kursa.Application.Common.Interfaces;
 using Kursa.Application.Common.Models;
 using Kursa.Domain.Entities;
-using MediatR;
+using Mediator;
 using Microsoft.EntityFrameworkCore;
 
 namespace Kursa.Application.Features.PinnedContents.Commands;
 
-public sealed record PinContentCommand(Guid ContentId, string? Notes = null) : IRequest<Result<Guid>>;
+public sealed record PinContentCommand(Guid ContentId, string? Notes = null) : ICommand<Result<Guid>>;
 
 public sealed class PinContentValidator : AbstractValidator<PinContentCommand>
 {
@@ -20,9 +20,9 @@ public sealed class PinContentValidator : AbstractValidator<PinContentCommand>
 
 public sealed class PinContentHandler(
     ICurrentUserService currentUserService,
-    IAppDbContext dbContext) : IRequestHandler<PinContentCommand, Result<Guid>>
+    IAppDbContext dbContext) : ICommandHandler<PinContentCommand, Result<Guid>>
 {
-    public async Task<Result<Guid>> Handle(PinContentCommand request, CancellationToken cancellationToken)
+    public async ValueTask<Result<Guid>> Handle(PinContentCommand request, CancellationToken cancellationToken)
     {
         if (!currentUserService.IsAuthenticated || currentUserService.ExternalId is null)
             return Result<Guid>.Failure("User is not authenticated.");

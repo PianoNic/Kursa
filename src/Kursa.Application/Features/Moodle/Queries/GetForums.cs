@@ -1,19 +1,19 @@
 using Kursa.Application.Common.Interfaces;
 using Kursa.Application.Common.Models;
 using Kursa.Application.Features.Moodle.Models;
-using MediatR;
+using Mediator;
 using Microsoft.EntityFrameworkCore;
 
 namespace Kursa.Application.Features.Moodle.Queries;
 
-public sealed record GetForumsQuery(int CourseId) : IRequest<Result<IReadOnlyList<ForumViewDto>>>;
+public sealed record GetForumsQuery(int CourseId) : IQuery<Result<IReadOnlyList<ForumViewDto>>>;
 
 public sealed class GetForumsHandler(
     ICurrentUserService currentUserService,
     IAppDbContext dbContext,
-    IMoodleService moodleService) : IRequestHandler<GetForumsQuery, Result<IReadOnlyList<ForumViewDto>>>
+    IMoodleService moodleService) : IQueryHandler<GetForumsQuery, Result<IReadOnlyList<ForumViewDto>>>
 {
-    public async Task<Result<IReadOnlyList<ForumViewDto>>> Handle(
+    public async ValueTask<Result<IReadOnlyList<ForumViewDto>>> Handle(
         GetForumsQuery request, CancellationToken cancellationToken)
     {
         if (!currentUserService.IsAuthenticated || currentUserService.ExternalId is null)

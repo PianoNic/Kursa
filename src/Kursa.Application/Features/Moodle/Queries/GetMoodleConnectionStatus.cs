@@ -1,6 +1,6 @@
 using Kursa.Application.Common.Interfaces;
 using Kursa.Application.Common.Models;
-using MediatR;
+using Mediator;
 using Microsoft.EntityFrameworkCore;
 
 namespace Kursa.Application.Features.Moodle.Queries;
@@ -9,13 +9,13 @@ public sealed record MoodleConnectionStatusDto(
     bool IsConnected,
     string? MoodleUrl);
 
-public sealed record GetMoodleConnectionStatusQuery : IRequest<Result<MoodleConnectionStatusDto>>;
+public sealed record GetMoodleConnectionStatusQuery : IQuery<Result<MoodleConnectionStatusDto>>;
 
 public sealed class GetMoodleConnectionStatusHandler(
     ICurrentUserService currentUserService,
-    IAppDbContext dbContext) : IRequestHandler<GetMoodleConnectionStatusQuery, Result<MoodleConnectionStatusDto>>
+    IAppDbContext dbContext) : IQueryHandler<GetMoodleConnectionStatusQuery, Result<MoodleConnectionStatusDto>>
 {
-    public async Task<Result<MoodleConnectionStatusDto>> Handle(
+    public async ValueTask<Result<MoodleConnectionStatusDto>> Handle(
         GetMoodleConnectionStatusQuery request,
         CancellationToken cancellationToken)
     {

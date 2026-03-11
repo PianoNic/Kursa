@@ -1,17 +1,17 @@
 using Kursa.Application.Common.Interfaces;
 using Kursa.Application.Common.Models;
-using MediatR;
+using Mediator;
 using Microsoft.EntityFrameworkCore;
 
 namespace Kursa.Application.Features.Recordings.Queries;
 
-public sealed record GetRecordingsQuery : IRequest<Result<IReadOnlyList<RecordingDto>>>;
+public sealed record GetRecordingsQuery : IQuery<Result<IReadOnlyList<RecordingDto>>>;
 
 public sealed class GetRecordingsHandler(
     ICurrentUserService currentUserService,
-    IAppDbContext dbContext) : IRequestHandler<GetRecordingsQuery, Result<IReadOnlyList<RecordingDto>>>
+    IAppDbContext dbContext) : IQueryHandler<GetRecordingsQuery, Result<IReadOnlyList<RecordingDto>>>
 {
-    public async Task<Result<IReadOnlyList<RecordingDto>>> Handle(GetRecordingsQuery request, CancellationToken cancellationToken)
+    public async ValueTask<Result<IReadOnlyList<RecordingDto>>> Handle(GetRecordingsQuery request, CancellationToken cancellationToken)
     {
         if (!currentUserService.IsAuthenticated || currentUserService.ExternalId is null)
             return Result<IReadOnlyList<RecordingDto>>.Failure("User is not authenticated.");

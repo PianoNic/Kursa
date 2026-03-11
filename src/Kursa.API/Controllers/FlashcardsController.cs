@@ -1,7 +1,7 @@
 using Kursa.Application.Features.Flashcards.Commands;
 using Kursa.Application.Features.Flashcards.Queries;
 using Kursa.Domain.Entities;
-using MediatR;
+using Mediator;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 

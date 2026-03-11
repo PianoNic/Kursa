@@ -1,5 +1,5 @@
 using Kursa.Application.Features.Analytics;
-using MediatR;
+using Mediator;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 

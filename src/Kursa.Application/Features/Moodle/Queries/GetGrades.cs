@@ -1,19 +1,19 @@
 using Kursa.Application.Common.Interfaces;
 using Kursa.Application.Common.Models;
 using Kursa.Application.Features.Moodle.Models;
-using MediatR;
+using Mediator;
 using Microsoft.EntityFrameworkCore;
 
 namespace Kursa.Application.Features.Moodle.Queries;
 
-public sealed record GetGradesQuery(int? CourseId = null) : IRequest<Result<IReadOnlyList<CourseGradeSummaryDto>>>;
+public sealed record GetGradesQuery(int? CourseId = null) : IQuery<Result<IReadOnlyList<CourseGradeSummaryDto>>>;
 
 public sealed class GetGradesHandler(
     ICurrentUserService currentUserService,
     IAppDbContext dbContext,
-    IMoodleService moodleService) : IRequestHandler<GetGradesQuery, Result<IReadOnlyList<CourseGradeSummaryDto>>>
+    IMoodleService moodleService) : IQueryHandler<GetGradesQuery, Result<IReadOnlyList<CourseGradeSummaryDto>>>
 {
-    public async Task<Result<IReadOnlyList<CourseGradeSummaryDto>>> Handle(
+    public async ValueTask<Result<IReadOnlyList<CourseGradeSummaryDto>>> Handle(
         GetGradesQuery request, CancellationToken cancellationToken)
     {
         if (!currentUserService.IsAuthenticated || currentUserService.ExternalId is null)

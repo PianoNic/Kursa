@@ -1,17 +1,17 @@
 using Kursa.Application.Common.Interfaces;
 using Kursa.Application.Common.Models;
-using MediatR;
+using Mediator;
 using Microsoft.EntityFrameworkCore;
 
 namespace Kursa.Application.Features.Moodle.Commands;
 
-public sealed record UnlinkMoodleTokenCommand : IRequest<Result>;
+public sealed record UnlinkMoodleTokenCommand : ICommand<Result>;
 
 public sealed class UnlinkMoodleTokenHandler(
     ICurrentUserService currentUserService,
-    IAppDbContext dbContext) : IRequestHandler<UnlinkMoodleTokenCommand, Result>
+    IAppDbContext dbContext) : ICommandHandler<UnlinkMoodleTokenCommand, Result>
 {
-    public async Task<Result> Handle(UnlinkMoodleTokenCommand request, CancellationToken cancellationToken)
+    public async ValueTask<Result> Handle(UnlinkMoodleTokenCommand request, CancellationToken cancellationToken)
     {
         if (currentUserService.ExternalId is null)
         {

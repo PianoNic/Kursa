@@ -1,20 +1,20 @@
 using Kursa.Application.Common.Interfaces;
 using Kursa.Application.Common.Models;
-using MediatR;
+using Mediator;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
 namespace Kursa.Application.Features.Summaries.Commands;
 
-public sealed record GenerateSummaryCommand(Guid ContentId) : IRequest<Result<string>>;
+public sealed record GenerateSummaryCommand(Guid ContentId) : ICommand<Result<string>>;
 
 public sealed class GenerateSummaryHandler(
     ICurrentUserService currentUserService,
     IAppDbContext dbContext,
     ISummaryService summaryService,
-    ILogger<GenerateSummaryHandler> logger) : IRequestHandler<GenerateSummaryCommand, Result<string>>
+    ILogger<GenerateSummaryHandler> logger) : ICommandHandler<GenerateSummaryCommand, Result<string>>
 {
-    public async Task<Result<string>> Handle(GenerateSummaryCommand request, CancellationToken cancellationToken)
+    public async ValueTask<Result<string>> Handle(GenerateSummaryCommand request, CancellationToken cancellationToken)
     {
         if (!currentUserService.IsAuthenticated || currentUserService.ExternalId is null)
             return Result<string>.Failure("User is not authenticated.");

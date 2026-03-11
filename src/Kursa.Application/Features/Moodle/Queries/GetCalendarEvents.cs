@@ -1,19 +1,19 @@
 using Kursa.Application.Common.Interfaces;
 using Kursa.Application.Common.Models;
 using Kursa.Application.Features.Moodle.Models;
-using MediatR;
+using Mediator;
 using Microsoft.EntityFrameworkCore;
 
 namespace Kursa.Application.Features.Moodle.Queries;
 
-public sealed record GetCalendarEventsQuery(DateTime WeekStart) : IRequest<Result<IReadOnlyList<CalendarEventViewDto>>>;
+public sealed record GetCalendarEventsQuery(DateTime WeekStart) : IQuery<Result<IReadOnlyList<CalendarEventViewDto>>>;
 
 public sealed class GetCalendarEventsHandler(
     ICurrentUserService currentUserService,
     IAppDbContext dbContext,
-    IMoodleService moodleService) : IRequestHandler<GetCalendarEventsQuery, Result<IReadOnlyList<CalendarEventViewDto>>>
+    IMoodleService moodleService) : IQueryHandler<GetCalendarEventsQuery, Result<IReadOnlyList<CalendarEventViewDto>>>
 {
-    public async Task<Result<IReadOnlyList<CalendarEventViewDto>>> Handle(
+    public async ValueTask<Result<IReadOnlyList<CalendarEventViewDto>>> Handle(
         GetCalendarEventsQuery request, CancellationToken cancellationToken)
     {
         if (!currentUserService.IsAuthenticated || currentUserService.ExternalId is null)
