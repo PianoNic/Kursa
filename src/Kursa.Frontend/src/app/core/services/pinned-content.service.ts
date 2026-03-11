@@ -1,6 +1,12 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { MoodleCourse, MoodleModule } from './moodle.service';
+
+export interface PinMoodleModuleResponse {
+  contentId: string;
+  alreadyIndexed: boolean;
+}
 
 export interface PinnedContent {
   id: string;
@@ -34,5 +40,20 @@ export class PinnedContentService {
 
   toggleStar(contentId: string): Observable<{ isStarred: boolean }> {
     return this.http.post<{ isStarred: boolean }>(`${this.baseUrl}/${contentId}/star`, {});
+  }
+
+  pinMoodleModule(course: MoodleCourse, mod: MoodleModule): Observable<PinMoodleModuleResponse> {
+    const body = {
+      moodleCourseId: course.id,
+      courseName: course.fullName,
+      courseShortName: course.shortName,
+      moodleModuleId: mod.id,
+      moduleName: mod.name,
+      modType: mod.modName,
+      description: mod.description ?? null,
+      url: mod.url ?? null,
+      fileUrl: mod.contents?.find(c => c.fileUrl)?.fileUrl ?? null,
+    };
+    return this.http.post<PinMoodleModuleResponse>(`${this.baseUrl}/moodle`, body);
   }
 }

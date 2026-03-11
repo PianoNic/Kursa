@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject, input, signal, OnInit } from '@angular/core';
-import { MoodleCourseSection, MoodleModule, MoodleContent, MoodleService } from '../../core/services/moodle.service';
+import { MoodleCourse, MoodleCourseSection, MoodleModule, MoodleContent, MoodleService } from '../../core/services/moodle.service';
+import { PinnedContentService } from '../../core/services/pinned-content.service';
 import { DecimalPipe } from '@angular/common';
 
 @Component({
@@ -109,6 +110,31 @@ import { DecimalPipe } from '@angular/common';
                             Open
                           </a>
                         }
+                        <!-- Pin for AI button -->
+                        <button
+                          (click)="pinModule(mod)"
+                          [disabled]="pinningModuleId() === mod.id"
+                          [title]="pinnedModuleIds().has(mod.id) ? 'Pinned for AI' : 'Pin for AI'"
+                          [class]="pinnedModuleIds().has(mod.id)
+                            ? 'rounded-md px-2 py-1.5 text-xs transition-colors text-emerald-400 hover:bg-accent'
+                            : 'rounded-md px-2 py-1.5 text-xs transition-colors text-muted-foreground hover:text-foreground hover:bg-accent'"
+                          aria-label="Pin module for AI search"
+                        >
+                          @if (pinningModuleId() === mod.id) {
+                            <svg class="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+                            </svg>
+                          } @else if (pinnedModuleIds().has(mod.id)) {
+                            <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                              <path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z"/>
+                            </svg>
+                          } @else {
+                            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+                              <path stroke-linecap="round" stroke-linejoin="round" d="M11.48 3.499a.562.562 0 0 1 1.04 0l2.125 5.111a.563.563 0 0 0 .475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 0 0-.182.557l1.285 5.385a.562.562 0 0 1-.84.61l-4.725-3.275a.562.562 0 0 0-.652 0L4.63 20.04a.562.562 0 0 1-.84-.61l1.285-5.386a.562.562 0 0 0-.182-.557L.476 9.996a.563.563 0 0 1 .321-.988l5.518-.442a.563.563 0 0 0 .475-.345L11.48 3.5Z"/>
+                            </svg>
+                          }
+                        </button>
                       </div>
                     </li>
                   }
@@ -129,11 +155,15 @@ import { DecimalPipe } from '@angular/common';
 })
 export class CourseDetailComponent implements OnInit {
   private readonly moodleService = inject(MoodleService);
+  private readonly pinnedContentService = inject(PinnedContentService);
 
   readonly courseId = input.required<number>();
   readonly sections = signal<MoodleCourseSection[]>([]);
   readonly loading = signal(true);
   readonly error = signal<string | null>(null);
+  readonly course = signal<MoodleCourse | null>(null);
+  readonly pinnedModuleIds = signal<Set<number>>(new Set());
+  readonly pinningModuleId = signal<number | null>(null);
 
   ngOnInit(): void {
     this.moodleService.getCourseContent(this.courseId()).subscribe({
@@ -147,6 +177,29 @@ export class CourseDetailComponent implements OnInit {
           : (err.error?.detail ?? err.error?.title ?? err.message ?? 'Failed to load course content.');
         this.error.set(detail);
         this.loading.set(false);
+      },
+    });
+
+    this.moodleService.getEnrolledCourses().subscribe({
+      next: (courses) => {
+        const found = courses.find(c => c.id === this.courseId()) ?? null;
+        this.course.set(found);
+      },
+    });
+  }
+
+  pinModule(mod: MoodleModule): void {
+    const c = this.course();
+    if (!c || this.pinningModuleId() === mod.id) return;
+
+    this.pinningModuleId.set(mod.id);
+    this.pinnedContentService.pinMoodleModule(c, mod).subscribe({
+      next: () => {
+        this.pinnedModuleIds.update(ids => new Set([...ids, mod.id]));
+        this.pinningModuleId.set(null);
+      },
+      error: () => {
+        this.pinningModuleId.set(null);
       },
     });
   }
