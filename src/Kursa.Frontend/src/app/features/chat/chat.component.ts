@@ -8,13 +8,12 @@ import { lucideArrowUp, lucidePaperclip } from '@ng-icons/lucide';
 import { HlmButton } from '@spartan-ng/helm/button';
 import { HlmCardImports } from '@spartan-ng/helm/card';
 import { HlmInputGroupImports } from '@spartan-ng/helm/input-group';
-import { HlmSeparator } from '@spartan-ng/helm/separator';
 import { ChatService, ChatThread, ChatMessage, Citation, ChatResponse } from '../../core/services/chat.service';
 
 @Component({
   selector: 'app-chat',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, DatePipe, HlmButton, ...HlmCardImports, ...HlmInputGroupImports, HlmSeparator, NgIconComponent],
+  imports: [FormsModule, DatePipe, HlmButton, ...HlmCardImports, ...HlmInputGroupImports, NgIconComponent],
   providers: [provideIcons({ lucideArrowUp, lucidePaperclip })],
   template: `
     <div class="flex h-full">
