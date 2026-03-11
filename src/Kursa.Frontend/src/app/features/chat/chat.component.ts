@@ -1,6 +1,8 @@
-import { ChangeDetectionStrategy, Component, inject, signal, computed, ElementRef, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal, ElementRef, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DatePipe } from '@angular/common';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+import { marked } from 'marked';
 import { ChatService, ChatThread, ChatMessage, Citation, ChatResponse } from '../../core/services/chat.service';
 
 @Component({
@@ -57,7 +59,11 @@ import { ChatService, ChatThread, ChatMessage, Citation, ChatResponse } from '..
                 class="max-w-2xl rounded-lg px-4 py-3"
                 [class]="msg.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-muted text-foreground'"
               >
-                <p class="whitespace-pre-wrap text-sm">{{ msg.content }}</p>
+                @if (msg.role === 'assistant') {
+                  <div class="prose prose-sm prose-invert max-w-none text-foreground [&_a]:text-primary [&_code]:rounded [&_code]:bg-background/50 [&_code]:px-1 [&_code]:py-0.5 [&_pre]:rounded [&_pre]:bg-background/50 [&_pre]:p-3" [innerHTML]="renderMarkdown(msg.content)"></div>
+                } @else {
+                  <p class="whitespace-pre-wrap text-sm">{{ msg.content }}</p>
+                }
                 <time class="mt-1 block text-xs opacity-60">{{ msg.createdAt | date:'short' }}</time>
               </div>
             </div>
@@ -122,6 +128,7 @@ import { ChatService, ChatThread, ChatMessage, Citation, ChatResponse } from '..
 })
 export class ChatComponent {
   private readonly chatService = inject(ChatService);
+  private readonly sanitizer = inject(DomSanitizer);
   private readonly messagesContainer = viewChild<ElementRef<HTMLDivElement>>('messagesContainer');
 
   readonly threads = signal<ChatThread[]>([]);
@@ -208,6 +215,10 @@ export class ChatComponent {
         this.error.set('Failed to send message. Please try again.');
       },
     });
+  }
+
+  renderMarkdown(content: string): SafeHtml {
+    return this.sanitizer.bypassSecurityTrustHtml(marked.parse(content) as string);
   }
 
   private scrollToBottom(): void {
