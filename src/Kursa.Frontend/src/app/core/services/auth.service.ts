@@ -41,7 +41,25 @@ export class AuthService {
 
     this.oauthService.configure(config);
     this.oauthService.setupAutomaticSilentRefresh();
-    await this.oauthService.loadDiscoveryDocumentAndTryLogin();
+
+    // Only load the discovery document — do NOT try to exchange auth codes.
+    // The CallbackComponent handles the actual code exchange via handleCallback().
+    // If we called loadDiscoveryDocumentAndTryLogin() here and the token exchange
+    // failed (e.g. Pocket ID misconfigured), the app would crash before rendering.
+    try {
+      await this.oauthService.loadDiscoveryDocument();
+    } catch {
+      // Non-fatal: app still renders the login page even without discovery doc.
+    }
+  }
+
+  async handleCallback(): Promise<boolean> {
+    try {
+      await this.oauthService.tryLogin();
+      return this.oauthService.hasValidAccessToken();
+    } catch {
+      return false;
+    }
   }
 
   login(): void {

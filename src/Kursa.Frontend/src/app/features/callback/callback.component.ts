@@ -1,13 +1,13 @@
 import { ChangeDetectionStrategy, Component, inject, OnInit, signal } from '@angular/core';
 import { Router } from '@angular/router';
-import { OAuthService } from 'angular-oauth2-oidc';
+import { AuthService } from '../../core/services/auth.service';
 
 @Component({
   selector: 'app-callback',
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="flex min-h-screen items-center justify-center bg-background">
-      <div class="text-center">
+      <div class="text-center px-4">
         <div class="mb-4 flex items-center justify-center gap-3">
           <span class="text-3xl font-bold text-foreground">Kursa</span>
         </div>
@@ -32,27 +32,25 @@ import { OAuthService } from 'angular-oauth2-oidc';
   `,
 })
 export class CallbackComponent implements OnInit {
-  private readonly oauthService = inject(OAuthService);
+  private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
 
   readonly error = signal<string | null>(null);
 
   async ngOnInit(): Promise<void> {
-    try {
-      await this.oauthService.loadDiscoveryDocumentAndTryLogin();
-
-      if (this.oauthService.hasValidAccessToken()) {
-        await this.router.navigate(['/dashboard']);
-      } else {
-        this.error.set('Could not complete sign-in. Make sure the Pocket ID client is configured with redirect URL http://localhost:4200/callback and Public client + PKCE enabled.');
-      }
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : String(err);
-      this.error.set(message || 'Unexpected error during sign-in.');
+    const success = await this.authService.handleCallback();
+    if (success) {
+      await this.router.navigate(['/dashboard']);
+    } else {
+      this.error.set(
+        'Sign-in failed. Make sure the Pocket ID client has redirect URL ' +
+          window.location.origin +
+          '/callback registered, and that Public client + PKCE are enabled.',
+      );
     }
   }
 
   retry(): void {
-    this.oauthService.initCodeFlow();
+    this.authService.login();
   }
 }
