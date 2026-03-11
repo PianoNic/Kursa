@@ -2,15 +2,18 @@ import { ChangeDetectionStrategy, Component, inject, signal, ElementRef, viewChi
 import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { marked } from 'marked';
+import { NgIconComponent, provideIcons } from '@ng-icons/core';
+import { lucideArrowUp } from '@ng-icons/lucide';
 import { HlmButton } from '@spartan-ng/helm/button';
-import { HlmInput } from '@spartan-ng/helm/input';
+import { HlmInputGroupImports } from '@spartan-ng/helm/input-group';
 import { AiContextService, ViewContext } from '../core/services/ai-context.service';
 import { ChatService, ChatMessage, Citation, ChatResponse } from '../core/services/chat.service';
 
 @Component({
   selector: 'app-ai-panel',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, HlmButton, HlmInput],
+  imports: [FormsModule, HlmButton, ...HlmInputGroupImports, NgIconComponent],
+  providers: [provideIcons({ lucideArrowUp })],
   template: `
     <aside
       class="fixed inset-y-0 right-0 z-30 flex w-96 flex-col border-l border-border bg-card transition-transform duration-300"
@@ -115,28 +118,34 @@ import { ChatService, ChatMessage, Citation, ChatResponse } from '../core/servic
 
       <!-- Input -->
       <div class="border-t border-border p-3">
-        <form (submit)="send($event)" class="flex gap-2">
+        <form (submit)="send($event)">
           <label for="ai-panel-input" class="sr-only">Ask Kursa AI</label>
-          <input
-            hlmInput
-            id="ai-panel-input"
-            type="text"
-            [(ngModel)]="inputMessage"
-            name="message"
-            [placeholder]="inputPlaceholder()"
-            [disabled]="loading()"
-            class="flex-1 py-1.5"
-          />
-          <button
-            hlmBtn
-            type="submit"
-            [disabled]="loading() || !inputMessage.trim()"
-            aria-label="Send message"
-          >
-            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5" />
-            </svg>
-          </button>
+          <div hlmInputGroup>
+            <textarea
+              hlmInputGroupTextarea
+              id="ai-panel-input"
+              [(ngModel)]="inputMessage"
+              name="message"
+              [placeholder]="inputPlaceholder()"
+              [disabled]="loading()"
+              rows="1"
+              (keydown.enter)="onEnterKey($event)"
+              class="resize-none text-sm"
+            ></textarea>
+            <div hlmInputGroupAddon align="block-end">
+              <button
+                hlmInputGroupButton
+                type="submit"
+                variant="default"
+                size="icon-sm"
+                class="ml-auto rounded-full"
+                [disabled]="loading() || !inputMessage.trim()"
+                aria-label="Send message"
+              >
+                <ng-icon name="lucideArrowUp" aria-hidden="true" />
+              </button>
+            </div>
+          </div>
         </form>
       </div>
     </aside>
@@ -191,6 +200,14 @@ export class AiPanelComponent {
 
   inputMessage = '';
   private threadId: string | undefined;
+
+  onEnterKey(event: Event): void {
+    const ke = event as KeyboardEvent;
+    if (!ke.shiftKey) {
+      event.preventDefault();
+      this.send(event);
+    }
+  }
 
   send(event: Event): void {
     event.preventDefault();
