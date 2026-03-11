@@ -1,17 +1,17 @@
 using Kursa.Application.Common.Interfaces;
 using Kursa.Application.Common.Models;
-using MediatR;
+using Mediator;
 using Microsoft.EntityFrameworkCore;
 
 namespace Kursa.Application.Features.Flashcards.Queries;
 
-public sealed record GetDeckDetailQuery(Guid DeckId) : IRequest<Result<FlashcardDeckDetailDto>>;
+public sealed record GetDeckDetailQuery(Guid DeckId) : IQuery<Result<FlashcardDeckDetailDto>>;
 
 public sealed class GetDeckDetailHandler(
     ICurrentUserService currentUserService,
-    IAppDbContext dbContext) : IRequestHandler<GetDeckDetailQuery, Result<FlashcardDeckDetailDto>>
+    IAppDbContext dbContext) : IQueryHandler<GetDeckDetailQuery, Result<FlashcardDeckDetailDto>>
 {
-    public async Task<Result<FlashcardDeckDetailDto>> Handle(GetDeckDetailQuery request, CancellationToken cancellationToken)
+    public async ValueTask<Result<FlashcardDeckDetailDto>> Handle(GetDeckDetailQuery request, CancellationToken cancellationToken)
     {
         if (!currentUserService.IsAuthenticated || currentUserService.ExternalId is null)
             return Result<FlashcardDeckDetailDto>.Failure("User is not authenticated.");

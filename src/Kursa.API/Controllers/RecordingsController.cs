@@ -1,6 +1,6 @@
 using Kursa.Application.Features.Recordings.Commands;
 using Kursa.Application.Features.Recordings.Queries;
-using MediatR;
+using Mediator;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 

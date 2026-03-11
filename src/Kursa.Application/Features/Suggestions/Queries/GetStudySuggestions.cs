@@ -1,19 +1,19 @@
 using Kursa.Application.Common.Interfaces;
 using Kursa.Application.Common.Models;
 using Kursa.Application.Features.Suggestions.Models;
-using MediatR;
+using Mediator;
 using Microsoft.EntityFrameworkCore;
 
 namespace Kursa.Application.Features.Suggestions.Queries;
 
-public sealed record GetStudySuggestionsQuery : IRequest<Result<IReadOnlyList<StudySuggestionDto>>>;
+public sealed record GetStudySuggestionsQuery : IQuery<Result<IReadOnlyList<StudySuggestionDto>>>;
 
 public sealed class GetStudySuggestionsHandler(
     ICurrentUserService currentUserService,
     IAppDbContext dbContext,
-    IStudySuggestionService suggestionService) : IRequestHandler<GetStudySuggestionsQuery, Result<IReadOnlyList<StudySuggestionDto>>>
+    IStudySuggestionService suggestionService) : IQueryHandler<GetStudySuggestionsQuery, Result<IReadOnlyList<StudySuggestionDto>>>
 {
-    public async Task<Result<IReadOnlyList<StudySuggestionDto>>> Handle(
+    public async ValueTask<Result<IReadOnlyList<StudySuggestionDto>>> Handle(
         GetStudySuggestionsQuery request, CancellationToken cancellationToken)
     {
         if (!currentUserService.IsAuthenticated || currentUserService.ExternalId is null)

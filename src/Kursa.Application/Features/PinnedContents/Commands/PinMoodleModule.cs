@@ -3,7 +3,7 @@ using Kursa.Application.Common.Interfaces;
 using Kursa.Application.Common.Models;
 using Kursa.Domain.Entities;
 using Kursa.Domain.Enums;
-using MediatR;
+using Mediator;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -25,7 +25,7 @@ public sealed record PinMoodleModuleCommand(
     string? Description,
     string? Url,
     string? FileUrl
-) : IRequest<Result<PinMoodleModuleResponseDto>>;
+) : ICommand<Result<PinMoodleModuleResponseDto>>;
 
 public sealed record PinMoodleModuleResponseDto(Guid ContentId, bool AlreadyIndexed);
 
@@ -45,9 +45,9 @@ public sealed class PinMoodleModuleHandler(
     ICurrentUserService currentUserService,
     IAppDbContext dbContext,
     IServiceScopeFactory scopeFactory,
-    ILogger<PinMoodleModuleHandler> logger) : IRequestHandler<PinMoodleModuleCommand, Result<PinMoodleModuleResponseDto>>
+    ILogger<PinMoodleModuleHandler> logger) : ICommandHandler<PinMoodleModuleCommand, Result<PinMoodleModuleResponseDto>>
 {
-    public async Task<Result<PinMoodleModuleResponseDto>> Handle(
+    public async ValueTask<Result<PinMoodleModuleResponseDto>> Handle(
         PinMoodleModuleCommand request, CancellationToken cancellationToken)
     {
         if (!currentUserService.IsAuthenticated || currentUserService.ExternalId is null)

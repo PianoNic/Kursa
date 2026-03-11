@@ -2,7 +2,7 @@ using FluentValidation;
 using Kursa.Application.Common.Interfaces;
 using Kursa.Application.Common.Models;
 using Kursa.Domain.Entities;
-using MediatR;
+using Mediator;
 using Microsoft.EntityFrameworkCore;
 
 namespace Kursa.Application.Features.Flashcards.Commands;
@@ -11,7 +11,7 @@ public sealed record CreateFlashcardCommand(
     Guid DeckId,
     string Front,
     string Back,
-    FlashcardType Type = FlashcardType.Basic) : IRequest<Result<FlashcardDto>>;
+    FlashcardType Type = FlashcardType.Basic) : ICommand<Result<FlashcardDto>>;
 
 public sealed class CreateFlashcardValidator : AbstractValidator<CreateFlashcardCommand>
 {
@@ -25,9 +25,9 @@ public sealed class CreateFlashcardValidator : AbstractValidator<CreateFlashcard
 
 public sealed class CreateFlashcardHandler(
     ICurrentUserService currentUserService,
-    IAppDbContext dbContext) : IRequestHandler<CreateFlashcardCommand, Result<FlashcardDto>>
+    IAppDbContext dbContext) : ICommandHandler<CreateFlashcardCommand, Result<FlashcardDto>>
 {
-    public async Task<Result<FlashcardDto>> Handle(CreateFlashcardCommand request, CancellationToken cancellationToken)
+    public async ValueTask<Result<FlashcardDto>> Handle(CreateFlashcardCommand request, CancellationToken cancellationToken)
     {
         if (!currentUserService.IsAuthenticated || currentUserService.ExternalId is null)
             return Result<FlashcardDto>.Failure("User is not authenticated.");

@@ -1,19 +1,19 @@
 using Kursa.Application.Common.Interfaces;
 using Kursa.Application.Common.Models;
 using Kursa.Domain.Entities;
-using MediatR;
+using Mediator;
 using Microsoft.EntityFrameworkCore;
 
 namespace Kursa.Application.Features.Recordings.Commands;
 
-public sealed record TranscribeRecordingCommand(Guid RecordingId) : IRequest<Result<bool>>;
+public sealed record TranscribeRecordingCommand(Guid RecordingId) : ICommand<Result<bool>>;
 
 public sealed class TranscribeRecordingHandler(
     ICurrentUserService currentUserService,
     IAppDbContext dbContext,
-    ITranscriptionQueue transcriptionQueue) : IRequestHandler<TranscribeRecordingCommand, Result<bool>>
+    ITranscriptionQueue transcriptionQueue) : ICommandHandler<TranscribeRecordingCommand, Result<bool>>
 {
-    public async Task<Result<bool>> Handle(TranscribeRecordingCommand request, CancellationToken cancellationToken)
+    public async ValueTask<Result<bool>> Handle(TranscribeRecordingCommand request, CancellationToken cancellationToken)
     {
         if (!currentUserService.IsAuthenticated || currentUserService.ExternalId is null)
             return Result<bool>.Failure("User is not authenticated.");

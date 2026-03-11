@@ -2,7 +2,7 @@ using Kursa.Application.Common.Interfaces;
 using Kursa.Application.Common.Models;
 using Kursa.Domain.Entities;
 using FluentValidation;
-using MediatR;
+using Mediator;
 using Microsoft.EntityFrameworkCore;
 
 namespace Kursa.Application.Features.Users.Commands;
@@ -11,7 +11,7 @@ public sealed record UpdateUserSettingsCommand(
     string? Theme,
     string? Language,
     string? Timezone,
-    bool? NotificationsEnabled) : IRequest<Result<UserSettingsDto>>;
+    bool? NotificationsEnabled) : ICommand<Result<UserSettingsDto>>;
 
 public sealed class UpdateUserSettingsValidator : AbstractValidator<UpdateUserSettingsCommand>
 {
@@ -36,9 +36,9 @@ public sealed class UpdateUserSettingsValidator : AbstractValidator<UpdateUserSe
 
 public sealed class UpdateUserSettingsHandler(
     ICurrentUserService currentUserService,
-    IAppDbContext dbContext) : IRequestHandler<UpdateUserSettingsCommand, Result<UserSettingsDto>>
+    IAppDbContext dbContext) : ICommandHandler<UpdateUserSettingsCommand, Result<UserSettingsDto>>
 {
-    public async Task<Result<UserSettingsDto>> Handle(
+    public async ValueTask<Result<UserSettingsDto>> Handle(
         UpdateUserSettingsCommand request,
         CancellationToken cancellationToken)
     {

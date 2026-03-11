@@ -1,17 +1,17 @@
 using Kursa.Application.Common.Interfaces;
 using Kursa.Application.Common.Models;
-using MediatR;
+using Mediator;
 using Microsoft.EntityFrameworkCore;
 
 namespace Kursa.Application.Features.Users.Commands;
 
-public sealed record CompleteOnboardingCommand : IRequest<Result>;
+public sealed record CompleteOnboardingCommand : ICommand<Result>;
 
 public sealed class CompleteOnboardingHandler(
     ICurrentUserService currentUserService,
-    IAppDbContext dbContext) : IRequestHandler<CompleteOnboardingCommand, Result>
+    IAppDbContext dbContext) : ICommandHandler<CompleteOnboardingCommand, Result>
 {
-    public async Task<Result> Handle(CompleteOnboardingCommand request, CancellationToken cancellationToken)
+    public async ValueTask<Result> Handle(CompleteOnboardingCommand request, CancellationToken cancellationToken)
     {
         if (!currentUserService.IsAuthenticated || currentUserService.ExternalId is null)
             return Result.Failure("User is not authenticated.");

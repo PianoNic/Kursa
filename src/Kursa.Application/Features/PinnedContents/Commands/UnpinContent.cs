@@ -1,12 +1,12 @@
 using FluentValidation;
 using Kursa.Application.Common.Interfaces;
 using Kursa.Application.Common.Models;
-using MediatR;
+using Mediator;
 using Microsoft.EntityFrameworkCore;
 
 namespace Kursa.Application.Features.PinnedContents.Commands;
 
-public sealed record UnpinContentCommand(Guid ContentId) : IRequest<Result>;
+public sealed record UnpinContentCommand(Guid ContentId) : ICommand<Result>;
 
 public sealed class UnpinContentValidator : AbstractValidator<UnpinContentCommand>
 {
@@ -18,9 +18,9 @@ public sealed class UnpinContentValidator : AbstractValidator<UnpinContentComman
 
 public sealed class UnpinContentHandler(
     ICurrentUserService currentUserService,
-    IAppDbContext dbContext) : IRequestHandler<UnpinContentCommand, Result>
+    IAppDbContext dbContext) : ICommandHandler<UnpinContentCommand, Result>
 {
-    public async Task<Result> Handle(UnpinContentCommand request, CancellationToken cancellationToken)
+    public async ValueTask<Result> Handle(UnpinContentCommand request, CancellationToken cancellationToken)
     {
         if (!currentUserService.IsAuthenticated || currentUserService.ExternalId is null)
             return Result.Failure("User is not authenticated.");

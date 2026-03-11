@@ -1,18 +1,18 @@
 using Kursa.Application.Common.Interfaces;
 using Kursa.Application.Common.Models;
 using Kursa.Domain.Entities;
-using MediatR;
+using Mediator;
 using Microsoft.EntityFrameworkCore;
 
 namespace Kursa.Application.Features.Analytics;
 
-public sealed record GetAnalyticsQuery : IRequest<Result<AnalyticsDto>>;
+public sealed record GetAnalyticsQuery : IQuery<Result<AnalyticsDto>>;
 
 public sealed class GetAnalyticsHandler(
     ICurrentUserService currentUserService,
-    IAppDbContext dbContext) : IRequestHandler<GetAnalyticsQuery, Result<AnalyticsDto>>
+    IAppDbContext dbContext) : IQueryHandler<GetAnalyticsQuery, Result<AnalyticsDto>>
 {
-    public async Task<Result<AnalyticsDto>> Handle(GetAnalyticsQuery request, CancellationToken cancellationToken)
+    public async ValueTask<Result<AnalyticsDto>> Handle(GetAnalyticsQuery request, CancellationToken cancellationToken)
     {
         if (!currentUserService.IsAuthenticated || currentUserService.ExternalId is null)
             return Result<AnalyticsDto>.Failure("User is not authenticated.");

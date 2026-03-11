@@ -3,7 +3,7 @@ using FluentValidation;
 using Kursa.Application.Common.Interfaces;
 using Kursa.Application.Common.Models;
 using Kursa.Domain.Entities;
-using MediatR;
+using Mediator;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.SemanticKernel;
@@ -13,7 +13,7 @@ using Microsoft.SemanticKernel.Embeddings;
 
 namespace Kursa.Application.Features.Chat.Commands;
 
-public sealed record SendChatMessageCommand(Guid? ThreadId, string Message) : IRequest<Result<ChatResponseDto>>;
+public sealed record SendChatMessageCommand(Guid? ThreadId, string Message) : ICommand<Result<ChatResponseDto>>;
 
 public sealed class SendChatMessageValidator : AbstractValidator<SendChatMessageCommand>
 {
@@ -30,7 +30,7 @@ public sealed class SendChatMessageHandler(
     ITextEmbeddingGenerationService embeddingService,
     IVectorStore vectorStore,
     IMoodleService moodleService,
-    ILogger<SendChatMessageHandler> logger) : IRequestHandler<SendChatMessageCommand, Result<ChatResponseDto>>
+    ILogger<SendChatMessageHandler> logger) : ICommandHandler<SendChatMessageCommand, Result<ChatResponseDto>>
 {
     private const string SystemPrompt =
         """
@@ -54,7 +54,7 @@ public sealed class SendChatMessageHandler(
         - Be concise but thorough.
         """;
 
-    public async Task<Result<ChatResponseDto>> Handle(SendChatMessageCommand request, CancellationToken cancellationToken)
+    public async ValueTask<Result<ChatResponseDto>> Handle(SendChatMessageCommand request, CancellationToken cancellationToken)
     {
         if (!currentUserService.IsAuthenticated || currentUserService.ExternalId is null)
             return Result<ChatResponseDto>.Failure("User is not authenticated.");

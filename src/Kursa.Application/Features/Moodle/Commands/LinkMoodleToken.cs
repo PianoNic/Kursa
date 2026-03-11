@@ -1,12 +1,12 @@
 using Kursa.Application.Common.Interfaces;
 using Kursa.Application.Common.Models;
 using FluentValidation;
-using MediatR;
+using Mediator;
 using Microsoft.EntityFrameworkCore;
 
 namespace Kursa.Application.Features.Moodle.Commands;
 
-public sealed record LinkMoodleTokenCommand(string Username, string Password) : IRequest<Result>;
+public sealed record LinkMoodleTokenCommand(string Username, string Password) : ICommand<Result>;
 
 public sealed class LinkMoodleTokenValidator : AbstractValidator<LinkMoodleTokenCommand>
 {
@@ -20,9 +20,9 @@ public sealed class LinkMoodleTokenValidator : AbstractValidator<LinkMoodleToken
 public sealed class LinkMoodleTokenHandler(
     ICurrentUserService currentUserService,
     IAppDbContext dbContext,
-    IMoodleService moodleService) : IRequestHandler<LinkMoodleTokenCommand, Result>
+    IMoodleService moodleService) : ICommandHandler<LinkMoodleTokenCommand, Result>
 {
-    public async Task<Result> Handle(LinkMoodleTokenCommand request, CancellationToken cancellationToken)
+    public async ValueTask<Result> Handle(LinkMoodleTokenCommand request, CancellationToken cancellationToken)
     {
         if (currentUserService.ExternalId is null)
         {

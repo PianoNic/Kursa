@@ -1,17 +1,17 @@
 using Kursa.Application.Common.Interfaces;
 using Kursa.Application.Common.Models;
-using MediatR;
+using Mediator;
 using Microsoft.EntityFrameworkCore;
 
 namespace Kursa.Application.Features.Chat.Queries;
 
-public sealed record GetChatMessagesQuery(Guid ThreadId) : IRequest<Result<IReadOnlyList<ChatMessageDto>>>;
+public sealed record GetChatMessagesQuery(Guid ThreadId) : IQuery<Result<IReadOnlyList<ChatMessageDto>>>;
 
 public sealed class GetChatMessagesHandler(
     ICurrentUserService currentUserService,
-    IAppDbContext dbContext) : IRequestHandler<GetChatMessagesQuery, Result<IReadOnlyList<ChatMessageDto>>>
+    IAppDbContext dbContext) : IQueryHandler<GetChatMessagesQuery, Result<IReadOnlyList<ChatMessageDto>>>
 {
-    public async Task<Result<IReadOnlyList<ChatMessageDto>>> Handle(GetChatMessagesQuery request, CancellationToken cancellationToken)
+    public async ValueTask<Result<IReadOnlyList<ChatMessageDto>>> Handle(GetChatMessagesQuery request, CancellationToken cancellationToken)
     {
         if (!currentUserService.IsAuthenticated || currentUserService.ExternalId is null)
             return Result<IReadOnlyList<ChatMessageDto>>.Failure("User is not authenticated.");

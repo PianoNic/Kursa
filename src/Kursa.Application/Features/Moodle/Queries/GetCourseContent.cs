@@ -2,12 +2,12 @@ using FluentValidation;
 using Kursa.Application.Common.Interfaces;
 using Kursa.Application.Common.Models;
 using Kursa.Application.Features.Moodle.Models;
-using MediatR;
+using Mediator;
 using Microsoft.EntityFrameworkCore;
 
 namespace Kursa.Application.Features.Moodle.Queries;
 
-public sealed record GetCourseContentQuery(int MoodleCourseId) : IRequest<Result<IReadOnlyList<MoodleCourseSectionDto>>>;
+public sealed record GetCourseContentQuery(int MoodleCourseId) : IQuery<Result<IReadOnlyList<MoodleCourseSectionDto>>>;
 
 public sealed class GetCourseContentValidator : AbstractValidator<GetCourseContentQuery>
 {
@@ -20,9 +20,9 @@ public sealed class GetCourseContentValidator : AbstractValidator<GetCourseConte
 public sealed class GetCourseContentHandler(
     ICurrentUserService currentUserService,
     IAppDbContext dbContext,
-    IMoodleService moodleService) : IRequestHandler<GetCourseContentQuery, Result<IReadOnlyList<MoodleCourseSectionDto>>>
+    IMoodleService moodleService) : IQueryHandler<GetCourseContentQuery, Result<IReadOnlyList<MoodleCourseSectionDto>>>
 {
-    public async Task<Result<IReadOnlyList<MoodleCourseSectionDto>>> Handle(
+    public async ValueTask<Result<IReadOnlyList<MoodleCourseSectionDto>>> Handle(
         GetCourseContentQuery request, CancellationToken cancellationToken)
     {
         if (!currentUserService.IsAuthenticated || currentUserService.ExternalId is null)

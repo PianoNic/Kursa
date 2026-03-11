@@ -1,14 +1,14 @@
 using Kursa.Application.Common.Interfaces;
 using Kursa.Application.Common.Models;
 using FluentValidation;
-using MediatR;
+using Mediator;
 using Microsoft.EntityFrameworkCore;
 
 namespace Kursa.Application.Features.Users.Commands;
 
 public sealed record UpdateUserProfileCommand(
     string? DisplayName,
-    string? AvatarUrl) : IRequest<Result<UserDto>>;
+    string? AvatarUrl) : ICommand<Result<UserDto>>;
 
 public sealed class UpdateUserProfileValidator : AbstractValidator<UpdateUserProfileCommand>
 {
@@ -26,9 +26,9 @@ public sealed class UpdateUserProfileValidator : AbstractValidator<UpdateUserPro
 
 public sealed class UpdateUserProfileHandler(
     ICurrentUserService currentUserService,
-    IUserSyncService userSyncService) : IRequestHandler<UpdateUserProfileCommand, Result<UserDto>>
+    IUserSyncService userSyncService) : ICommandHandler<UpdateUserProfileCommand, Result<UserDto>>
 {
-    public async Task<Result<UserDto>> Handle(UpdateUserProfileCommand request, CancellationToken cancellationToken)
+    public async ValueTask<Result<UserDto>> Handle(UpdateUserProfileCommand request, CancellationToken cancellationToken)
     {
         if (currentUserService.ExternalId is null || currentUserService.Email is null)
         {

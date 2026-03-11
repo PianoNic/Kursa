@@ -1,18 +1,18 @@
 using Kursa.Application.Common.Interfaces;
 using Kursa.Application.Common.Models;
 using Kursa.Domain.Entities;
-using MediatR;
+using Mediator;
 using Microsoft.EntityFrameworkCore;
 
 namespace Kursa.Application.Features.Quizzes.Queries;
 
-public sealed record GetQuizResultsQuery(Guid QuizId) : IRequest<Result<IReadOnlyList<QuizAttemptDto>>>;
+public sealed record GetQuizResultsQuery(Guid QuizId) : IQuery<Result<IReadOnlyList<QuizAttemptDto>>>;
 
 public sealed class GetQuizResultsHandler(
     ICurrentUserService currentUserService,
-    IAppDbContext dbContext) : IRequestHandler<GetQuizResultsQuery, Result<IReadOnlyList<QuizAttemptDto>>>
+    IAppDbContext dbContext) : IQueryHandler<GetQuizResultsQuery, Result<IReadOnlyList<QuizAttemptDto>>>
 {
-    public async Task<Result<IReadOnlyList<QuizAttemptDto>>> Handle(GetQuizResultsQuery request, CancellationToken cancellationToken)
+    public async ValueTask<Result<IReadOnlyList<QuizAttemptDto>>> Handle(GetQuizResultsQuery request, CancellationToken cancellationToken)
     {
         if (!currentUserService.IsAuthenticated || currentUserService.ExternalId is null)
             return Result<IReadOnlyList<QuizAttemptDto>>.Failure("User is not authenticated.");

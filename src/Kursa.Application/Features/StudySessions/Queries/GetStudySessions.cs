@@ -1,17 +1,17 @@
 using Kursa.Application.Common.Interfaces;
 using Kursa.Application.Common.Models;
-using MediatR;
+using Mediator;
 using Microsoft.EntityFrameworkCore;
 
 namespace Kursa.Application.Features.StudySessions.Queries;
 
-public sealed record GetStudySessionsQuery : IRequest<Result<IReadOnlyList<StudySessionDto>>>;
+public sealed record GetStudySessionsQuery : IQuery<Result<IReadOnlyList<StudySessionDto>>>;
 
 public sealed class GetStudySessionsHandler(
     ICurrentUserService currentUserService,
-    IAppDbContext dbContext) : IRequestHandler<GetStudySessionsQuery, Result<IReadOnlyList<StudySessionDto>>>
+    IAppDbContext dbContext) : IQueryHandler<GetStudySessionsQuery, Result<IReadOnlyList<StudySessionDto>>>
 {
-    public async Task<Result<IReadOnlyList<StudySessionDto>>> Handle(GetStudySessionsQuery request, CancellationToken cancellationToken)
+    public async ValueTask<Result<IReadOnlyList<StudySessionDto>>> Handle(GetStudySessionsQuery request, CancellationToken cancellationToken)
     {
         if (!currentUserService.IsAuthenticated || currentUserService.ExternalId is null)
             return Result<IReadOnlyList<StudySessionDto>>.Failure("User is not authenticated.");

@@ -1,6 +1,6 @@
 using Kursa.Application.Features.Chat.Commands;
 using Kursa.Application.Features.Chat.Queries;
-using MediatR;
+using Mediator;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 

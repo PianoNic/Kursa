@@ -2,7 +2,7 @@ using FluentValidation;
 using Kursa.Application.Common.Interfaces;
 using Kursa.Application.Common.Models;
 using Kursa.Domain.Entities;
-using MediatR;
+using Mediator;
 using Microsoft.EntityFrameworkCore;
 
 namespace Kursa.Application.Features.StudySessions.Commands;
@@ -10,7 +10,7 @@ namespace Kursa.Application.Features.StudySessions.Commands;
 public sealed record StartStudySessionCommand(
     string Title,
     int WorkMinutes = 25,
-    int BreakMinutes = 5) : IRequest<Result<StudySessionDto>>;
+    int BreakMinutes = 5) : ICommand<Result<StudySessionDto>>;
 
 public sealed class StartStudySessionValidator : AbstractValidator<StartStudySessionCommand>
 {
@@ -24,9 +24,9 @@ public sealed class StartStudySessionValidator : AbstractValidator<StartStudySes
 
 public sealed class StartStudySessionHandler(
     ICurrentUserService currentUserService,
-    IAppDbContext dbContext) : IRequestHandler<StartStudySessionCommand, Result<StudySessionDto>>
+    IAppDbContext dbContext) : ICommandHandler<StartStudySessionCommand, Result<StudySessionDto>>
 {
-    public async Task<Result<StudySessionDto>> Handle(StartStudySessionCommand request, CancellationToken cancellationToken)
+    public async ValueTask<Result<StudySessionDto>> Handle(StartStudySessionCommand request, CancellationToken cancellationToken)
     {
         if (!currentUserService.IsAuthenticated || currentUserService.ExternalId is null)
             return Result<StudySessionDto>.Failure("User is not authenticated.");
