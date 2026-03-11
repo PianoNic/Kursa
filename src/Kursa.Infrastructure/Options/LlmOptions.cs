@@ -18,7 +18,8 @@ public sealed class LlmOptions
 
     public string OpenRouterBaseUrl { get; init; } = "https://openrouter.ai/api/v1";
 
-    public string OllamaHost { get; init; } = "http://localhost:11434";
+    /// <summary>Must include the /v1 path — e.g. http://localhost:11434/v1 or https://your-ollama/v1</summary>
+    public string OllamaHost { get; init; } = "http://localhost:11434/v1";
 
     public int MaxRetries { get; init; } = 3;
 
