@@ -3,13 +3,16 @@ using System.Net.Http.Headers;
 using System.Text.Json;
 using Kursa.Application.Common.Interfaces;
 using Kursa.Application.Features.Moodle.Models;
+using Kursa.Infrastructure.Options;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace Kursa.Infrastructure.Services;
 
 public sealed class MoodleService(
     IHttpClientFactory httpClientFactory,
+    IOptions<MoodleOptions> moodleOptions,
     IDistributedCache cache,
     ILogger<MoodleService> logger) : IMoodleService
 {
@@ -21,8 +24,10 @@ public sealed class MoodleService(
     private static readonly TimeSpan CourseCacheDuration = TimeSpan.FromMinutes(5);
     private static readonly TimeSpan ContentCacheDuration = TimeSpan.FromMinutes(2);
 
+    private string BridgeUrl => moodleOptions.Value.BridgeUrl.TrimEnd('/');
+
     public async Task<IReadOnlyList<MoodleCourseDto>> GetEnrolledCoursesAsync(
-        string moodleUrl, string moodleToken, CancellationToken cancellationToken = default)
+        string moodleToken, CancellationToken cancellationToken = default)
     {
         string cacheKey = $"moodle:courses:{HashToken(moodleToken)}";
 
@@ -30,11 +35,9 @@ public sealed class MoodleService(
         if (cached is not null)
             return cached;
 
-        var response = await SendMoodleRequestAsync(
-            moodleUrl, moodleToken, "/core_enrol_get_users_courses", cancellationToken);
+        var response = await SendRequestAsync(moodleToken, "/core_enrol_get_users_courses", cancellationToken);
 
-        var courses = JsonSerializer.Deserialize<List<MoodleCourseDto>>(response, JsonOptions)
-            ?? [];
+        var courses = JsonSerializer.Deserialize<List<MoodleCourseDto>>(response, JsonOptions) ?? [];
 
         await SetCacheAsync(cacheKey, courses, CourseCacheDuration, cancellationToken);
 
@@ -42,7 +45,7 @@ public sealed class MoodleService(
     }
 
     public async Task<IReadOnlyList<MoodleCourseSectionDto>> GetCourseContentAsync(
-        string moodleUrl, string moodleToken, int courseId, CancellationToken cancellationToken = default)
+        string moodleToken, int courseId, CancellationToken cancellationToken = default)
     {
         string cacheKey = $"moodle:content:{HashToken(moodleToken)}:{courseId}";
 
@@ -50,11 +53,10 @@ public sealed class MoodleService(
         if (cached is not null)
             return cached;
 
-        var response = await SendMoodleRequestAsync(
-            moodleUrl, moodleToken, $"/core_course_get_contents?courseid={courseId}", cancellationToken);
+        var response = await SendRequestAsync(
+            moodleToken, $"/core_course_get_contents?courseid={courseId}", cancellationToken);
 
-        var sections = JsonSerializer.Deserialize<List<MoodleCourseSectionDto>>(response, JsonOptions)
-            ?? [];
+        var sections = JsonSerializer.Deserialize<List<MoodleCourseSectionDto>>(response, JsonOptions) ?? [];
 
         await SetCacheAsync(cacheKey, sections, ContentCacheDuration, cancellationToken);
 
@@ -62,17 +64,16 @@ public sealed class MoodleService(
     }
 
     public async Task<MoodleSiteInfoDto> GetSiteInfoAsync(
-        string moodleUrl, string moodleToken, CancellationToken cancellationToken = default)
+        string moodleToken, CancellationToken cancellationToken = default)
     {
-        var response = await SendMoodleRequestAsync(
-            moodleUrl, moodleToken, "/core_webservice_get_site_info", cancellationToken);
+        var response = await SendRequestAsync(moodleToken, "/core_webservice_get_site_info", cancellationToken);
 
         return JsonSerializer.Deserialize<MoodleSiteInfoDto>(response, JsonOptions)
             ?? throw new InvalidOperationException("Failed to deserialize Moodle site info.");
     }
 
     public async Task<MoodleAssignmentsResponseDto> GetAssignmentsAsync(
-        string moodleUrl, string moodleToken, IReadOnlyList<int>? courseIds = null,
+        string moodleToken, IReadOnlyList<int>? courseIds = null,
         CancellationToken cancellationToken = default)
     {
         string courseParam = courseIds is { Count: > 0 }
@@ -85,8 +86,8 @@ public sealed class MoodleService(
         if (cached is not null)
             return cached;
 
-        var response = await SendMoodleRequestAsync(
-            moodleUrl, moodleToken, $"/mod_assign_get_assignments{courseParam}", cancellationToken);
+        var response = await SendRequestAsync(
+            moodleToken, $"/mod_assign_get_assignments{courseParam}", cancellationToken);
 
         var result = JsonSerializer.Deserialize<MoodleAssignmentsResponseDto>(response, JsonOptions)
             ?? new MoodleAssignmentsResponseDto();
@@ -97,7 +98,7 @@ public sealed class MoodleService(
     }
 
     public async Task<MoodleGradeReportDto> GetGradesAsync(
-        string moodleUrl, string moodleToken, int courseId, CancellationToken cancellationToken = default)
+        string moodleToken, int courseId, CancellationToken cancellationToken = default)
     {
         string cacheKey = $"moodle:grades:{HashToken(moodleToken)}:{courseId}";
 
@@ -105,8 +106,8 @@ public sealed class MoodleService(
         if (cached is not null)
             return cached;
 
-        var response = await SendMoodleRequestAsync(
-            moodleUrl, moodleToken, $"/gradereport_user_get_grade_items?courseid={courseId}", cancellationToken);
+        var response = await SendRequestAsync(
+            moodleToken, $"/gradereport_user_get_grade_items?courseid={courseId}", cancellationToken);
 
         var result = JsonSerializer.Deserialize<MoodleGradeReportDto>(response, JsonOptions)
             ?? new MoodleGradeReportDto();
@@ -117,7 +118,7 @@ public sealed class MoodleService(
     }
 
     public async Task<IReadOnlyList<MoodleForumDto>> GetForumsAsync(
-        string moodleUrl, string moodleToken, int courseId, CancellationToken cancellationToken = default)
+        string moodleToken, int courseId, CancellationToken cancellationToken = default)
     {
         string cacheKey = $"moodle:forums:{HashToken(moodleToken)}:{courseId}";
 
@@ -125,8 +126,8 @@ public sealed class MoodleService(
         if (cached is not null)
             return cached;
 
-        var response = await SendMoodleRequestAsync(
-            moodleUrl, moodleToken, $"/mod_forum_get_forums_by_courses?courseids[0]={courseId}", cancellationToken);
+        var response = await SendRequestAsync(
+            moodleToken, $"/mod_forum_get_forums_by_courses?courseids[0]={courseId}", cancellationToken);
 
         var forums = JsonSerializer.Deserialize<List<MoodleForumDto>>(response, JsonOptions) ?? [];
 
@@ -136,7 +137,7 @@ public sealed class MoodleService(
     }
 
     public async Task<MoodleForumDiscussionsResponseDto> GetForumDiscussionsAsync(
-        string moodleUrl, string moodleToken, int forumId, CancellationToken cancellationToken = default)
+        string moodleToken, int forumId, CancellationToken cancellationToken = default)
     {
         string cacheKey = $"moodle:discussions:{HashToken(moodleToken)}:{forumId}";
 
@@ -144,8 +145,8 @@ public sealed class MoodleService(
         if (cached is not null)
             return cached;
 
-        var response = await SendMoodleRequestAsync(
-            moodleUrl, moodleToken, $"/mod_forum_get_forum_discussions?forumid={forumId}", cancellationToken);
+        var response = await SendRequestAsync(
+            moodleToken, $"/mod_forum_get_forum_discussions?forumid={forumId}", cancellationToken);
 
         var result = JsonSerializer.Deserialize<MoodleForumDiscussionsResponseDto>(response, JsonOptions)
             ?? new MoodleForumDiscussionsResponseDto();
@@ -156,7 +157,7 @@ public sealed class MoodleService(
     }
 
     public async Task<MoodleCalendarEventsResponseDto> GetCalendarEventsAsync(
-        string moodleUrl, string moodleToken, long timeStart, long timeEnd,
+        string moodleToken, long timeStart, long timeEnd,
         CancellationToken cancellationToken = default)
     {
         string cacheKey = $"moodle:calendar:{HashToken(moodleToken)}:{timeStart}:{timeEnd}";
@@ -167,8 +168,7 @@ public sealed class MoodleService(
 
         string endpoint = $"/core_calendar_get_calendar_events?events[timestart]={timeStart}&events[timeend]={timeEnd}";
 
-        var response = await SendMoodleRequestAsync(
-            moodleUrl, moodleToken, endpoint, cancellationToken);
+        var response = await SendRequestAsync(moodleToken, endpoint, cancellationToken);
 
         var result = JsonSerializer.Deserialize<MoodleCalendarEventsResponseDto>(response, JsonOptions)
             ?? new MoodleCalendarEventsResponseDto();
@@ -178,11 +178,11 @@ public sealed class MoodleService(
         return result;
     }
 
-    private async Task<string> SendMoodleRequestAsync(
-        string moodleUrl, string moodleToken, string endpoint, CancellationToken cancellationToken)
+    private async Task<string> SendRequestAsync(
+        string moodleToken, string endpoint, CancellationToken cancellationToken)
     {
         using var client = httpClientFactory.CreateClient("Moodle");
-        client.BaseAddress = new Uri(moodleUrl.TrimEnd('/'));
+        client.BaseAddress = new Uri(BridgeUrl);
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", moodleToken);
         client.Timeout = TimeSpan.FromSeconds(30);
 
@@ -192,17 +192,17 @@ public sealed class MoodleService(
 
         if (response.StatusCode == HttpStatusCode.Unauthorized)
         {
-            logger.LogWarning("Moodle API returned 401 Unauthorized for endpoint {Endpoint}", endpoint);
+            logger.LogWarning("MoodlewareAPI returned 401 for endpoint {Endpoint}", endpoint);
             throw new UnauthorizedAccessException("Moodle token is invalid or expired. Please re-link your Moodle account.");
         }
 
         if (!response.IsSuccessStatusCode)
         {
             string body = await response.Content.ReadAsStringAsync(cancellationToken);
-            logger.LogError("Moodle API error {StatusCode} for {Endpoint}: {Body}",
+            logger.LogError("MoodlewareAPI error {StatusCode} for {Endpoint}: {Body}",
                 (int)response.StatusCode, endpoint, body);
             throw new HttpRequestException(
-                $"Moodle API returned {(int)response.StatusCode}: {response.ReasonPhrase}");
+                $"MoodlewareAPI returned {(int)response.StatusCode}: {response.ReasonPhrase}");
         }
 
         return await response.Content.ReadAsStringAsync(cancellationToken);

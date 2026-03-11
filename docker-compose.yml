@@ -1,5 +1,22 @@
 services:
   # ========================
+  # MoodlewareAPI Bridge
+  # ========================
+  moodlewareapi:
+    image: ghcr.io/moodleng/moodlewareapi:latest
+    ports:
+      - "8000:8000"
+    environment:
+      - MOODLE_URL=${MOODLE_URL}
+      - ALLOW_ORIGINS=*
+      - LOG_LEVEL=info
+      - REDIS_URL=redis://redis:6379/1
+      - SECRET_KEY=${MOODLEWARE_SECRET_KEY:-change_me_in_production}
+    depends_on:
+      - redis
+    restart: unless-stopped
+
+  # ========================
   # Backend API
   # ========================
   api:
@@ -17,7 +34,7 @@ services:
       - MinIO__Endpoint=minio:9000
       - MinIO__AccessKey=${MINIO_ACCESS_KEY}
       - MinIO__SecretKey=${MINIO_SECRET_KEY}
-      - Moodle__ApiBaseUrl=${MOODLE_API_BASE_URL}
+      - Moodle__BridgeUrl=http://moodlewareapi:8000
       - Llm__Provider=${LLM_PROVIDER:-openai}
       - Llm__ApiKey=${LLM_API_KEY}
       - Llm__Model=${LLM_MODEL:-gpt-4o-mini}
@@ -30,6 +47,8 @@ services:
       qdrant:
         condition: service_started
       minio:
+        condition: service_started
+      moodlewareapi:
         condition: service_started
     restart: unless-stopped
 

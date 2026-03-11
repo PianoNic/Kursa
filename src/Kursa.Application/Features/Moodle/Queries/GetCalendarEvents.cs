@@ -26,7 +26,7 @@ public sealed class GetCalendarEventsHandler(
         if (user is null)
             return Result<IReadOnlyList<CalendarEventViewDto>>.Failure("User not found.");
 
-        if (string.IsNullOrEmpty(user.MoodleToken) || string.IsNullOrEmpty(user.MoodleUrl))
+        if (string.IsNullOrEmpty(user.MoodleToken))
             return Result<IReadOnlyList<CalendarEventViewDto>>.Failure("Moodle account is not linked.");
 
         DateTime weekEnd = request.WeekStart.AddDays(7);
@@ -34,7 +34,7 @@ public sealed class GetCalendarEventsHandler(
         long timeEnd = new DateTimeOffset(weekEnd, TimeSpan.Zero).ToUnixTimeSeconds();
 
         MoodleCalendarEventsResponseDto response = await moodleService.GetCalendarEventsAsync(
-            user.MoodleUrl, user.MoodleToken, timeStart, timeEnd, cancellationToken);
+            user.MoodleToken, timeStart, timeEnd, cancellationToken);
 
         var events = response.Events
             .Select(e =>

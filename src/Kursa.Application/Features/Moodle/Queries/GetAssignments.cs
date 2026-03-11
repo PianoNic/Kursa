@@ -26,7 +26,7 @@ public sealed class GetAssignmentsHandler(
         if (user is null)
             return Result<IReadOnlyList<AssignmentViewDto>>.Failure("User not found.");
 
-        if (string.IsNullOrEmpty(user.MoodleToken) || string.IsNullOrEmpty(user.MoodleUrl))
+        if (string.IsNullOrEmpty(user.MoodleToken))
             return Result<IReadOnlyList<AssignmentViewDto>>.Failure("Moodle account is not linked.");
 
         IReadOnlyList<int>? courseIds = request.CourseId.HasValue
@@ -34,7 +34,7 @@ public sealed class GetAssignmentsHandler(
             : null;
 
         MoodleAssignmentsResponseDto response = await moodleService.GetAssignmentsAsync(
-            user.MoodleUrl, user.MoodleToken, courseIds, cancellationToken);
+            user.MoodleToken, courseIds, cancellationToken);
 
         DateTime utcNow = DateTime.UtcNow;
 

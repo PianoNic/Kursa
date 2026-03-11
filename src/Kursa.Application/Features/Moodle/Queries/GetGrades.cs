@@ -26,26 +26,26 @@ public sealed class GetGradesHandler(
         if (user is null)
             return Result<IReadOnlyList<CourseGradeSummaryDto>>.Failure("User not found.");
 
-        if (string.IsNullOrEmpty(user.MoodleToken) || string.IsNullOrEmpty(user.MoodleUrl))
+        if (string.IsNullOrEmpty(user.MoodleToken))
             return Result<IReadOnlyList<CourseGradeSummaryDto>>.Failure("Moodle account is not linked.");
 
         // If a specific course is requested, fetch just that one
         if (request.CourseId.HasValue)
         {
             CourseGradeSummaryDto summary = await GetCourseGradeSummaryAsync(
-                user.MoodleUrl, user.MoodleToken, request.CourseId.Value, cancellationToken);
+                user.MoodleToken, request.CourseId.Value, cancellationToken);
             return Result<IReadOnlyList<CourseGradeSummaryDto>>.Success([summary]);
         }
 
         // Otherwise fetch grades for all enrolled courses
         IReadOnlyList<MoodleCourseDto> courses = await moodleService.GetEnrolledCoursesAsync(
-            user.MoodleUrl, user.MoodleToken, cancellationToken);
+            user.MoodleToken, cancellationToken);
 
         var summaries = new List<CourseGradeSummaryDto>();
         foreach (MoodleCourseDto course in courses)
         {
             CourseGradeSummaryDto summary = await GetCourseGradeSummaryAsync(
-                user.MoodleUrl, user.MoodleToken, course.Id, cancellationToken);
+                user.MoodleToken, course.Id, cancellationToken);
 
             // Only include courses that have grade items
             if (summary.TotalItemCount > 0)
@@ -56,10 +56,10 @@ public sealed class GetGradesHandler(
     }
 
     private async Task<CourseGradeSummaryDto> GetCourseGradeSummaryAsync(
-        string moodleUrl, string moodleToken, int courseId, CancellationToken cancellationToken)
+        string moodleToken, int courseId, CancellationToken cancellationToken)
     {
         MoodleGradeReportDto report = await moodleService.GetGradesAsync(
-            moodleUrl, moodleToken, courseId, cancellationToken);
+            moodleToken, courseId, cancellationToken);
 
         MoodleUserGradeDto? userGrade = report.UserGrades.FirstOrDefault();
 
