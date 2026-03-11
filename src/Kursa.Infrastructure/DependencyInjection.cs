@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
+using Microsoft.SemanticKernel;
 
 namespace Kursa.Infrastructure;
 
@@ -94,19 +95,24 @@ public static class DependencyInjection
         services.AddSingleton<ITranscriptionQueue>(sp => sp.GetRequiredService<TranscriptionQueue>());
         services.AddHostedService<TranscriptionBackgroundService>();
 
-        // LLM provider — configuration-driven selection
-        services.AddSingleton<ILlmProvider>(sp =>
-        {
-            LlmOptions llmOptions = sp.GetRequiredService<IOptions<LlmOptions>>().Value;
+        // Semantic Kernel — chat via OpenRouter, embeddings via Ollama
+        LlmOptions llmOpts = configuration.GetSection(LlmOptions.SectionName).Get<LlmOptions>()
+            ?? new LlmOptions { Provider = "openrouter" };
 
-            return llmOptions.Provider.ToLowerInvariant() switch
-            {
-                "openrouter" => ActivatorUtilities.CreateInstance<OpenRouterLlmProvider>(sp),
-                "ollama" => ActivatorUtilities.CreateInstance<OllamaLlmProvider>(sp),
-                _ => throw new InvalidOperationException(
-                    $"Unknown LLM provider '{llmOptions.Provider}'. Supported: openrouter, ollama.")
-            };
-        });
+        IKernelBuilder kernelBuilder = services.AddKernel();
+
+#pragma warning disable SKEXP0010, SKEXP0070
+        // Chat completion (OpenRouter = OpenAI-compatible API)
+        kernelBuilder.AddOpenAIChatCompletion(
+            modelId: llmOpts.Model,
+            apiKey: llmOpts.ApiKey,
+            endpoint: new Uri(llmOpts.OpenRouterBaseUrl));
+
+        // Text embeddings (Ollama native API)
+        kernelBuilder.AddOllamaTextEmbeddingGeneration(
+            modelId: llmOpts.EmbeddingModel,
+            endpoint: new Uri(llmOpts.OllamaHost));
+#pragma warning restore SKEXP0010, SKEXP0070
 
         return services;
     }

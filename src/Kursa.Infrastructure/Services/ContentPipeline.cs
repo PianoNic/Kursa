@@ -3,12 +3,13 @@ using Kursa.Application.Common.Interfaces;
 using Kursa.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Microsoft.SemanticKernel.Embeddings;
 
 namespace Kursa.Infrastructure.Services;
 
 public sealed partial class ContentPipeline(
     IAppDbContext dbContext,
-    ILlmProvider llmProvider,
+    ITextEmbeddingGenerationService embeddingService,
     IVectorStore vectorStore,
     ILogger<ContentPipeline> logger) : IContentPipeline
 {
@@ -43,12 +44,14 @@ public sealed partial class ContentPipeline(
         logger.LogInformation("Indexing content {ContentId} ({Title}): {ChunkCount} chunks", contentId, content.Title, chunks.Count);
 
         // Generate embedding for initial collection setup — get vector size from first embedding
-        IReadOnlyList<float> firstEmbedding = await llmProvider.GenerateEmbeddingAsync(chunks[0], cancellationToken);
-        await vectorStore.EnsureCollectionAsync(CollectionName, firstEmbedding.Count, cancellationToken);
+#pragma warning disable SKEXP0001
+        ReadOnlyMemory<float> firstEmbedding = await embeddingService.GenerateEmbeddingAsync(chunks[0], cancellationToken: cancellationToken);
+        await vectorStore.EnsureCollectionAsync(CollectionName, firstEmbedding.Length, cancellationToken);
 
         // Generate embeddings for all chunks (batch)
-        IReadOnlyList<IReadOnlyList<float>> embeddings = await llmProvider.GenerateEmbeddingsAsync(
-            chunks.ToList(), cancellationToken);
+        IList<ReadOnlyMemory<float>> embeddings = await embeddingService.GenerateEmbeddingsAsync(
+            chunks.ToList(), cancellationToken: cancellationToken);
+#pragma warning restore SKEXP0001
 
         // Build vector points
         var points = new List<VectorPoint>(chunks.Count);
@@ -57,7 +60,7 @@ public sealed partial class ContentPipeline(
             points.Add(new VectorPoint
             {
                 Id = Guid.NewGuid(),
-                Vector = embeddings[i],
+                Vector = embeddings[i].ToArray(),
                 ContentId = contentId,
                 UserId = userId,
                 ChunkText = chunks[i],
