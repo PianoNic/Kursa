@@ -3,15 +3,19 @@ import { FormsModule } from '@angular/forms';
 import { DatePipe } from '@angular/common';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { marked } from 'marked';
+import { NgIconComponent, provideIcons } from '@ng-icons/core';
+import { lucideArrowUp, lucidePaperclip } from '@ng-icons/lucide';
 import { HlmButton } from '@spartan-ng/helm/button';
-import { HlmInput } from '@spartan-ng/helm/input';
 import { HlmCardImports } from '@spartan-ng/helm/card';
+import { HlmInputGroupImports } from '@spartan-ng/helm/input-group';
+import { HlmSeparator } from '@spartan-ng/helm/separator';
 import { ChatService, ChatThread, ChatMessage, Citation, ChatResponse } from '../../core/services/chat.service';
 
 @Component({
   selector: 'app-chat',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, DatePipe, HlmButton, HlmInput, ...HlmCardImports],
+  imports: [FormsModule, DatePipe, HlmButton, ...HlmCardImports, ...HlmInputGroupImports, HlmSeparator, NgIconComponent],
+  providers: [provideIcons({ lucideArrowUp, lucidePaperclip })],
   template: `
     <div class="flex h-full">
       <!-- Thread sidebar -->
@@ -105,29 +109,49 @@ import { ChatService, ChatThread, ChatMessage, Citation, ChatResponse } from '..
 
         <!-- Input -->
         <div class="border-t border-border p-4">
-          <form (submit)="send($event)" class="flex gap-3">
+          <form (submit)="send($event)">
             <label for="chat-input" class="sr-only">Type your message</label>
-            <input
-              hlmInput
-              id="chat-input"
-              type="text"
-              [(ngModel)]="inputMessage"
-              name="message"
-              placeholder="Ask about your course materials..."
-              [disabled]="loading()"
-              class="flex-1"
-            />
-            <button
-              hlmBtn
-              type="submit"
-              [disabled]="loading() || !inputMessage.trim()"
-            >
-              Send
-            </button>
+            <div hlmInputGroup>
+              <textarea
+                hlmInputGroupTextarea
+                id="chat-input"
+                [(ngModel)]="inputMessage"
+                name="message"
+                placeholder="Ask about your course materials..."
+                [disabled]="loading()"
+                rows="1"
+                (keydown.enter)="onEnterKey($event)"
+                class="resize-none"
+              ></textarea>
+              <div hlmInputGroupAddon align="block-end">
+                <button
+                  hlmInputGroupButton
+                  type="button"
+                  variant="outline"
+                  size="icon-sm"
+                  class="rounded-full"
+                  aria-label="Attach file"
+                  disabled
+                >
+                  <ng-icon name="lucidePaperclip" aria-hidden="true" />
+                </button>
+                <button
+                  hlmInputGroupButton
+                  type="submit"
+                  variant="default"
+                  size="icon-sm"
+                  class="ml-auto rounded-full"
+                  [disabled]="loading() || !inputMessage.trim()"
+                  aria-label="Send message"
+                >
+                  <ng-icon name="lucideArrowUp" aria-hidden="true" />
+                </button>
+              </div>
+            </div>
+            @if (error()) {
+              <p class="mt-2 text-sm text-destructive" role="alert">{{ error() }}</p>
+            }
           </form>
-          @if (error()) {
-            <p class="mt-2 text-sm text-destructive" role="alert">{{ error() }}</p>
-          }
         </div>
       </div>
     </div>
@@ -175,6 +199,14 @@ export class ChatComponent {
     this.messages.set([]);
     this.activeSources.set([]);
     this.error.set(null);
+  }
+
+  onEnterKey(event: Event): void {
+    const ke = event as KeyboardEvent;
+    if (!ke.shiftKey) {
+      event.preventDefault();
+      this.send(event);
+    }
   }
 
   send(event: Event): void {
