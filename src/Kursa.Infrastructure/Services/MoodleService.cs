@@ -52,8 +52,14 @@ public sealed class MoodleService(
         if (cached is not null) return cached;
 
         var client = clientFactory.CreateForToken(moodleToken);
+
+        // Resolve the Moodle userid for this token — required by core_enrol_get_users_courses
+        var siteInfo = await GetSiteInfoAsync(moodleToken, cancellationToken);
+        var body = new CoreEnrolGetUsersCoursesRequest();
+        body.AdditionalData["userid"] = siteInfo.UserId;
+
         var result = await client.Core_enrol_get_users_courses.PostAsync(
-            new CoreEnrolGetUsersCoursesRequest(), cancellationToken: cancellationToken);
+            body, cancellationToken: cancellationToken);
 
         var courses = await DeserializeAsync<List<MoodleCourseDto>>(result, cancellationToken) ?? [];
         await SetCacheAsync(cacheKey, courses, CourseCacheDuration, cancellationToken);
