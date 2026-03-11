@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, inject, input, signal, OnInit } from '@angular/core';
-import { MoodleCourseSection, MoodleService } from '../../core/services/moodle.service';
+import { MoodleCourseSection, MoodleModule, MoodleContent, MoodleService } from '../../core/services/moodle.service';
 import { DecimalPipe } from '@angular/common';
 
 @Component({
@@ -9,8 +9,8 @@ import { DecimalPipe } from '@angular/common';
   template: `
     <div class="space-y-6">
       <div class="flex items-center gap-3">
-        <a href="/courses" class="text-muted-foreground hover:text-foreground">
-          <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+        <a href="/courses" class="text-muted-foreground hover:text-foreground" aria-label="Back to courses">
+          <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
             <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
           </svg>
         </a>
@@ -19,59 +19,103 @@ import { DecimalPipe } from '@angular/common';
 
       @if (loading()) {
         <div class="flex items-center justify-center py-12">
-          <div class="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+          <div class="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" aria-hidden="true"></div>
           <span class="ml-3 text-muted-foreground">Loading course content...</span>
         </div>
       } @else if (error()) {
-        <div class="rounded-lg border border-destructive/50 bg-destructive/10 p-6">
+        <div class="rounded-lg border border-destructive/50 bg-destructive/10 p-6" role="alert">
           <h2 class="text-lg font-semibold text-destructive">Unable to load content</h2>
           <p class="mt-2 text-sm text-muted-foreground">{{ error() }}</p>
         </div>
       } @else {
         @for (section of sections(); track section.id) {
-          <div class="rounded-lg border border-border bg-card">
-            <div class="border-b border-border p-4">
-              <h2 class="font-semibold text-foreground">{{ section.name }}</h2>
-              @if (section.summary) {
-                <p class="mt-1 text-sm text-muted-foreground" [innerHTML]="section.summary"></p>
-              }
-            </div>
+          @if (section.visible !== 0 && section.modules.length > 0) {
+            <div class="rounded-lg border border-border bg-card">
+              <div class="border-b border-border p-4">
+                <h2 class="font-semibold text-foreground">{{ section.name }}</h2>
+                @if (section.summary) {
+                  <p class="mt-1 text-sm text-muted-foreground" [innerHTML]="section.summary"></p>
+                }
+              </div>
 
-            @if (section.modules.length > 0) {
-              <ul class="divide-y divide-border">
+              <ul class="divide-y divide-border" role="list">
                 @for (mod of section.modules; track mod.id) {
-                  <li class="flex items-center gap-3 p-4 hover:bg-accent">
-                    <div class="flex h-8 w-8 items-center justify-center rounded bg-muted text-xs font-medium text-muted-foreground uppercase">
-                      {{ mod.modName.slice(0, 3) }}
-                    </div>
-                    <div class="min-w-0 flex-1">
-                      <p class="font-medium text-foreground">{{ mod.name }}</p>
-                      @if (mod.contents && mod.contents.length > 0) {
-                        <p class="text-xs text-muted-foreground">
-                          {{ mod.contents.length }} file{{ mod.contents.length === 1 ? '' : 's' }}
-                          @if (totalFileSize(mod.contents) > 0) {
-                            · {{ totalFileSize(mod.contents) | number:'1.0-1' }} KB
+                  @if (mod.visible !== 0) {
+                    <li class="flex items-start gap-3 p-4 hover:bg-accent/50 transition-colors">
+                      <!-- Module type icon -->
+                      <div
+                        class="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg"
+                        [class]="modIconBg(mod.modName)"
+                        aria-hidden="true"
+                      >
+                        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" [attr.d]="modIconPath(mod.modName)" />
+                        </svg>
+                      </div>
+
+                      <!-- Name + meta -->
+                      <div class="min-w-0 flex-1">
+                        <p class="font-medium text-foreground">{{ mod.name }}</p>
+                        <p class="mt-0.5 text-xs text-muted-foreground capitalize">
+                          {{ modLabel(mod.modName) }}
+                          @if (mod.contents && mod.contents.length > 0) {
+                            &middot; {{ mod.contents.length }} file{{ mod.contents.length === 1 ? '' : 's' }}
+                            @if (totalFileSize(mod.contents) > 0) {
+                              &middot; {{ totalFileSize(mod.contents) | number:'1.0-1' }} KB
+                            }
                           }
                         </p>
-                      }
-                    </div>
-                    @if (mod.url) {
-                      <a
-                        [href]="mod.url"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        class="text-sm text-primary hover:underline"
-                      >
-                        Open
-                      </a>
-                    }
-                  </li>
+                        @if (mod.description) {
+                          <p class="mt-1 text-xs text-muted-foreground line-clamp-2" [innerHTML]="mod.description"></p>
+                        }
+                      </div>
+
+                      <!-- Actions -->
+                      <div class="flex shrink-0 items-center gap-2">
+                        @if (isQuiz(mod.modName) && mod.url) {
+                          <a
+                            [href]="mod.url"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            class="rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
+                          >
+                            Start quiz
+                          </a>
+                        } @else if (isAssignment(mod.modName) && mod.url) {
+                          <a
+                            [href]="mod.url"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            class="rounded-md bg-amber-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-amber-700 transition-colors"
+                          >
+                            View task
+                          </a>
+                        } @else if (hasFiles(mod) && primaryFileUrl(mod)) {
+                          <a
+                            [href]="primaryFileUrl(mod)!"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            class="rounded-md border border-border px-3 py-1.5 text-xs font-medium text-foreground hover:bg-accent transition-colors"
+                          >
+                            Open
+                          </a>
+                        } @else if (mod.url) {
+                          <a
+                            [href]="mod.url"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            class="rounded-md border border-border px-3 py-1.5 text-xs font-medium text-foreground hover:bg-accent transition-colors"
+                          >
+                            Open
+                          </a>
+                        }
+                      </div>
+                    </li>
+                  }
                 }
               </ul>
-            } @else {
-              <p class="p-4 text-sm text-muted-foreground">No activities in this section.</p>
-            }
-          </div>
+            </div>
+          }
         }
 
         @if (sections().length === 0) {
@@ -87,7 +131,6 @@ export class CourseDetailComponent implements OnInit {
   private readonly moodleService = inject(MoodleService);
 
   readonly courseId = input.required<number>();
-
   readonly sections = signal<MoodleCourseSection[]>([]);
   readonly loading = signal(true);
   readonly error = signal<string | null>(null);
@@ -105,7 +148,83 @@ export class CourseDetailComponent implements OnInit {
     });
   }
 
-  totalFileSize(contents: { fileSize: number }[]): number {
+  totalFileSize(contents: MoodleContent[]): number {
     return contents.reduce((sum, c) => sum + c.fileSize, 0) / 1024;
+  }
+
+  isQuiz(modName: string): boolean {
+    return modName === 'quiz';
+  }
+
+  isAssignment(modName: string): boolean {
+    return modName === 'assign';
+  }
+
+  hasFiles(mod: MoodleModule): boolean {
+    return !!mod.contents && mod.contents.length > 0;
+  }
+
+  primaryFileUrl(mod: MoodleModule): string | null {
+    return mod.contents?.find(c => c.fileUrl)?.fileUrl ?? null;
+  }
+
+  modLabel(modName: string): string {
+    const labels: Record<string, string> = {
+      resource: 'File',
+      url: 'Link',
+      page: 'Page',
+      quiz: 'Quiz',
+      assign: 'Assignment',
+      forum: 'Forum',
+      folder: 'Folder',
+      label: 'Label',
+      book: 'Book',
+      glossary: 'Glossary',
+      choice: 'Choice',
+      feedback: 'Feedback',
+      survey: 'Survey',
+      wiki: 'Wiki',
+      workshop: 'Workshop',
+      scorm: 'SCORM',
+      lti: 'External tool',
+    };
+    return labels[modName] ?? modName;
+  }
+
+  modIconBg(modName: string): string {
+    const map: Record<string, string> = {
+      quiz: 'bg-violet-500/15 text-violet-400',
+      assign: 'bg-amber-500/15 text-amber-400',
+      resource: 'bg-blue-500/15 text-blue-400',
+      url: 'bg-cyan-500/15 text-cyan-400',
+      page: 'bg-emerald-500/15 text-emerald-400',
+      forum: 'bg-orange-500/15 text-orange-400',
+      folder: 'bg-yellow-500/15 text-yellow-400',
+      book: 'bg-indigo-500/15 text-indigo-400',
+    };
+    return map[modName] ?? 'bg-muted text-muted-foreground';
+  }
+
+  modIconPath(modName: string): string {
+    switch (modName) {
+      case 'quiz':
+        return 'M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 5.25h.008v.008H12v-.008Z';
+      case 'assign':
+        return 'M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z';
+      case 'resource':
+        return 'M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z';
+      case 'url':
+        return 'M13.19 8.688a4.5 4.5 0 0 1 1.242 7.244l-4.5 4.5a4.5 4.5 0 0 1-6.364-6.364l1.757-1.757m13.35-.622 1.757-1.757a4.5 4.5 0 0 0-6.364-6.364l-4.5 4.5a4.5 4.5 0 0 0 1.242 7.244';
+      case 'page':
+        return 'M12 7.5h1.5m-1.5 3h1.5m-7.5 3h7.5m-7.5 3h7.5m3-9h3.375c.621 0 1.125.504 1.125 1.125V18a2.25 2.25 0 0 1-2.25 2.25M16.5 7.5V18a2.25 2.25 0 0 0 2.25 2.25M16.5 7.5V4.875c0-.621-.504-1.125-1.125-1.125H4.125C3.504 3.75 3 4.254 3 4.875V18a2.25 2.25 0 0 0 2.25 2.25h13.5M6 7.5h3v3H6v-3Z';
+      case 'forum':
+        return 'M20.25 8.511c.884.284 1.5 1.128 1.5 2.097v4.286c0 1.136-.847 2.1-1.98 2.193-.34.027-.68.052-1.02.072v3.091l-3-3c-1.354 0-2.694-.055-4.02-.163a2.115 2.115 0 0 1-.825-.242m9.345-8.334a2.126 2.126 0 0 0-.476-.095 48.64 48.64 0 0 0-8.048 0c-1.131.094-1.976 1.057-1.976 2.192v4.286c0 .837.46 1.58 1.155 1.951m9.345-8.334V6.637c0-1.621-1.152-3.026-2.76-3.235A48.455 48.455 0 0 0 11.25 3c-2.115 0-4.198.137-6.24.402-1.608.209-2.76 1.614-2.76 3.235v6.226c0 1.621 1.152 3.026 2.76 3.235.577.075 1.157.14 1.74.194V21l4.155-4.155';
+      case 'folder':
+        return 'M2.25 12.75V12A2.25 2.25 0 0 1 4.5 9.75h15A2.25 2.25 0 0 1 21.75 12v.75m-8.69-6.44-2.12-2.12a1.5 1.5 0 0 0-1.061-.44H4.5A2.25 2.25 0 0 0 2.25 6v12a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9a2.25 2.25 0 0 0-2.25-2.25h-5.379a1.5 1.5 0 0 1-1.06-.44Z';
+      case 'book':
+        return 'M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18a8.967 8.967 0 0 0-6 2.292m0-14.25v14.25';
+      default:
+        return 'M4.26 10.147a60.438 60.438 0 0 0-.491 6.347A48.63 48.63 0 0 1 12 20.904a48.63 48.63 0 0 1 8.232-4.41 60.46 60.46 0 0 0-.491-6.347m-15.482 0a50.636 50.636 0 0 0-2.658-.813A59.906 59.906 0 0 1 12 3.493a59.903 59.903 0 0 1 10.399 5.84c-.896.248-1.783.52-2.658.814m-15.482 0A50.717 50.717 0 0 1 12 13.489a50.702 50.702 0 0 1 3.741-3.342M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z';
+    }
   }
 }
