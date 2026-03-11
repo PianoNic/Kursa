@@ -1,7 +1,7 @@
 import { Injectable, signal, computed } from '@angular/core';
 
 export interface ViewContext {
-  type: 'course' | 'content' | 'module' | 'none';
+  type: 'course' | 'content' | 'module' | 'recording' | 'flashcards' | 'quizzes' | 'none';
   id?: string;
   title?: string;
   description?: string;
