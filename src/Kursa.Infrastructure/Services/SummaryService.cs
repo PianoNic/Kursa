@@ -2,12 +2,14 @@ using Kursa.Application.Common.Interfaces;
 using Kursa.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Microsoft.SemanticKernel.ChatCompletion;
+using Microsoft.SemanticKernel.Connectors.OpenAI;
 
 namespace Kursa.Infrastructure.Services;
 
 public sealed class SummaryService(
     IAppDbContext dbContext,
-    ILlmProvider llmProvider,
+    IChatCompletionService chatCompletionService,
     ILogger<SummaryService> logger) : ISummaryService
 {
     private const string SystemPrompt =
@@ -40,13 +42,15 @@ public sealed class SummaryService(
 
         logger.LogInformation("Generating summary for content {ContentId} ({Title})", contentId, content.Title);
 
-        LlmChatResponse response = await llmProvider.ChatAsync(new LlmChatRequest
-        {
-            SystemPrompt = SystemPrompt,
-            Messages = [LlmMessage.User($"Please summarize the following content:\n\n{text}")],
-            Temperature = 0.3f,
-            MaxTokens = 1024,
-        }, cancellationToken);
+        var history = new ChatHistory(SystemPrompt);
+        history.AddUserMessage($"Please summarize the following content:\n\n{text}");
+
+#pragma warning disable SKEXP0001
+        var settings = new OpenAIPromptExecutionSettings { Temperature = 0.3f, MaxTokens = 1024 };
+#pragma warning restore SKEXP0001
+
+        var response = await chatCompletionService.GetChatMessageContentAsync(history, settings, cancellationToken: cancellationToken);
+        string summary = response.Content ?? string.Empty;
 
         // Upsert summary in database
         ContentSummary? existing = await dbContext.ContentSummaries
@@ -54,8 +58,8 @@ public sealed class SummaryService(
 
         if (existing is not null)
         {
-            existing.Summary = response.Content;
-            existing.TokensUsed = response.TotalTokens;
+            existing.Summary = summary;
+            existing.TokensUsed = 0;
         }
         else
         {
@@ -63,16 +67,16 @@ public sealed class SummaryService(
             {
                 ContentId = contentId,
                 UserId = userId,
-                Summary = response.Content,
-                TokensUsed = response.TotalTokens,
+                Summary = summary,
+                TokensUsed = 0,
             });
         }
 
         await dbContext.SaveChangesAsync(cancellationToken);
 
-        logger.LogInformation("Summary generated for content {ContentId}, {Tokens} tokens used", contentId, response.TotalTokens);
+        logger.LogInformation("Summary generated for content {ContentId}", contentId);
 
-        return response.Content;
+        return summary;
     }
 
     private static string BuildContentText(Content content)

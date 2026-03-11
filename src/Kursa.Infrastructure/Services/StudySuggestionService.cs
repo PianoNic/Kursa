@@ -3,12 +3,14 @@ using Kursa.Application.Common.Interfaces;
 using Kursa.Application.Features.Suggestions.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Microsoft.SemanticKernel.ChatCompletion;
+using Microsoft.SemanticKernel.Connectors.OpenAI;
 
 namespace Kursa.Infrastructure.Services;
 
 public sealed class StudySuggestionService(
     IAppDbContext dbContext,
-    ILlmProvider llmProvider,
+    IChatCompletionService chatCompletionService,
     ILogger<StudySuggestionService> logger) : IStudySuggestionService
 {
     public async Task<IReadOnlyList<StudySuggestionDto>> GenerateSuggestionsAsync(
@@ -115,18 +117,17 @@ public sealed class StudySuggestionService(
             Be specific and actionable. Reference actual numbers from the data.
             """;
 
-        var request = new LlmChatRequest
-        {
-            SystemPrompt = systemPrompt,
-            Messages = [LlmMessage.User(context)],
-            Temperature = 0.7f,
-            MaxTokens = 800,
-        };
+        var history = new ChatHistory(systemPrompt);
+        history.AddUserMessage(context);
 
-        LlmChatResponse response = await llmProvider.ChatAsync(request, cancellationToken);
+#pragma warning disable SKEXP0001
+        var settings = new OpenAIPromptExecutionSettings { Temperature = 0.7f, MaxTokens = 800 };
+#pragma warning restore SKEXP0001
+
+        var response = await chatCompletionService.GetChatMessageContentAsync(history, settings, cancellationToken: cancellationToken);
 
         // Parse JSON response
-        string content = response.Content.Trim();
+        string content = (response.Content ?? string.Empty).Trim();
         // Strip markdown code block if present
         if (content.StartsWith("```"))
         {

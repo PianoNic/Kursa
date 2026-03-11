@@ -2,12 +2,16 @@ using Kursa.Application.Common.Interfaces;
 using Kursa.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Microsoft.SemanticKernel.ChatCompletion;
+using Microsoft.SemanticKernel.Connectors.OpenAI;
+using Microsoft.SemanticKernel.Embeddings;
 
 namespace Kursa.Infrastructure.Services;
 
 public sealed class RecordingIndexingService(
     IAppDbContext dbContext,
-    ILlmProvider llmProvider,
+    IChatCompletionService chatCompletionService,
+    ITextEmbeddingGenerationService embeddingService,
     IVectorStore vectorStore,
     ILogger<RecordingIndexingService> logger) : IRecordingIndexingService
 {
@@ -40,11 +44,13 @@ public sealed class RecordingIndexingService(
         logger.LogInformation("Indexing recording {RecordingId} ({Title}): {ChunkCount} chunks",
             recordingId, recording.Title, chunks.Count);
 
-        IReadOnlyList<float> firstEmbedding = await llmProvider.GenerateEmbeddingAsync(chunks[0], cancellationToken);
-        await vectorStore.EnsureCollectionAsync(CollectionName, firstEmbedding.Count, cancellationToken);
+#pragma warning disable SKEXP0001
+        ReadOnlyMemory<float> firstEmbedding = await embeddingService.GenerateEmbeddingAsync(chunks[0], cancellationToken: cancellationToken);
+        await vectorStore.EnsureCollectionAsync(CollectionName, firstEmbedding.Length, cancellationToken);
 
-        IReadOnlyList<IReadOnlyList<float>> embeddings = await llmProvider.GenerateEmbeddingsAsync(
-            chunks.ToList(), cancellationToken);
+        IList<ReadOnlyMemory<float>> embeddings = await embeddingService.GenerateEmbeddingsAsync(
+            chunks.ToList(), cancellationToken: cancellationToken);
+#pragma warning restore SKEXP0001
 
         var points = new List<VectorPoint>(chunks.Count);
         for (int i = 0; i < chunks.Count; i++)
@@ -52,8 +58,8 @@ public sealed class RecordingIndexingService(
             points.Add(new VectorPoint
             {
                 Id = Guid.NewGuid(),
-                Vector = embeddings[i],
-                ContentId = recordingId, // Use recording ID as content ID for vector store
+                Vector = embeddings[i].ToArray(),
+                ContentId = recordingId,
                 UserId = recording.UserId,
                 ChunkText = chunks[i],
                 ChunkIndex = i,
@@ -63,17 +69,13 @@ public sealed class RecordingIndexingService(
             });
         }
 
-        // Delete existing vectors for this recording (re-index scenario)
         await vectorStore.DeleteByContentIdAsync(CollectionName, recordingId, cancellationToken);
-
         await vectorStore.UpsertAsync(CollectionName, points, cancellationToken);
 
-        // Generate summary
         string summary = await GenerateSummaryAsync(text, cancellationToken);
 
         recording.Status = RecordingStatus.Completed;
 
-        // Store summary in the description if it was empty, otherwise append
         if (!string.IsNullOrWhiteSpace(summary))
         {
             recording.Description = string.IsNullOrWhiteSpace(recording.Description)
@@ -96,9 +98,7 @@ public sealed class RecordingIndexingService(
     private static string BuildTranscriptText(Recording recording)
     {
         if (recording.Segments.Count > 0)
-        {
             return string.Join("\n", recording.Segments.Select(s => s.Text));
-        }
 
         return recording.TranscriptText ?? string.Empty;
     }
@@ -107,25 +107,22 @@ public sealed class RecordingIndexingService(
     {
         try
         {
-            // Truncate for summary to avoid token limits
             string truncated = text.Length > 8000 ? text[..8000] : text;
 
-            string systemPrompt = """
+            var history = new ChatHistory(
+                """
                 You are a study assistant. Summarize the following lecture transcript concisely.
                 Focus on key topics, main concepts, and important takeaways.
                 Use bullet points for clarity. Keep it under 300 words.
-                """;
+                """);
+            history.AddUserMessage(truncated);
 
-            var request = new LlmChatRequest
-            {
-                SystemPrompt = systemPrompt,
-                Messages = [LlmMessage.User(truncated)],
-                Temperature = 0.3f,
-                MaxTokens = 500,
-            };
+#pragma warning disable SKEXP0001
+            var settings = new OpenAIPromptExecutionSettings { Temperature = 0.3f, MaxTokens = 500 };
+#pragma warning restore SKEXP0001
 
-            LlmChatResponse response = await llmProvider.ChatAsync(request, cancellationToken);
-            return response.Content;
+            var response = await chatCompletionService.GetChatMessageContentAsync(history, settings, cancellationToken: cancellationToken);
+            return response.Content ?? string.Empty;
         }
         catch (Exception ex)
         {

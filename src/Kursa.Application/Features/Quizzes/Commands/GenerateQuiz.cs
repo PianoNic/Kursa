@@ -6,6 +6,9 @@ using Kursa.Domain.Entities;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Microsoft.SemanticKernel.ChatCompletion;
+using Microsoft.SemanticKernel.Connectors.OpenAI;
+using Microsoft.SemanticKernel.Embeddings;
 
 namespace Kursa.Application.Features.Quizzes.Commands;
 
@@ -28,7 +31,8 @@ public sealed class GenerateQuizValidator : AbstractValidator<GenerateQuizComman
 public sealed class GenerateQuizHandler(
     ICurrentUserService currentUserService,
     IAppDbContext dbContext,
-    ILlmProvider llmProvider,
+    IChatCompletionService chatCompletionService,
+    ITextEmbeddingGenerationService embeddingService,
     IVectorStore vectorStore,
     ILogger<GenerateQuizHandler> logger) : IRequestHandler<GenerateQuizCommand, Result<QuizDetailDto>>
 {
@@ -86,7 +90,10 @@ public sealed class GenerateQuizHandler(
 
         // Retrieve content chunks from vector store
         string searchQuery = request.Topic ?? pinnedContent.Content.Title;
-        IReadOnlyList<float> queryEmbedding = await llmProvider.GenerateEmbeddingAsync(searchQuery, cancellationToken);
+#pragma warning disable SKEXP0001
+        ReadOnlyMemory<float> queryEmbeddingMemory = await embeddingService.GenerateEmbeddingAsync(searchQuery, cancellationToken: cancellationToken);
+#pragma warning restore SKEXP0001
+        float[] queryEmbedding = queryEmbeddingMemory.ToArray();
 
         IReadOnlyList<VectorSearchResult> searchResults = await vectorStore.SearchAsync(
             CollectionName,
@@ -113,13 +120,14 @@ public sealed class GenerateQuizHandler(
 
         try
         {
-            LlmChatResponse llmResponse = await llmProvider.ChatAsync(new LlmChatRequest
-            {
-                SystemPrompt = SystemPrompt,
-                Messages = [LlmMessage.User(userPrompt)],
-                Temperature = 0.5f,
-                MaxTokens = 4096,
-            }, cancellationToken);
+            var history = new ChatHistory(SystemPrompt);
+            history.AddUserMessage(userPrompt);
+
+#pragma warning disable SKEXP0001
+            var settings = new OpenAIPromptExecutionSettings { Temperature = 0.5f, MaxTokens = 4096 };
+#pragma warning restore SKEXP0001
+
+            var llmResponse = await chatCompletionService.GetChatMessageContentAsync(history, settings, cancellationToken: cancellationToken);
 
             // Parse the LLM response
             var generated = ParseQuizResponse(llmResponse.Content);
