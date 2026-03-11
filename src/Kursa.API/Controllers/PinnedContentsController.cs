@@ -60,6 +60,41 @@ public class PinnedContentsController(ISender sender) : ControllerBase
             ? Ok()
             : BadRequest(result.Error);
     }
+
+    /// <summary>
+    /// Lazily pins a Moodle module by creating the local Course/Module/Content hierarchy
+    /// and triggering RAG indexing in the background.
+    /// </summary>
+    [HttpPost("moodle")]
+    public async Task<IActionResult> PinMoodleModuleAsync(
+        [FromBody] PinMoodleModuleRequest request, CancellationToken cancellationToken)
+    {
+        var result = await sender.Send(new PinMoodleModuleCommand(
+            request.MoodleCourseId,
+            request.CourseName,
+            request.CourseShortName,
+            request.MoodleModuleId,
+            request.ModuleName,
+            request.ModType,
+            request.Description,
+            request.Url,
+            request.FileUrl), cancellationToken);
+
+        return result.IsSuccess
+            ? Ok(result.Value)
+            : BadRequest(result.Error);
+    }
 }
 
 public sealed record PinContentRequest(string? Notes);
+
+public sealed record PinMoodleModuleRequest(
+    int MoodleCourseId,
+    string CourseName,
+    string CourseShortName,
+    int MoodleModuleId,
+    string ModuleName,
+    string ModType,
+    string? Description,
+    string? Url,
+    string? FileUrl);
