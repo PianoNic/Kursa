@@ -40,27 +40,29 @@ import { MoodleService } from '../../core/services/moodle.service';
               <div class="space-y-4">
                 <h2 class="text-xl font-bold text-foreground">Connect Moodle</h2>
                 <p class="text-sm text-muted-foreground">
-                  Link your Moodle account to browse courses and content.
+                  Enter your Moodle credentials to link your account.
                 </p>
 
                 <div class="space-y-3">
                   <div>
-                    <label for="moodle-url" class="block text-sm font-medium text-foreground">Moodle URL</label>
+                    <label for="moodle-username" class="block text-sm font-medium text-foreground">Username</label>
                     <input
-                      id="moodle-url"
-                      type="url"
-                      [(ngModel)]="moodleUrl"
-                      placeholder="https://moodle.example.com"
+                      id="moodle-username"
+                      type="text"
+                      [(ngModel)]="moodleUsername"
+                      autocomplete="username"
+                      placeholder="Your Moodle username"
                       class="mt-1 block w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
                     />
                   </div>
                   <div>
-                    <label for="moodle-token" class="block text-sm font-medium text-foreground">API Token</label>
+                    <label for="moodle-password" class="block text-sm font-medium text-foreground">Password</label>
                     <input
-                      id="moodle-token"
+                      id="moodle-password"
                       type="password"
-                      [(ngModel)]="moodleToken"
-                      placeholder="Your Moodle API token"
+                      [(ngModel)]="moodlePassword"
+                      autocomplete="current-password"
+                      placeholder="Your Moodle password"
                       class="mt-1 block w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
                     />
                   </div>
@@ -136,7 +138,7 @@ import { MoodleService } from '../../core/services/moodle.service';
                   (click)="next()"
                   class="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
                 >
-                  {{ currentStep() === 1 && moodleUrl && moodleToken ? 'Connect & Continue' : 'Continue' }}
+                  {{ currentStep() === 1 && moodleUsername && moodlePassword ? 'Connect & Continue' : 'Continue' }}
                 </button>
               } @else {
                 <button
@@ -163,16 +165,23 @@ export class OnboardingComponent {
   readonly moodleLinkError = signal<string | null>(null);
   readonly moodleLinkSuccess = signal(false);
 
-  moodleUrl = '';
-  moodleToken = '';
+  moodleUsername = '';
+  moodlePassword = '';
   selectedTheme = 'dark';
 
   next(): void {
-    if (this.currentStep() === 1 && this.moodleUrl && this.moodleToken) {
-      // Attempt to link Moodle before proceeding
+    if (this.currentStep() === 1 && this.moodleUsername && this.moodlePassword) {
       this.moodleLinkError.set(null);
-      // The actual linking would go through the MoodleController
-      // For now, just advance
+      this.moodleService.linkMoodle(this.moodleUsername, this.moodlePassword).subscribe({
+        next: () => {
+          this.moodleLinkSuccess.set(true);
+          this.currentStep.update((s) => s + 1);
+        },
+        error: () => {
+          this.moodleLinkError.set('Invalid credentials. Please check and try again.');
+        },
+      });
+      return;
     }
 
     if (this.currentStep() < this.steps.length - 1) {

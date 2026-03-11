@@ -4,6 +4,9 @@ using Microsoft.Kiota.Abstractions;
 using Microsoft.Kiota.Abstractions.Authentication;
 using Microsoft.Kiota.Http.HttpClientLibrary;
 using Microsoft.Extensions.Options;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Kursa.Infrastructure.MoodlewareAPI;
 
@@ -21,6 +24,17 @@ public sealed class MoodlewareClientFactory(
         var httpClient = httpClientFactory.CreateClient("Moodle");
         var authProvider = new StaticBearerTokenAuthProvider(moodleToken);
         var adapter = new HttpClientRequestAdapter(authProvider, httpClient: httpClient)
+        {
+            BaseUrl = options.Value.BridgeUrl.TrimEnd('/')
+        };
+        return new MoodlewareApiClient(adapter);
+    }
+
+    /// <summary>Creates an unauthenticated client for calling open endpoints such as POST /auth.</summary>
+    public MoodlewareApiClient CreateAnonymous()
+    {
+        var httpClient = httpClientFactory.CreateClient("Moodle");
+        var adapter = new HttpClientRequestAdapter(new AnonymousAuthenticationProvider(), httpClient: httpClient)
         {
             BaseUrl = options.Value.BridgeUrl.TrimEnd('/')
         };

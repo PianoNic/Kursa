@@ -7,6 +7,7 @@ using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using Microsoft.Kiota.Abstractions.Serialization;
 using Microsoft.Kiota.Serialization.Json;
+using AuthRequest = Kursa.Infrastructure.MoodlewareAPI.Client.Models.AuthRequest;
 
 namespace Kursa.Infrastructure.Services;
 
@@ -22,6 +23,26 @@ public sealed class MoodleService(
 
     private static readonly TimeSpan CourseCacheDuration = TimeSpan.FromMinutes(5);
     private static readonly TimeSpan ContentCacheDuration = TimeSpan.FromMinutes(2);
+
+    public async Task<string?> GetTokenAsync(string username, string password, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var client = clientFactory.CreateAnonymous();
+            var response = await client.Auth.PostAsync(new AuthRequest
+            {
+                Username = username,
+                Password = password,
+            }, cancellationToken: cancellationToken);
+
+            return response?.Token;
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "MoodlewareAPI /auth failed for user {Username}", username);
+            return null;
+        }
+    }
 
     public async Task<IReadOnlyList<MoodleCourseDto>> GetEnrolledCoursesAsync(
         string moodleToken, CancellationToken cancellationToken = default)
