@@ -182,7 +182,8 @@ export class CourseDetailComponent implements OnInit {
 
     this.moodleService.getEnrolledCourses().subscribe({
       next: (courses) => {
-        const found = courses.find(c => c.id === this.courseId()) ?? null;
+        const id = +this.courseId();
+        const found = courses.find(c => c.id === id) ?? null;
         this.course.set(found);
       },
     });

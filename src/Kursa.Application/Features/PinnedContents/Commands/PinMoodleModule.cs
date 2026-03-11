@@ -5,6 +5,7 @@ using Kursa.Domain.Entities;
 using Kursa.Domain.Enums;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 namespace Kursa.Application.Features.PinnedContents.Commands;
@@ -43,7 +44,7 @@ public sealed class PinMoodleModuleValidator : AbstractValidator<PinMoodleModule
 public sealed class PinMoodleModuleHandler(
     ICurrentUserService currentUserService,
     IAppDbContext dbContext,
-    IContentPipeline contentPipeline,
+    IServiceScopeFactory scopeFactory,
     ILogger<PinMoodleModuleHandler> logger) : IRequestHandler<PinMoodleModuleCommand, Result<PinMoodleModuleResponseDto>>
 {
     public async Task<Result<PinMoodleModuleResponseDto>> Handle(
@@ -129,19 +130,24 @@ public sealed class PinMoodleModuleHandler(
             alreadyIndexed = pinned.IsIndexed;
         }
 
-        // --- 5. Trigger indexing in background ---
+        // --- 5. Trigger indexing in background (new scope to avoid disposed DbContext) ---
         if (!alreadyIndexed)
         {
+            Guid contentId = content.Id;
+            Guid userId = user.Id;
+            string contentTitle = content.Title;
             _ = Task.Run(async () =>
             {
                 try
                 {
-                    await contentPipeline.IndexContentAsync(content.Id, user.Id, CancellationToken.None);
-                    logger.LogInformation("Background indexing complete for content {ContentId} ({Title})", content.Id, content.Title);
+                    using IServiceScope scope = scopeFactory.CreateScope();
+                    var pipeline = scope.ServiceProvider.GetRequiredService<IContentPipeline>();
+                    await pipeline.IndexContentAsync(contentId, userId, CancellationToken.None);
+                    logger.LogInformation("Background indexing complete for content {ContentId} ({Title})", contentId, contentTitle);
                 }
                 catch (Exception ex)
                 {
-                    logger.LogError(ex, "Background indexing failed for content {ContentId}", content.Id);
+                    logger.LogError(ex, "Background indexing failed for content {ContentId}", contentId);
                 }
             });
         }
