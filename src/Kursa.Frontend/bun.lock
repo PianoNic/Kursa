@@ -13,6 +13,7 @@
         "@angular/router": "^21.1.0",
         "@spartan-ng/brain": "^0.0.1-alpha.649",
         "angular-oauth2-oidc": "^20.0.2",
+        "marked": "^17.0.4",
         "rxjs": "~7.8.0",
         "tslib": "^2.3.0",
       },
@@ -1738,6 +1739,8 @@
     "make-dir": ["make-dir@2.1.0", "", { "dependencies": { "pify": "^4.0.1", "semver": "^5.6.0" } }, "sha512-LS9X+dc8KLxXCb8dni79fLIIUA5VyZoyjSMCwTluaXA0o27cCK0bhXkpgw+sTXVpPy/lSO57ilRixqk0vDmtRA=="],
 
     "make-fetch-happen": ["make-fetch-happen@15.0.4", "", { "dependencies": { "@gar/promise-retry": "^1.0.0", "@npmcli/agent": "^4.0.0", "cacache": "^20.0.1", "http-cache-semantics": "^4.1.1", "minipass": "^7.0.2", "minipass-fetch": "^5.0.0", "minipass-flush": "^1.0.5", "minipass-pipeline": "^1.2.4", "negotiator": "^1.0.0", "proc-log": "^6.0.0", "ssri": "^13.0.0" } }, "sha512-vM2sG+wbVeVGYcCm16mM3d5fuem9oC28n436HjsGO3LcxoTI8LNVa4rwZDn3f76+cWyT4GGJDxjTYU1I2nr6zw=="],
+
+    "marked": ["marked@17.0.4", "", { "bin": { "marked": "bin/marked.js" } }, "sha512-NOmVMM+KAokHMvjWmC5N/ZOvgmSWuqJB8FoYI019j4ogb/PeRMKoKIjReZ2w3376kkA8dSJIP8uD993Kxc0iRQ=="],
 
     "math-intrinsics": ["math-intrinsics@1.1.0", "", {}, "sha512-/IXtbwEk5HTPyEwyKX6hGkYXxM9nbj64B+ilVJnC/R6B0pH5G4V3b0pVbL7DBj4tkhBAppbQUlf6F6Xl9LHu1g=="],
 
