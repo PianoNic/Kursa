@@ -99,10 +99,10 @@ public static class DependencyInjection
 
             return llmOptions.Provider.ToLowerInvariant() switch
             {
-                "openai" or "anthropic" => ActivatorUtilities.CreateInstance<OpenAiLlmProvider>(sp),
+                "openrouter" => ActivatorUtilities.CreateInstance<OpenRouterLlmProvider>(sp),
                 "ollama" => ActivatorUtilities.CreateInstance<OllamaLlmProvider>(sp),
                 _ => throw new InvalidOperationException(
-                    $"Unknown LLM provider '{llmOptions.Provider}'. Supported: openai, anthropic, ollama.")
+                    $"Unknown LLM provider '{llmOptions.Provider}'. Supported: openrouter, ollama.")
             };
         });
 
