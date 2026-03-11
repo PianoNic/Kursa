@@ -92,12 +92,21 @@ public sealed class QdrantVectorStore : IVectorStore
             filter = MatchKeyword("content_id", filterByContentId.Value.ToString());
         }
 
-        IReadOnlyList<ScoredPoint> results = await _client.SearchAsync(
-            collectionName,
-            queryVector.ToArray(),
-            filter: filter,
-            limit: (ulong)limit,
-            cancellationToken: cancellationToken);
+        IReadOnlyList<ScoredPoint> results;
+        try
+        {
+            results = await _client.SearchAsync(
+                collectionName,
+                queryVector.ToArray(),
+                filter: filter,
+                limit: (ulong)limit,
+                cancellationToken: cancellationToken);
+        }
+        catch (Grpc.Core.RpcException ex) when (ex.StatusCode == Grpc.Core.StatusCode.NotFound)
+        {
+            _logger.LogDebug("Qdrant collection '{Collection}' does not exist yet — returning empty results", collectionName);
+            return [];
+        }
 
         return results.Select(r => new VectorSearchResult
         {
