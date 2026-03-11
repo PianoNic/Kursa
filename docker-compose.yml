@@ -3,7 +3,7 @@ services:
   # MoodlewareAPI Bridge
   # ========================
   moodlewareapi:
-    image: ghcr.io/moodleng/moodlewareapi:latest
+    image: moodlewareapi:local
     ports:
       - "8000:8000"
     environment:
