@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, OnInit, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { HlmButton } from '@spartan-ng/helm/button';
@@ -149,7 +149,7 @@ import { MoodleService } from '../../core/services/moodle.service';
     </div>
   `,
 })
-export class OnboardingComponent {
+export class OnboardingComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly authService = inject(AuthService);
   private readonly moodleService = inject(MoodleService);
@@ -162,6 +162,11 @@ export class OnboardingComponent {
   moodleUsername = '';
   moodlePassword = '';
   selectedTheme = 'dark';
+
+  ngOnInit(): void {
+    // Ensure the user record exists in the DB before any actions (e.g. Moodle linking)
+    this.authService.getCurrentUser().subscribe();
+  }
 
   next(): void {
     if (this.currentStep() === 1 && this.moodleUsername && this.moodlePassword) {
