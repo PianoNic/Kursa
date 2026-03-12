@@ -6,6 +6,8 @@ import { provideOAuthClient } from 'angular-oauth2-oidc';
 import { routes } from './app.routes';
 import { authInterceptor } from './core/interceptors/auth.interceptor';
 import { AuthService } from './core/services/auth.service';
+import { Configuration } from './api';
+import { environment } from '../environments/environment';
 
 function initializeAuth(authService: AuthService): () => Promise<void> {
   return () => authService.initialize();
@@ -17,6 +19,10 @@ export const appConfig: ApplicationConfig = {
     provideRouter(routes, withComponentInputBinding()),
     provideHttpClient(withInterceptors([authInterceptor])),
     provideOAuthClient(),
+    {
+      provide: Configuration,
+      useFactory: () => new Configuration({ basePath: environment.apiBaseUrl }),
+    },
     {
       provide: APP_INITIALIZER,
       useFactory: initializeAuth,

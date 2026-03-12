@@ -6,7 +6,8 @@
     "start": "ng serve",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
-    "test": "ng test"
+    "test": "ng test",
+    "apigen": "npx @openapitools/openapi-generator-cli generate -i http://localhost:5024/swagger/v1/swagger.json -g typescript-angular -o ./src/app/api"
   },
   "prettier": {
     "printWidth": 100,
