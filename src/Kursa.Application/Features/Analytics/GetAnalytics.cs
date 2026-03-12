@@ -82,8 +82,12 @@ public sealed class GetAnalyticsHandler(
 
         // Weekly activity (last 7 days)
         DateTime weekAgo = now.Date.AddDays(-6);
-        List<StudyActivityDto> weeklyActivity = await dbContext.StudySessions
+        var recentSessions = await dbContext.StudySessions
             .Where(s => s.UserId == userId && s.Status == StudySessionStatus.Completed && s.CompletedAt != null && s.CompletedAt >= weekAgo)
+            .Select(s => new { s.CompletedAt, s.TotalDurationSeconds, s.CardsReviewed, s.QuizQuestionsAnswered })
+            .ToListAsync(cancellationToken);
+
+        List<StudyActivityDto> weeklyActivity = recentSessions
             .GroupBy(s => s.CompletedAt!.Value.Date)
             .Select(g => new StudyActivityDto(
                 g.Key,
@@ -91,7 +95,7 @@ public sealed class GetAnalyticsHandler(
                 g.Sum(s => s.CardsReviewed),
                 g.Sum(s => s.QuizQuestionsAnswered)))
             .OrderBy(a => a.Date)
-            .ToListAsync(cancellationToken);
+            .ToList();
 
         // Fill in missing days
         var filledActivity = new List<StudyActivityDto>();
