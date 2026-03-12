@@ -1,14 +1,14 @@
-using System.Net.Http.Headers;
 using System.Text.Json;
 using Kursa.Application.Common.Interfaces;
 using Kursa.Application.Features.Moodle.Models;
 using Kursa.Infrastructure.MoodlewareAPI;
 using Kursa.Infrastructure.MoodlewareAPI.Client.Models;
+using Kursa.Infrastructure.Options;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Microsoft.Kiota.Abstractions.Serialization;
 using Microsoft.Kiota.Serialization.Json;
-using AuthRequest = Kursa.Infrastructure.MoodlewareAPI.Client.Models.AuthRequest;
 
 namespace Kursa.Infrastructure.Services;
 
@@ -16,6 +16,7 @@ public sealed class MoodleService(
     MoodlewareClientFactory clientFactory,
     IHttpClientFactory httpClientFactory,
     IDistributedCache cache,
+    IOptions<MoodleOptions> moodleOptions,
     ILogger<MoodleService> logger) : IMoodleService
 {
     private static readonly JsonSerializerOptions JsonOptions = new()
@@ -31,17 +32,25 @@ public sealed class MoodleService(
         try
         {
             var client = clientFactory.CreateAnonymous();
-            var response = await client.Auth.PostAsync(new AuthRequest
+            var response = await client.GetToken.PostAsync(new Get_moodle_token_params
             {
+                MoodleUrl = moodleOptions.Value.SiteUrl,
                 Username = username,
                 Password = password,
             }, cancellationToken: cancellationToken);
 
-            return response?.Token;
+            if (response?.Success != true || response.Data is not UntypedObject dataObj)
+                return null;
+
+            IDictionary<string, UntypedNode?> values = dataObj.GetValue()!;
+            if (values.TryGetValue("token", out UntypedNode? tokenNode) && tokenNode is UntypedString tokenStr)
+                return tokenStr.GetValue();
+
+            return null;
         }
         catch (Exception ex)
         {
-            logger.LogWarning(ex, "MoodlewareAPI /auth failed for user {Username}", username);
+            logger.LogWarning(ex, "MoodlewareAPI /get-token failed for user {Username}", username);
             return null;
         }
     }
@@ -57,13 +66,13 @@ public sealed class MoodleService(
 
         // Resolve the Moodle userid for this token — required by core_enrol_get_users_courses
         var siteInfo = await GetSiteInfoAsync(moodleToken, cancellationToken);
-        var body = new CoreEnrolGetUsersCoursesRequest();
+        var body = new Get_user_courses_params();
         body.AdditionalData["userid"] = siteInfo.UserId;
 
-        var result = await client.Core_enrol_get_users_courses.PostAsync(
+        var response = await client.Core.Enrol.GetUsersCourses.PostAsync(
             body, cancellationToken: cancellationToken);
 
-        var courses = await DeserializeAsync<List<MoodleCourseDto>>(result, cancellationToken) ?? [];
+        var courses = await DeserializeMoodleDataAsync<List<MoodleCourseDto>>(response, cancellationToken) ?? [];
         await SetCacheAsync(cacheKey, courses, CourseCacheDuration, cancellationToken);
         return courses;
     }
@@ -76,15 +85,15 @@ public sealed class MoodleService(
         if (cached is not null) return cached;
 
         var client = clientFactory.CreateForToken(moodleToken);
-        UntypedNode? result = await client.Core_course_get_contents.PostAsync(
-            new CoreCourseGetContentsRequest { Courseid = courseId }, cancellationToken: cancellationToken);
+        var response = await client.Core.Course.GetContents.PostAsync(
+            new Get_course_contents_params { Courseid = courseId }, cancellationToken: cancellationToken);
 
-        ThrowIfMoodleError(result, "core_course_get_contents");
+        ThrowIfMoodleError(response, "core_course_get_contents");
 
         List<MoodleCourseSectionDto> sections;
         try
         {
-            sections = await DeserializeAsync<List<MoodleCourseSectionDto>>(result, cancellationToken) ?? [];
+            sections = await DeserializeMoodleDataAsync<List<MoodleCourseSectionDto>>(response, cancellationToken) ?? [];
         }
         catch (Exception ex)
         {
@@ -100,10 +109,10 @@ public sealed class MoodleService(
         string moodleToken, CancellationToken cancellationToken = default)
     {
         var client = clientFactory.CreateForToken(moodleToken);
-        var result = await client.Core_webservice_get_site_info.PostAsync(
-            new CoreWebserviceGetSiteInfoRequest(), cancellationToken: cancellationToken);
+        var response = await client.Core.Webservice.GetSiteInfo.PostAsync(
+            new Get_site_info_params(), cancellationToken: cancellationToken);
 
-        return await DeserializeParsableAsync<MoodleSiteInfoDto>(result, cancellationToken)
+        return await DeserializeMoodleDataAsync<MoodleSiteInfoDto>(response, cancellationToken)
             ?? throw new InvalidOperationException("Failed to deserialize Moodle site info.");
     }
 
@@ -116,14 +125,14 @@ public sealed class MoodleService(
         if (cached is not null) return cached;
 
         var client = clientFactory.CreateForToken(moodleToken);
-        var body = new ModAssignGetAssignmentsRequest();
+        var body = new Get_assignments_params();
         if (courseIds is { Count: > 0 })
         {
             body.AdditionalData["courseids"] = courseIds.ToList();
         }
 
-        var result = await client.Mod_assign_get_assignments.PostAsync(body, cancellationToken: cancellationToken);
-        var dto = await DeserializeAsync<MoodleAssignmentsResponseDto>(result, cancellationToken) ?? new MoodleAssignmentsResponseDto();
+        var response = await client.Mod.Assign.GetAssignments.PostAsync(body, cancellationToken: cancellationToken);
+        var dto = await DeserializeMoodleDataAsync<MoodleAssignmentsResponseDto>(response, cancellationToken) ?? new MoodleAssignmentsResponseDto();
         await SetCacheAsync(cacheKey, dto, ContentCacheDuration, cancellationToken);
         return dto;
     }
@@ -136,10 +145,10 @@ public sealed class MoodleService(
         if (cached is not null) return cached;
 
         var client = clientFactory.CreateForToken(moodleToken);
-        var result = await client.Gradereport_user_get_grade_items.PostAsync(
-            new GradereportUserGetGradeItemsRequest { Courseid = courseId }, cancellationToken: cancellationToken);
+        var response = await client.Gradereport.User.GetGradeItems.PostAsync(
+            new Get_grade_items_params { Courseid = courseId }, cancellationToken: cancellationToken);
 
-        var dto = await DeserializeAsync<MoodleGradeReportDto>(result, cancellationToken) ?? new MoodleGradeReportDto();
+        var dto = await DeserializeMoodleDataAsync<MoodleGradeReportDto>(response, cancellationToken) ?? new MoodleGradeReportDto();
         await SetCacheAsync(cacheKey, dto, ContentCacheDuration, cancellationToken);
         return dto;
     }
@@ -152,11 +161,11 @@ public sealed class MoodleService(
         if (cached is not null) return cached;
 
         var client = clientFactory.CreateForToken(moodleToken);
-        var body = new ModForumGetForumsByCoursesRequest();
+        var body = new Get_forums_by_courses_params();
         body.AdditionalData["courseids"] = new List<int> { courseId };
 
-        var result = await client.Mod_forum_get_forums_by_courses.PostAsync(body, cancellationToken: cancellationToken);
-        var forums = await DeserializeAsync<List<MoodleForumDto>>(result, cancellationToken) ?? [];
+        var response = await client.Mod.Forum.GetForumsByCourses.PostAsync(body, cancellationToken: cancellationToken);
+        var forums = await DeserializeMoodleDataAsync<List<MoodleForumDto>>(response, cancellationToken) ?? [];
         await SetCacheAsync(cacheKey, forums, ContentCacheDuration, cancellationToken);
         return forums;
     }
@@ -169,10 +178,10 @@ public sealed class MoodleService(
         if (cached is not null) return cached;
 
         var client = clientFactory.CreateForToken(moodleToken);
-        var result = await client.Mod_forum_get_forum_discussions.PostAsync(
-            new ModForumGetForumDiscussionsRequest { Forumid = forumId }, cancellationToken: cancellationToken);
+        var response = await client.Mod.Forum.GetForumDiscussions.PostAsync(
+            new Get_forum_discussions_params { Forumid = forumId }, cancellationToken: cancellationToken);
 
-        var dto = await DeserializeAsync<MoodleForumDiscussionsResponseDto>(result, cancellationToken) ?? new MoodleForumDiscussionsResponseDto();
+        var dto = await DeserializeMoodleDataAsync<MoodleForumDiscussionsResponseDto>(response, cancellationToken) ?? new MoodleForumDiscussionsResponseDto();
         await SetCacheAsync(cacheKey, dto, ContentCacheDuration, cancellationToken);
         return dto;
     }
@@ -186,15 +195,15 @@ public sealed class MoodleService(
         if (cached is not null) return cached;
 
         var client = clientFactory.CreateForToken(moodleToken);
-        var body = new CoreCalendarGetCalendarEventsRequest();
+        var body = new Get_calendar_events_params();
         body.AdditionalData["events"] = new Dictionary<string, long>
         {
             ["timestart"] = timeStart,
             ["timeend"] = timeEnd,
         };
 
-        var result = await client.Core_calendar_get_calendar_events.PostAsync(body, cancellationToken: cancellationToken);
-        var dto = await DeserializeAsync<MoodleCalendarEventsResponseDto>(result, cancellationToken) ?? new MoodleCalendarEventsResponseDto();
+        var response = await client.Core.Calendar.GetCalendarEvents.PostAsync(body, cancellationToken: cancellationToken);
+        var dto = await DeserializeMoodleDataAsync<MoodleCalendarEventsResponseDto>(response, cancellationToken) ?? new MoodleCalendarEventsResponseDto();
         await SetCacheAsync(cacheKey, dto, ContentCacheDuration, cancellationToken);
         return dto;
     }
@@ -217,13 +226,15 @@ public sealed class MoodleService(
     }
 
     /// <summary>
-    /// Serializes any Kiota <see cref="IParsable"/> (including <see cref="UntypedNode"/> and
-    /// typed response objects) to JSON, then deserializes into <typeparamref name="TTarget"/>
-    /// using System.Text.Json.
+    /// Extracts the <c>data</c> field from a <see cref="MoodleResponse"/> and deserializes it
+    /// into <typeparamref name="TTarget"/> using System.Text.Json.
     /// </summary>
-    private async Task<TTarget?> DeserializeAsync<TTarget>(UntypedNode? node, CancellationToken cancellationToken)
+    private async Task<TTarget?> DeserializeMoodleDataAsync<TTarget>(MoodleResponse? response, CancellationToken cancellationToken)
         where TTarget : class
-        => await DeserializeParsableAsync<TTarget>(node, cancellationToken);
+    {
+        UntypedNode? data = response?.Data;
+        return await DeserializeParsableAsync<TTarget>(data, cancellationToken);
+    }
 
     private async Task<TTarget?> DeserializeParsableAsync<TTarget>(IParsable? parsable, CancellationToken cancellationToken)
         where TTarget : class
@@ -273,23 +284,26 @@ public sealed class MoodleService(
         => token.GetHashCode(StringComparison.Ordinal).ToString("x8");
 
     /// <summary>
-    /// Detects Moodle error responses (HTTP 200 with an exception/errorcode body) and throws
-    /// an <see cref="InvalidOperationException"/> with the Moodle error message so callers
-    /// don't try to deserialize error objects as content DTOs.
+    /// Detects Moodle error responses and throws an <see cref="InvalidOperationException"/>
+    /// with the Moodle error message so callers don't try to deserialize error objects as content DTOs.
     /// </summary>
-    private static void ThrowIfMoodleError(UntypedNode? node, string operation)
+    private static void ThrowIfMoodleError(MoodleResponse? response, string operation)
     {
-        if (node is not UntypedObject obj) return;
+        if (response?.Success == false || response?.Data is not UntypedObject obj) return;
 
-        IDictionary<string, UntypedNode?> values = obj.GetValue()!;
-        if (!values.ContainsKey("exception")) return;
+        // Check if the data itself contains a Moodle exception
+        if (response.Data is UntypedObject dataObj)
+        {
+            IDictionary<string, UntypedNode?> values = dataObj.GetValue()!;
+            if (!values.ContainsKey("exception")) return;
 
-        string message = "Moodle error";
-        if (values.TryGetValue("message", out UntypedNode? msgNode) && msgNode is UntypedString msgStr)
-            message = msgStr.GetValue() ?? message;
-        else if (values.TryGetValue("errorcode", out UntypedNode? codeNode) && codeNode is UntypedString codeStr)
-            message = codeStr.GetValue() ?? message;
+            string message = "Moodle error";
+            if (values.TryGetValue("message", out UntypedNode? msgNode) && msgNode is UntypedString msgStr)
+                message = msgStr.GetValue() ?? message;
+            else if (values.TryGetValue("errorcode", out UntypedNode? codeNode) && codeNode is UntypedString codeStr)
+                message = codeStr.GetValue() ?? message;
 
-        throw new InvalidOperationException($"Moodle returned an error for '{operation}': {message}");
+            throw new InvalidOperationException($"Moodle returned an error for '{operation}': {message}");
+        }
     }
 }

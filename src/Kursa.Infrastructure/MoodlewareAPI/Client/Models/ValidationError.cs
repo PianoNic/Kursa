@@ -14,22 +14,6 @@ namespace Kursa.Infrastructure.MoodlewareAPI.Client.Models
     {
         /// <summary>Stores additional data not described in the OpenAPI description found when deserializing. Can be used for serialization as well.</summary>
         public IDictionary<string, object> AdditionalData { get; set; }
-        /// <summary>The ctx property</summary>
-#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
-#nullable enable
-        public global::Kursa.Infrastructure.MoodlewareAPI.Client.Models.ValidationError_ctx? Ctx { get; set; }
-#nullable restore
-#else
-        public global::Kursa.Infrastructure.MoodlewareAPI.Client.Models.ValidationError_ctx Ctx { get; set; }
-#endif
-        /// <summary>The input property</summary>
-#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
-#nullable enable
-        public UntypedNode? Input { get; set; }
-#nullable restore
-#else
-        public UntypedNode Input { get; set; }
-#endif
         /// <summary>The loc property</summary>
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
 #nullable enable
@@ -79,8 +63,6 @@ namespace Kursa.Infrastructure.MoodlewareAPI.Client.Models
         {
             return new Dictionary<string, Action<IParseNode>>
             {
-                { "ctx", n => { Ctx = n.GetObjectValue<global::Kursa.Infrastructure.MoodlewareAPI.Client.Models.ValidationError_ctx>(global::Kursa.Infrastructure.MoodlewareAPI.Client.Models.ValidationError_ctx.CreateFromDiscriminatorValue); } },
-                { "input", n => { Input = n.GetObjectValue<UntypedNode>(UntypedNode.CreateFromDiscriminatorValue); } },
                 { "loc", n => { Loc = n.GetCollectionOfPrimitiveValues<string>()?.AsList(); } },
                 { "msg", n => { Msg = n.GetStringValue(); } },
                 { "type", n => { Type = n.GetStringValue(); } },
@@ -93,8 +75,6 @@ namespace Kursa.Infrastructure.MoodlewareAPI.Client.Models
         public virtual void Serialize(ISerializationWriter writer)
         {
             if(ReferenceEquals(writer, null)) throw new ArgumentNullException(nameof(writer));
-            writer.WriteObjectValue<global::Kursa.Infrastructure.MoodlewareAPI.Client.Models.ValidationError_ctx>("ctx", Ctx);
-            writer.WriteObjectValue<UntypedNode>("input", Input);
             writer.WriteCollectionOfPrimitiveValues<string>("loc", Loc);
             writer.WriteStringValue("msg", Msg);
             writer.WriteStringValue("type", Type);
