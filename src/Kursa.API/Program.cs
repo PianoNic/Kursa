@@ -24,6 +24,20 @@ try
     builder.Services.AddSpaStaticFiles(options => { options.RootPath = "wwwroot/browser"; });
     builder.Services.AddProblemDetails();
     builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+
+    if (builder.Environment.IsDevelopment())
+    {
+        builder.Services.AddCors(options =>
+        {
+            options.AddDefaultPolicy(policy =>
+            {
+                policy.WithOrigins("http://localhost:4200")
+                    .AllowAnyHeader()
+                    .AllowAnyMethod()
+                    .AllowCredentials();
+            });
+        });
+    }
     #endregion
 
     #region API Documentation
@@ -159,6 +173,12 @@ try
     }
 
     app.UseRouting();
+
+    if (app.Environment.IsDevelopment())
+    {
+        app.UseCors();
+    }
+
     app.UseAuthentication();
     app.UseAuthorization();
     app.MapControllers();
