@@ -84,10 +84,6 @@ Kursa/
 │   │   ├── angular.json
 │   │   └── package.json
 │   └── Kursa.Tests/            # Backend tests (xUnit)
-├── docker/
-│   ├── Dockerfile.api
-│   ├── Dockerfile.web
-│   └── nginx.conf
 ├── docker-compose.yml          # Full stack: API, DB, Redis, Qdrant, MinIO
 ├── CLAUDE.md                   # This file
 ├── README.md
