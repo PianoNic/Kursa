@@ -84,7 +84,7 @@ Kursa/
 │   │   ├── angular.json
 │   │   └── package.json
 │   └── Kursa.Tests/            # Backend tests (xUnit)
-├── docker-compose.yml          # Full stack: API, DB, Redis, Qdrant, MinIO
+├── compose.yml                 # Full stack: API, DB, Redis, Qdrant, MinIO
 ├── CLAUDE.md                   # This file
 ├── README.md
 ├── .gitignore
@@ -138,7 +138,7 @@ Kursa/
 
 ### Docker
 - Every service gets a Dockerfile
-- `docker-compose.yml` for full local dev stack
+- `compose.yml` for full local dev stack
 - Use multi-stage builds for .NET and Angular
 - `.env.example` for all environment variables
 - Health checks on all services
