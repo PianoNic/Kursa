@@ -14,6 +14,6 @@ export const onboardingGuard: CanActivateFn = () => {
 
   return authService.getCurrentUser().pipe(
     map((user) => (user.onboardingCompleted ? true : router.createUrlTree(['/onboarding']))),
-    catchError(() => of(true)),
+    catchError(() => of(router.createUrlTree(['/onboarding']))),
   );
 };

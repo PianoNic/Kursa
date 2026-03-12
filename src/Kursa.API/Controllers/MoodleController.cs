@@ -21,6 +21,21 @@ public class MoodleController(ISender sender) : ControllerBase
             : BadRequest(result.Error);
     }
 
+    /// <summary>
+    /// Validates Moodle credentials without storing them. Used during onboarding before user is created.
+    /// </summary>
+    [HttpPost("validate")]
+    public async Task<IActionResult> ValidateCredentialsAsync(
+        ValidateMoodleCredentialsCommand command,
+        CancellationToken cancellationToken)
+    {
+        var result = await sender.Send(command, cancellationToken);
+
+        return result.IsSuccess
+            ? Ok()
+            : BadRequest(result.Error);
+    }
+
     [HttpPost("link")]
     public async Task<IActionResult> LinkTokenAsync(
         LinkMoodleTokenCommand command,

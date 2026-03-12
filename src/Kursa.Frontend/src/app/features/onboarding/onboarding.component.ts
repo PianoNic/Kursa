@@ -127,15 +127,19 @@ import { MoodleService } from '../../core/services/moodle.service';
             }
 
             <div class="flex items-center gap-3">
-              @if (currentStep() < steps.length - 1) {
+              @if (currentStep() < steps.length - 1 && currentStep() !== 1) {
                 <button hlmBtn variant="ghost" (click)="skip()">
                   Skip
                 </button>
               }
 
               @if (currentStep() < steps.length - 1) {
-                <button hlmBtn (click)="next()">
-                  {{ currentStep() === 1 && moodleUsername && moodlePassword ? 'Connect & Continue' : 'Continue' }}
+                <button hlmBtn (click)="next()" [disabled]="moodleValidating() || (currentStep() === 1 && (!moodleUsername || !moodlePassword))">
+                  @if (moodleValidating()) {
+                    Validating…
+                  } @else {
+                    {{ currentStep() === 1 ? 'Connect & Continue' : 'Continue' }}
+                  }
                 </button>
               } @else {
                 <button hlmBtn class="px-6" (click)="finish()">
@@ -163,20 +167,25 @@ export class OnboardingComponent implements OnInit {
   moodlePassword = '';
   selectedTheme = 'dark';
 
+  readonly moodleValidating = signal(false);
+
   ngOnInit(): void {
-    // Ensure the user record exists in the DB before any actions (e.g. Moodle linking)
-    this.authService.getCurrentUser().subscribe();
+    // Nothing to do — user record is created only on finish (register)
   }
 
   next(): void {
+    // On Moodle step, validate credentials before proceeding
     if (this.currentStep() === 1 && this.moodleUsername && this.moodlePassword) {
       this.moodleLinkError.set(null);
-      this.moodleService.linkMoodle(this.moodleUsername, this.moodlePassword).subscribe({
+      this.moodleValidating.set(true);
+      this.moodleService.validateCredentials(this.moodleUsername, this.moodlePassword).subscribe({
         next: () => {
+          this.moodleValidating.set(false);
           this.moodleLinkSuccess.set(true);
           this.currentStep.update((s) => s + 1);
         },
         error: () => {
+          this.moodleValidating.set(false);
           this.moodleLinkError.set('Invalid credentials. Please check and try again.');
         },
       });
@@ -199,12 +208,20 @@ export class OnboardingComponent implements OnInit {
   }
 
   finish(): void {
-    this.authService.completeOnboarding().subscribe({
+    // Register creates the user in DB + marks onboarding complete
+    this.authService.register().subscribe({
       next: () => {
-        this.router.navigate(['/dashboard']);
+        // Now link Moodle if credentials were provided
+        if (this.moodleUsername && this.moodlePassword) {
+          this.moodleService.linkMoodle(this.moodleUsername, this.moodlePassword).subscribe({
+            next: () => this.router.navigate(['/dashboard']),
+            error: () => this.router.navigate(['/dashboard']),
+          });
+        } else {
+          this.router.navigate(['/dashboard']);
+        }
       },
       error: () => {
-        // Still navigate even if the API call fails — can retry later
         this.router.navigate(['/dashboard']);
       },
     });

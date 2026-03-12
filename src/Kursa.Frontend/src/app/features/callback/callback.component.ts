@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, inject, OnInit, signal } from '@angular/core';
+import { HttpErrorResponse } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
 import { firstValueFrom } from 'rxjs';
@@ -40,19 +41,27 @@ export class CallbackComponent implements OnInit {
 
   async ngOnInit(): Promise<void> {
     const success = await this.authService.handleCallback();
-    if (success) {
-      try {
-        const user = await firstValueFrom(this.authService.getCurrentUser());
-        await this.router.navigate([user.onboardingCompleted ? '/dashboard' : '/onboarding']);
-      } catch {
-        await this.router.navigate(['/dashboard']);
-      }
-    } else {
+    if (!success) {
       this.error.set(
         'Sign-in failed. Make sure the Pocket ID client has redirect URL ' +
           window.location.origin +
           '/callback registered, and that Public client + PKCE are enabled.',
       );
+      return;
+    }
+
+    try {
+      // Check if user already exists in DB
+      await firstValueFrom(this.authService.getCurrentUser());
+      await this.router.navigate(['/dashboard']);
+    } catch (err) {
+      if (err instanceof HttpErrorResponse && err.status === 404) {
+        // User not registered yet → onboarding
+        await this.router.navigate(['/onboarding']);
+      } else {
+        // Other error — still go to onboarding as safe default
+        await this.router.navigate(['/onboarding']);
+      }
     }
   }
 
