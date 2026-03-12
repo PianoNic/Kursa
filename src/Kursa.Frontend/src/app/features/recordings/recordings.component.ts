@@ -5,13 +5,11 @@ import { HlmCardImports } from '@spartan-ng/helm/card';
 import { HlmInput } from '@spartan-ng/helm/input';
 import { HlmLabel } from '@spartan-ng/helm/label';
 import { HlmTextarea } from '@spartan-ng/helm/textarea';
-import {
-  Recording,
-  RecordingDetail,
-  RecordingService,
-  RecordingStatus,
-  TranscriptSegment,
-} from '../../core/services/recording.service';
+import { RecordingsService } from '../../api/api/recordings.service';
+import { RecordingDto } from '../../api/model/recordingDto';
+import { RecordingDetailDto } from '../../api/model/recordingDetailDto';
+import { RecordingStatus } from '../../api/model/recordingStatus';
+import { TranscriptSegmentDto } from '../../api/model/transcriptSegmentDto';
 
 type View = 'list' | 'upload' | 'detail';
 
@@ -53,7 +51,7 @@ type View = 'list' | 'upload' | 'detail';
                 <button
                   hlmBtn
                   variant="outline"
-                  (click)="openDetail(rec.id)"
+                  (click)="openDetail(rec.id!)"
                   class="h-auto w-full items-center justify-start gap-4 p-4 text-left"
                 >
                   <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10" aria-hidden="true">
@@ -65,7 +63,7 @@ type View = 'list' | 'upload' | 'detail';
                     <p class="truncate font-medium text-foreground">{{ rec.title }}</p>
                     <div class="flex items-center gap-3 text-xs text-muted-foreground">
                       <span>{{ rec.createdAt | date:'medium' }}</span>
-                      <span>{{ formatFileSize(rec.fileSizeBytes) }}</span>
+                      <span>{{ formatFileSize(rec.fileSizeBytes ?? 0) }}</span>
                       @if (rec.courseTitle) {
                         <span>{{ rec.courseTitle }}</span>
                       }
@@ -75,7 +73,7 @@ type View = 'list' | 'upload' | 'detail';
                     class="shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium"
                     [class]="getStatusClasses(rec.status)"
                   >
-                    {{ rec.status }}
+                    {{ getStatusLabel(rec.status) }}
                   </span>
                 </button>
               }
@@ -218,7 +216,7 @@ type View = 'list' | 'upload' | 'detail';
                 class="rounded-full px-2.5 py-0.5 text-xs font-medium"
                 [class]="getStatusClasses(d.status)"
               >
-                {{ d.status }}
+                {{ getStatusLabel(d.status) }}
               </span>
             </div>
 
@@ -235,7 +233,7 @@ type View = 'list' | 'upload' | 'detail';
                   </div>
                   <div>
                     <p class="text-muted-foreground">Size</p>
-                    <p class="font-medium text-foreground">{{ formatFileSize(d.fileSizeBytes) }}</p>
+                    <p class="font-medium text-foreground">{{ formatFileSize(d.fileSizeBytes ?? 0) }}</p>
                   </div>
                   <div>
                     <p class="text-muted-foreground">Uploaded</p>
@@ -261,19 +259,19 @@ type View = 'list' | 'upload' | 'detail';
                 <div hlmCard class="p-5">
                   <h2 class="text-sm font-semibold text-foreground">Actions</h2>
                   <div class="mt-3 space-y-2">
-                    @if (d.status === 'Uploaded' || d.status === 'Failed') {
-                      <button hlmBtn class="w-full" (click)="retryTranscription(d.id)">
-                        {{ d.status === 'Failed' ? 'Retry Transcription' : 'Start Transcription' }}
+                    @if (d.status === 0 || d.status === 5) {
+                      <button hlmBtn class="w-full" (click)="retryTranscription(d.id!)">
+                        {{ d.status === 5 ? 'Retry Transcription' : 'Start Transcription' }}
                       </button>
                     }
-                    <button hlmBtn variant="outline" class="w-full" (click)="downloadRecording(d.id)">
+                    <button hlmBtn variant="outline" class="w-full" (click)="downloadRecording(d.id!)">
                       Download Audio
                     </button>
                     <button
                       hlmBtn
                       variant="outline"
                       class="w-full border-destructive/30 text-destructive hover:bg-destructive/10"
-                      (click)="confirmDelete(d.id)"
+                      (click)="confirmDelete(d.id!)"
                     >
                       Delete Recording
                     </button>
@@ -321,19 +319,19 @@ type View = 'list' | 'upload' | 'detail';
 
                 <!-- Segments or fallback to full text -->
                 <div class="mt-3 max-h-[32rem] overflow-y-auto">
-                  @if (d.segments.length > 0) {
+                  @if ((d.segments ?? []).length > 0) {
                     <div class="space-y-1">
-                      @for (seg of getFilteredSegments(d.segments); track seg.id) {
+                      @for (seg of getFilteredSegments(d.segments ?? []); track seg.id) {
                         <div class="flex gap-3 rounded-md px-2 py-1.5 transition-colors hover:bg-accent">
                           <button
                             hlmBtn
                             variant="link"
                             size="sm"
                             class="shrink-0 font-mono text-xs"
-                            (click)="copyTimestamp(seg.startSeconds)"
-                            [attr.aria-label]="'Copy timestamp ' + formatTimestamp(seg.startSeconds)"
+                            (click)="copyTimestamp(seg.startSeconds ?? 0)"
+                            [attr.aria-label]="'Copy timestamp ' + formatTimestamp(seg.startSeconds ?? 0)"
                           >
-                            {{ formatTimestamp(seg.startSeconds) }}
+                            {{ formatTimestamp(seg.startSeconds ?? 0) }}
                           </button>
                           <p class="text-sm text-foreground">{{ seg.text }}</p>
                         </div>
@@ -346,14 +344,14 @@ type View = 'list' | 'upload' | 'detail';
                   }
                 </div>
               </div>
-            } @else if (d.status === 'Transcribing') {
+            } @else if (d.status === 1) {
               <div hlmCard class="p-5 text-center">
                 <div class="mx-auto h-6 w-6 animate-spin rounded-full border-4 border-primary border-t-transparent" role="status">
                   <span class="sr-only">Transcription in progress...</span>
                 </div>
                 <p class="mt-2 text-sm text-muted-foreground" aria-hidden="true">Transcription in progress...</p>
               </div>
-            } @else if (d.status === 'Failed' && d.errorMessage) {
+            } @else if (d.status === 5 && d.errorMessage) {
               <div class="rounded-md bg-destructive/10 p-4 text-sm text-destructive" role="alert">
                 <p class="font-medium">Processing failed</p>
                 <p class="mt-1">{{ d.errorMessage }}</p>
@@ -366,15 +364,15 @@ type View = 'list' | 'upload' | 'detail';
   `,
 })
 export class RecordingsComponent implements OnInit {
-  private readonly recordingService = inject(RecordingService);
+  private readonly recordingService = inject(RecordingsService);
 
   readonly view = signal<View>('list');
   readonly loading = signal(true);
-  readonly recordings = signal<Recording[]>([]);
+  readonly recordings = signal<RecordingDto[]>([]);
   readonly selectedFile = signal<File | null>(null);
   readonly uploading = signal(false);
   readonly uploadError = signal<string | null>(null);
-  readonly detail = signal<RecordingDetail | null>(null);
+  readonly detail = signal<RecordingDetailDto | null>(null);
   readonly detailLoading = signal(false);
   readonly transcriptSearch = signal('');
 
@@ -382,7 +380,7 @@ export class RecordingsComponent implements OnInit {
     const d = this.detail();
     const search = this.transcriptSearch().toLowerCase();
     if (!d || !search) return 0;
-    return d.segments.filter(s => s.text.toLowerCase().includes(search)).length;
+    return (d.segments ?? []).filter(s => (s.text ?? '').toLowerCase().includes(search)).length;
   });
 
   ngOnInit(): void {
@@ -391,7 +389,7 @@ export class RecordingsComponent implements OnInit {
 
   loadRecordings(): void {
     this.loading.set(true);
-    this.recordingService.getRecordings().subscribe({
+    this.recordingService.apiRecordingsGet().subscribe({
       next: (data) => {
         this.recordings.set(data);
         this.loading.set(false);
@@ -420,7 +418,7 @@ export class RecordingsComponent implements OnInit {
     this.uploading.set(true);
     this.uploadError.set(null);
 
-    this.recordingService.upload(file, title.trim(), description.trim() || undefined).subscribe({
+    this.recordingService.apiRecordingsUploadPost(title.trim(), description.trim() || undefined, undefined, file).subscribe({
       next: () => {
         this.uploading.set(false);
         this.selectedFile.set(null);
@@ -440,7 +438,7 @@ export class RecordingsComponent implements OnInit {
     this.transcriptSearch.set('');
     this.view.set('detail');
 
-    this.recordingService.getRecording(id).subscribe({
+    this.recordingService.apiRecordingsRecordingIdGet(id).subscribe({
       next: (data) => {
         this.detail.set(data);
         this.detailLoading.set(false);
@@ -453,13 +451,13 @@ export class RecordingsComponent implements OnInit {
   }
 
   retryTranscription(id: string): void {
-    this.recordingService.transcribe(id).subscribe({
+    this.recordingService.apiRecordingsRecordingIdTranscribePost(id).subscribe({
       next: () => this.openDetail(id),
     });
   }
 
   downloadRecording(id: string): void {
-    this.recordingService.getDownloadUrl(id).subscribe({
+    this.recordingService.apiRecordingsRecordingIdDownloadUrlGet(id).subscribe({
       next: (res) => {
         window.open(res.url, '_blank');
       },
@@ -467,7 +465,7 @@ export class RecordingsComponent implements OnInit {
   }
 
   confirmDelete(id: string): void {
-    this.recordingService.delete(id).subscribe({
+    this.recordingService.apiRecordingsRecordingIdDelete(id).subscribe({
       next: () => {
         this.view.set('list');
         this.loadRecordings();
@@ -491,10 +489,10 @@ export class RecordingsComponent implements OnInit {
     return `${s}s`;
   }
 
-  getFilteredSegments(segments: TranscriptSegment[]): TranscriptSegment[] {
+  getFilteredSegments(segments: TranscriptSegmentDto[]): TranscriptSegmentDto[] {
     const search = this.transcriptSearch().toLowerCase();
     if (!search) return segments;
-    return segments.filter(s => s.text.toLowerCase().includes(search));
+    return segments.filter(s => (s.text ?? '').toLowerCase().includes(search));
   }
 
   formatTimestamp(seconds: number): string {
@@ -509,11 +507,11 @@ export class RecordingsComponent implements OnInit {
     navigator.clipboard.writeText(this.formatTimestamp(seconds));
   }
 
-  exportTranscript(d: RecordingDetail): void {
+  exportTranscript(d: RecordingDetailDto): void {
     let content: string;
-    if (d.segments.length > 0) {
-      content = d.segments
-        .map(s => `[${this.formatTimestamp(s.startSeconds)}] ${s.text}`)
+    if ((d.segments ?? []).length > 0) {
+      content = (d.segments ?? [])
+        .map(s => `[${this.formatTimestamp(s.startSeconds ?? 0)}] ${s.text ?? ''}`)
         .join('\n');
     } else {
       content = d.transcriptText || '';
@@ -528,19 +526,33 @@ export class RecordingsComponent implements OnInit {
     URL.revokeObjectURL(url);
   }
 
-  getStatusClasses(status: RecordingStatus): string {
+  getStatusLabel(status: RecordingStatus | undefined): string {
     switch (status) {
-      case 'Uploaded':
+      case RecordingStatus.NUMBER_0: return 'Uploaded';
+      case RecordingStatus.NUMBER_1: return 'Transcribing';
+      case RecordingStatus.NUMBER_2: return 'Transcribed';
+      case RecordingStatus.NUMBER_3: return 'Indexing';
+      case RecordingStatus.NUMBER_4: return 'Completed';
+      case RecordingStatus.NUMBER_5: return 'Failed';
+      default: return 'Unknown';
+    }
+  }
+
+  getStatusClasses(status: RecordingStatus | undefined): string {
+    switch (status) {
+      case RecordingStatus.NUMBER_0:
         return 'bg-blue-500/10 text-blue-500';
-      case 'Transcribing':
-      case 'Indexing':
+      case RecordingStatus.NUMBER_1:
+      case RecordingStatus.NUMBER_3:
         return 'bg-orange-500/10 text-orange-500';
-      case 'Transcribed':
+      case RecordingStatus.NUMBER_2:
         return 'bg-cyan-500/10 text-cyan-500';
-      case 'Completed':
+      case RecordingStatus.NUMBER_4:
         return 'bg-green-500/10 text-green-500';
-      case 'Failed':
+      case RecordingStatus.NUMBER_5:
         return 'bg-destructive/10 text-destructive';
+      default:
+        return '';
     }
   }
 }

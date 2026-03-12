@@ -8,7 +8,11 @@ import { lucideArrowUp, lucidePaperclip } from '@ng-icons/lucide';
 import { HlmButton } from '@spartan-ng/helm/button';
 import { HlmCardImports } from '@spartan-ng/helm/card';
 import { HlmInputGroupImports } from '@spartan-ng/helm/input-group';
-import { ChatService, ChatThread, ChatMessage, Citation, ChatResponse } from '../../core/services/chat.service';
+import { ChatService } from '../../api/api/chat.service';
+import { ChatThreadDto } from '../../api/model/chatThreadDto';
+import { ChatMessageDto } from '../../api/model/chatMessageDto';
+import { CitationDto } from '../../api/model/citationDto';
+import { ChatResponseDto } from '../../api/model/chatResponseDto';
 
 @Component({
   selector: 'app-chat',
@@ -69,7 +73,7 @@ import { ChatService, ChatThread, ChatMessage, Citation, ChatResponse } from '..
                 [class]="msg.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-muted text-foreground'"
               >
                 @if (msg.role === 'assistant') {
-                  <div class="markdown-body text-sm text-foreground" [innerHTML]="renderMarkdown(msg.content)"></div>
+                  <div class="markdown-body text-sm text-foreground" [innerHTML]="renderMarkdown(msg.content ?? '')"></div>
                 } @else {
                   <p class="whitespace-pre-wrap text-sm">{{ msg.content }}</p>
                 }
@@ -86,7 +90,7 @@ import { ChatService, ChatThread, ChatMessage, Citation, ChatResponse } from '..
                   <li class="text-xs text-muted-foreground">
                     <span class="font-medium text-foreground">[{{ i + 1 }}]</span>
                     {{ source.contentTitle }}
-                    <span class="italic"> — score: {{ source.score.toFixed(2) }}</span>
+                    <span class="italic"> — score: {{ (source.score ?? 0).toFixed(2) }}</span>
                   </li>
                 }
               </ul>
@@ -161,10 +165,10 @@ export class ChatComponent {
   private readonly sanitizer = inject(DomSanitizer);
   private readonly messagesContainer = viewChild<ElementRef<HTMLDivElement>>('messagesContainer');
 
-  readonly threads = signal<ChatThread[]>([]);
-  readonly messages = signal<ChatMessage[]>([]);
+  readonly threads = signal<ChatThreadDto[]>([]);
+  readonly messages = signal<ChatMessageDto[]>([]);
   readonly activeThreadId = signal<string | null>(null);
-  readonly activeSources = signal<Citation[]>([]);
+  readonly activeSources = signal<CitationDto[]>([]);
   readonly loading = signal(false);
   readonly error = signal<string | null>(null);
 
@@ -175,16 +179,16 @@ export class ChatComponent {
   }
 
   loadThreads(): void {
-    this.chatService.getThreads().subscribe({
+    this.chatService.apiChatThreadsGet().subscribe({
       next: (threads) => this.threads.set(threads),
       error: () => {},
     });
   }
 
-  selectThread(thread: ChatThread): void {
-    this.activeThreadId.set(thread.id);
+  selectThread(thread: ChatThreadDto): void {
+    this.activeThreadId.set(thread.id ?? null);
     this.activeSources.set([]);
-    this.chatService.getMessages(thread.id).subscribe({
+    this.chatService.apiChatThreadsThreadIdMessagesGet(thread.id!).subscribe({
       next: (messages) => {
         this.messages.set(messages);
         this.scrollToBottom();
@@ -218,7 +222,7 @@ export class ChatComponent {
     this.inputMessage = '';
 
     // Optimistically show user message
-    const tempUserMsg: ChatMessage = {
+    const tempUserMsg: ChatMessageDto = {
       id: crypto.randomUUID(),
       role: 'user',
       content: message,
@@ -231,8 +235,8 @@ export class ChatComponent {
 
     const threadId = this.activeThreadId() ?? undefined;
 
-    this.chatService.sendMessage(message, threadId).subscribe({
-      next: (response: ChatResponse) => {
+    this.chatService.apiChatSendPost({ message, threadId }).subscribe({
+      next: (response: ChatResponseDto) => {
         this.loading.set(false);
 
         // Set thread ID if this was a new thread
@@ -240,11 +244,13 @@ export class ChatComponent {
           this.loadThreads();
         }
 
-        this.messages.update((msgs) => [...msgs, response.message]);
-        this.activeSources.set(response.sources);
+        if (response.message) {
+          this.messages.update((msgs) => [...msgs, response.message!]);
+        }
+        this.activeSources.set(response.sources ?? []);
 
         // Extract thread ID from response if available
-        if (response.message.id) {
+        if (response.message?.id) {
           this.scrollToBottom();
         }
       },

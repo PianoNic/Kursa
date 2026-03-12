@@ -1,3 +1,4 @@
+using Kursa.Application.Features.PinnedContents;
 using Kursa.Application.Features.PinnedContents.Commands;
 using Kursa.Application.Features.PinnedContents.Queries;
 using Mediator;
@@ -12,6 +13,7 @@ namespace Kursa.API.Controllers;
 public class PinnedContentsController(ISender sender) : ControllerBase
 {
     [HttpGet]
+    [ProducesResponseType(typeof(IReadOnlyList<PinnedContentDto>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetPinnedContentsAsync(CancellationToken cancellationToken)
     {
         var result = await sender.Send(new GetPinnedContentsQuery(), cancellationToken);
@@ -27,7 +29,7 @@ public class PinnedContentsController(ISender sender) : ControllerBase
         var result = await sender.Send(new PinContentCommand(contentId, request?.Notes), cancellationToken);
 
         return result.IsSuccess
-            ? Ok(new { id = result.Value })
+            ? Ok(new PinContentResponse(result.Value))
             : BadRequest(result.Error);
     }
 
@@ -47,7 +49,7 @@ public class PinnedContentsController(ISender sender) : ControllerBase
         var result = await sender.Send(new ToggleStarCommand(contentId), cancellationToken);
 
         return result.IsSuccess
-            ? Ok(new { isStarred = result.Value })
+            ? Ok(new ToggleStarResponse(result.Value))
             : BadRequest(result.Error);
     }
 
@@ -66,6 +68,7 @@ public class PinnedContentsController(ISender sender) : ControllerBase
     /// and triggering RAG indexing in the background.
     /// </summary>
     [HttpPost("moodle")]
+    [ProducesResponseType(typeof(PinMoodleModuleResponseDto), StatusCodes.Status200OK)]
     public async Task<IActionResult> PinMoodleModuleAsync(
         [FromBody] PinMoodleModuleRequest request, CancellationToken cancellationToken)
     {

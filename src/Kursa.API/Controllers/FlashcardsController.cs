@@ -1,3 +1,4 @@
+using Kursa.Application.Features.Flashcards;
 using Kursa.Application.Features.Flashcards.Commands;
 using Kursa.Application.Features.Flashcards.Queries;
 using Kursa.Domain.Entities;
@@ -13,6 +14,7 @@ namespace Kursa.API.Controllers;
 public class FlashcardsController(ISender sender) : ControllerBase
 {
     [HttpGet("decks")]
+    [ProducesResponseType(typeof(IReadOnlyList<FlashcardDeckDto>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetDecksAsync(CancellationToken cancellationToken)
     {
         var result = await sender.Send(new GetDecksQuery(), cancellationToken);
@@ -23,6 +25,7 @@ public class FlashcardsController(ISender sender) : ControllerBase
     }
 
     [HttpGet("decks/{deckId:guid}")]
+    [ProducesResponseType(typeof(FlashcardDeckDetailDto), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetDeckDetailAsync(Guid deckId, CancellationToken cancellationToken)
     {
         var result = await sender.Send(new GetDeckDetailQuery(deckId), cancellationToken);
@@ -33,6 +36,7 @@ public class FlashcardsController(ISender sender) : ControllerBase
     }
 
     [HttpGet("decks/{deckId:guid}/due")]
+    [ProducesResponseType(typeof(IReadOnlyList<FlashcardDto>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetDueCardsAsync(Guid deckId, CancellationToken cancellationToken)
     {
         var result = await sender.Send(new GetDueFlashcardsQuery(deckId), cancellationToken);
@@ -43,6 +47,7 @@ public class FlashcardsController(ISender sender) : ControllerBase
     }
 
     [HttpPost("generate")]
+    [ProducesResponseType(typeof(FlashcardDeckDetailDto), StatusCodes.Status200OK)]
     public async Task<IActionResult> GenerateFlashcardsAsync([FromBody] GenerateFlashcardsRequest request, CancellationToken cancellationToken)
     {
         var result = await sender.Send(new GenerateFlashcardsCommand(
@@ -56,6 +61,7 @@ public class FlashcardsController(ISender sender) : ControllerBase
     }
 
     [HttpPost("decks/{deckId:guid}/cards")]
+    [ProducesResponseType(typeof(FlashcardDto), StatusCodes.Status200OK)]
     public async Task<IActionResult> CreateCardAsync(Guid deckId, [FromBody] CreateCardRequest request, CancellationToken cancellationToken)
     {
         var result = await sender.Send(new CreateFlashcardCommand(
@@ -70,6 +76,7 @@ public class FlashcardsController(ISender sender) : ControllerBase
     }
 
     [HttpPost("cards/{cardId:guid}/review")]
+    [ProducesResponseType(typeof(ReviewResultDto), StatusCodes.Status200OK)]
     public async Task<IActionResult> ReviewCardAsync(Guid cardId, [FromBody] ReviewCardRequest request, CancellationToken cancellationToken)
     {
         var result = await sender.Send(new ReviewFlashcardCommand(cardId, request.Quality), cancellationToken);

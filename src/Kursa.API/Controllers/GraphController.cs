@@ -17,6 +17,7 @@ public class GraphController(IMicrosoftGraphService graphService) : ControllerBa
     // -- OneNote --
 
     [HttpGet("onenote/notebooks")]
+    [ProducesResponseType(typeof(IReadOnlyList<OneNoteNotebookDto>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetNotebooksAsync(CancellationToken cancellationToken)
     {
         string? token = GetGraphToken();
@@ -28,6 +29,7 @@ public class GraphController(IMicrosoftGraphService graphService) : ControllerBa
     }
 
     [HttpGet("onenote/notebooks/{notebookId}/sections")]
+    [ProducesResponseType(typeof(IReadOnlyList<OneNoteSectionDto>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetSectionsAsync(string notebookId, CancellationToken cancellationToken)
     {
         string? token = GetGraphToken();
@@ -39,6 +41,7 @@ public class GraphController(IMicrosoftGraphService graphService) : ControllerBa
     }
 
     [HttpGet("onenote/sections/{sectionId}/pages")]
+    [ProducesResponseType(typeof(IReadOnlyList<OneNotePageDto>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetPagesAsync(string sectionId, CancellationToken cancellationToken)
     {
         string? token = GetGraphToken();
@@ -63,6 +66,7 @@ public class GraphController(IMicrosoftGraphService graphService) : ControllerBa
     // -- SharePoint --
 
     [HttpGet("sharepoint/sites")]
+    [ProducesResponseType(typeof(IReadOnlyList<SharePointSiteDto>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetSitesAsync(
         [FromQuery] string? search, CancellationToken cancellationToken)
     {
@@ -75,6 +79,7 @@ public class GraphController(IMicrosoftGraphService graphService) : ControllerBa
     }
 
     [HttpGet("sharepoint/sites/{siteId}/items")]
+    [ProducesResponseType(typeof(IReadOnlyList<SharePointDriveItemDto>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetDriveItemsAsync(
         string siteId, [FromQuery] string? folderId, CancellationToken cancellationToken)
     {

@@ -1,8 +1,8 @@
 import { ChangeDetectionStrategy, Component, signal, inject, OnInit } from '@angular/core';
 import { HlmButton } from '@spartan-ng/helm/button';
 import { HlmCardImports } from '@spartan-ng/helm/card';
-import { ForumService, ForumView, DiscussionView } from '../../core/services/forum.service';
-import { MoodleService, MoodleCourse } from '../../core/services/moodle.service';
+import { MoodleService } from '../../api/api/moodle.service';
+import { ForumViewDto, DiscussionViewDto, MoodleCourseDto } from '../../api/model/models';
 
 @Component({
   selector: 'app-forums',
@@ -131,7 +131,7 @@ import { MoodleService, MoodleCourse } from '../../core/services/moodle.service'
                     />
                   } @else {
                     <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-medium text-primary" aria-hidden="true">
-                      {{ getInitials(discussion.author) }}
+                      {{ getInitials(discussion.author ?? '') }}
                     </div>
                   }
                   <div class="min-w-0 flex-1">
@@ -143,7 +143,7 @@ import { MoodleService, MoodleCourse } from '../../core/services/moodle.service'
                     </div>
                     <div class="mt-1 flex items-center gap-3 text-xs text-muted-foreground">
                       <span>{{ discussion.author }}</span>
-                      <span>{{ formatDate(discussion.createdAt) }}</span>
+                      <span>{{ formatDate(discussion.createdAt ?? '') }}</span>
                       <span>{{ discussion.replyCount }} replies</span>
                     </div>
                     @if (discussion.message) {
@@ -160,12 +160,11 @@ import { MoodleService, MoodleCourse } from '../../core/services/moodle.service'
   `,
 })
 export class ForumsComponent implements OnInit {
-  private readonly forumService = inject(ForumService);
   private readonly moodleService = inject(MoodleService);
 
-  readonly courses = signal<MoodleCourse[]>([]);
-  readonly forums = signal<ForumView[]>([]);
-  readonly discussions = signal<DiscussionView[]>([]);
+  readonly courses = signal<MoodleCourseDto[]>([]);
+  readonly forums = signal<ForumViewDto[]>([]);
+  readonly discussions = signal<DiscussionViewDto[]>([]);
   readonly loading = signal(true);
   readonly discussionsLoading = signal(false);
   readonly error = signal<string | null>(null);
@@ -179,13 +178,13 @@ export class ForumsComponent implements OnInit {
     this.loadCourses();
   }
 
-  selectCourse(course: MoodleCourse): void {
-    this.selectedCourseId = course.id;
-    this.selectedCourseName.set(course.shortName);
+  selectCourse(course: MoodleCourseDto): void {
+    this.selectedCourseId = course.id!;
+    this.selectedCourseName.set(course.shortName ?? '');
     this.loading.set(true);
     this.activeView.set('forums');
 
-    this.forumService.getForums(course.id).subscribe({
+    this.moodleService.apiMoodleCoursesCourseIdForumsGet(course.id!).subscribe({
       next: (forums) => {
         this.forums.set(forums);
         this.loading.set(false);
@@ -197,12 +196,12 @@ export class ForumsComponent implements OnInit {
     });
   }
 
-  selectForum(forum: ForumView): void {
-    this.selectedForumName.set(forum.name);
+  selectForum(forum: ForumViewDto): void {
+    this.selectedForumName.set(forum.name ?? '');
     this.discussionsLoading.set(true);
     this.activeView.set('discussions');
 
-    this.forumService.getDiscussions(forum.id).subscribe({
+    this.moodleService.apiMoodleForumsForumIdDiscussionsGet(forum.id!).subscribe({
       next: (discussions) => {
         this.discussions.set(discussions);
         this.discussionsLoading.set(false);
@@ -248,7 +247,7 @@ export class ForumsComponent implements OnInit {
     this.loading.set(true);
     this.error.set(null);
 
-    this.moodleService.getEnrolledCourses().subscribe({
+    this.moodleService.apiMoodleCoursesGet().subscribe({
       next: (courses) => {
         this.courses.set(courses);
         this.loading.set(false);

@@ -5,9 +5,8 @@ import { HlmButton } from '@spartan-ng/helm/button';
 import { HlmCardImports } from '@spartan-ng/helm/card';
 import { HlmInput } from '@spartan-ng/helm/input';
 import { HlmLabel } from '@spartan-ng/helm/label';
-import { StudySession, StudySessionService } from '../../core/services/study-session.service';
-import { FlashcardDeck, Flashcard, FlashcardService } from '../../core/services/flashcard.service';
-import { Quiz, QuizDetail, QuizService } from '../../core/services/quiz.service';
+import { StudySessionsService } from '../../api/api/studySessions.service';
+import { StudySessionDto } from '../../api/model/studySessionDto';
 
 type View = 'list' | 'setup' | 'active' | 'summary';
 type TimerPhase = 'work' | 'break';
@@ -46,9 +45,9 @@ type TimerPhase = 'work' | 'break';
                 <div hlmCard class="flex items-center gap-4 p-4">
                   <div
                     class="flex h-10 w-10 items-center justify-center rounded-full"
-                    [class]="session.status === 'Completed' ? 'bg-green-500/10 text-green-500' : 'bg-muted text-muted-foreground'"
+                    [class]="session.status === 1 ? 'bg-green-500/10 text-green-500' : 'bg-muted text-muted-foreground'"
                   >
-                    @if (session.status === 'Completed') {
+                    @if (session.status === 1) {
                       <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" /></svg>
                     } @else {
                       <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg>
@@ -62,11 +61,11 @@ type TimerPhase = 'work' | 'break';
                     <p class="text-xs text-muted-foreground">{{ session.createdAt | date:'medium' }}</p>
                   </div>
                   <div class="flex items-center gap-3 text-xs text-muted-foreground">
-                    @if (session.completedPomodoros > 0) {
+                    @if ((session.completedPomodoros ?? 0) > 0) {
                       <span>{{ session.completedPomodoros }} pomo</span>
                     }
-                    @if (session.totalDurationSeconds > 0) {
-                      <span>{{ formatDuration(session.totalDurationSeconds) }}</span>
+                    @if ((session.totalDurationSeconds ?? 0) > 0) {
+                      <span>{{ formatDuration(session.totalDurationSeconds ?? 0) }}</span>
                     }
                   </div>
                 </div>
@@ -230,7 +229,7 @@ type TimerPhase = 'work' | 'break';
                   <p class="text-xs text-muted-foreground">Pomodoros</p>
                 </div>
                 <div hlmCard class="p-4 text-center">
-                  <p class="text-3xl font-bold text-primary">{{ formatDuration(completedSession()!.totalDurationSeconds) }}</p>
+                  <p class="text-3xl font-bold text-primary">{{ formatDuration(completedSession()!.totalDurationSeconds ?? 0) }}</p>
                   <p class="text-xs text-muted-foreground">Total Time</p>
                 </div>
                 <div hlmCard class="p-4 text-center">
@@ -254,11 +253,11 @@ type TimerPhase = 'work' | 'break';
   `,
 })
 export class StudyComponent implements OnInit, OnDestroy {
-  private readonly sessionService = inject(StudySessionService);
+  private readonly sessionService = inject(StudySessionsService);
 
   readonly view = signal<View>('list');
   readonly loading = signal(true);
-  readonly sessions = signal<StudySession[]>([]);
+  readonly sessions = signal<StudySessionDto[]>([]);
 
   // Setup
   sessionTitle = '';
@@ -266,7 +265,7 @@ export class StudyComponent implements OnInit, OnDestroy {
   breakMinutes = 5;
 
   // Active session
-  readonly activeSession = signal<StudySession | null>(null);
+  readonly activeSession = signal<StudySessionDto | null>(null);
   readonly timerPhase = signal<TimerPhase>('work');
   readonly timerSeconds = signal(0);
   readonly timerRunning = signal(false);
@@ -278,13 +277,13 @@ export class StudyComponent implements OnInit, OnDestroy {
   private sessionStartTime = 0;
 
   // Summary
-  readonly completedSession = signal<StudySession | null>(null);
+  readonly completedSession = signal<StudySessionDto | null>(null);
 
   readonly totalPhaseSeconds = computed(() => {
     const phase = this.timerPhase();
     const session = this.activeSession();
     if (!session) return 0;
-    return phase === 'work' ? session.workMinutes * 60 : session.breakMinutes * 60;
+    return phase === 'work' ? (session.workMinutes ?? 25) * 60 : (session.breakMinutes ?? 5) * 60;
   });
 
   readonly formattedTimer = computed(() => {
@@ -310,7 +309,7 @@ export class StudyComponent implements OnInit, OnDestroy {
 
   loadSessions(): void {
     this.loading.set(true);
-    this.sessionService.getSessions().subscribe({
+    this.sessionService.apiStudySessionsGet().subscribe({
       next: (sessions) => {
         this.sessions.set(sessions);
         this.loading.set(false);
@@ -322,7 +321,7 @@ export class StudyComponent implements OnInit, OnDestroy {
   startSession(): void {
     if (!this.sessionTitle.trim()) return;
 
-    this.sessionService.startSession(this.sessionTitle.trim(), this.workMinutes, this.breakMinutes).subscribe({
+    this.sessionService.apiStudySessionsStartPost({ title: this.sessionTitle.trim(), workMinutes: this.workMinutes, breakMinutes: this.breakMinutes }).subscribe({
       next: (session) => {
         this.activeSession.set(session);
         this.pomodoroCount.set(0);
@@ -331,7 +330,7 @@ export class StudyComponent implements OnInit, OnDestroy {
         this.sessionQuizCorrect.set(0);
         this.sessionStartTime = Date.now();
         this.timerPhase.set('work');
-        this.timerSeconds.set(session.workMinutes * 60);
+        this.timerSeconds.set((session.workMinutes ?? 25) * 60);
         this.view.set('active');
       },
     });
@@ -368,14 +367,13 @@ export class StudyComponent implements OnInit, OnDestroy {
 
     const elapsed = Math.round((Date.now() - this.sessionStartTime) / 1000);
 
-    this.sessionService.completeSession(
-      session.id,
-      this.pomodoroCount(),
-      elapsed,
-      this.sessionCardsReviewed(),
-      this.sessionQuizAnswered(),
-      this.sessionQuizCorrect(),
-    ).subscribe({
+    this.sessionService.apiStudySessionsSessionIdCompletePost(session.id!, {
+      completedPomodoros: this.pomodoroCount(),
+      totalDurationSeconds: elapsed,
+      cardsReviewed: this.sessionCardsReviewed(),
+      quizQuestionsAnswered: this.sessionQuizAnswered(),
+      quizCorrectAnswers: this.sessionQuizCorrect(),
+    }).subscribe({
       next: (completed) => {
         this.completedSession.set(completed);
         this.view.set('summary');
@@ -403,11 +401,11 @@ export class StudyComponent implements OnInit, OnDestroy {
       this.pomodoroCount.update((c) => c + 1);
       this.timerPhase.set('break');
       const session = this.activeSession();
-      this.timerSeconds.set(session ? session.breakMinutes * 60 : 300);
+      this.timerSeconds.set(session ? (session.breakMinutes ?? 5) * 60 : 300);
     } else {
       this.timerPhase.set('work');
       const session = this.activeSession();
-      this.timerSeconds.set(session ? session.workMinutes * 60 : 1500);
+      this.timerSeconds.set(session ? (session.workMinutes ?? 25) * 60 : 1500);
     }
   }
 

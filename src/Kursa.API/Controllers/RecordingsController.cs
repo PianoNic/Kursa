@@ -1,3 +1,4 @@
+using Kursa.Application.Features.Recordings;
 using Kursa.Application.Features.Recordings.Commands;
 using Kursa.Application.Features.Recordings.Queries;
 using Mediator;
@@ -12,6 +13,7 @@ namespace Kursa.API.Controllers;
 public class RecordingsController(ISender sender) : ControllerBase
 {
     [HttpGet]
+    [ProducesResponseType(typeof(IReadOnlyList<RecordingDto>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetRecordingsAsync(CancellationToken cancellationToken)
     {
         var result = await sender.Send(new GetRecordingsQuery(), cancellationToken);
@@ -22,6 +24,7 @@ public class RecordingsController(ISender sender) : ControllerBase
     }
 
     [HttpGet("{recordingId:guid}")]
+    [ProducesResponseType(typeof(RecordingDetailDto), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetRecordingDetailAsync(Guid recordingId, CancellationToken cancellationToken)
     {
         var result = await sender.Send(new GetRecordingDetailQuery(recordingId), cancellationToken);
@@ -37,12 +40,13 @@ public class RecordingsController(ISender sender) : ControllerBase
         var result = await sender.Send(new GetRecordingDownloadUrlQuery(recordingId), cancellationToken);
 
         return result.IsSuccess
-            ? Ok(new { url = result.Value })
+            ? Ok(new DownloadUrlResponse(result.Value))
             : BadRequest(result.Error);
     }
 
     [HttpPost("upload")]
     [RequestSizeLimit(500 * 1024 * 1024)] // 500 MB
+    [ProducesResponseType(typeof(RecordingDto), StatusCodes.Status200OK)]
     public async Task<IActionResult> UploadRecordingAsync(
         [FromForm] string title,
         [FromForm] string? description,

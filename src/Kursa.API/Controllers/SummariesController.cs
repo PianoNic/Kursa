@@ -1,3 +1,4 @@
+using Kursa.Application.Features.Summaries;
 using Kursa.Application.Features.Summaries.Commands;
 using Kursa.Application.Features.Summaries.Queries;
 using Mediator;
@@ -12,6 +13,7 @@ namespace Kursa.API.Controllers;
 public class SummariesController(ISender sender) : ControllerBase
 {
     [HttpGet("{contentId:guid}")]
+    [ProducesResponseType(typeof(ContentSummaryDto), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetSummaryAsync(Guid contentId, CancellationToken cancellationToken)
     {
         var result = await sender.Send(new GetContentSummaryQuery(contentId), cancellationToken);
@@ -27,7 +29,7 @@ public class SummariesController(ISender sender) : ControllerBase
         var result = await sender.Send(new GenerateSummaryCommand(contentId), cancellationToken);
 
         return result.IsSuccess
-            ? Ok(new { summary = result.Value })
+            ? Ok(new GenerateSummaryResponse(result.Value))
             : BadRequest(result.Error);
     }
 }

@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, firstValueFrom } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import { OAuthService, AuthConfig } from 'angular-oauth2-oidc';
+import { environment } from '../../../environments/environment';
 
 export interface UserProfile {
   id: string;
@@ -12,6 +13,7 @@ export interface UserProfile {
   role: string;
   onboardingCompleted: boolean;
   moodleConnected: boolean;
+  createdAt?: string;
 }
 
 interface AppInfo {
@@ -38,7 +40,7 @@ export class AuthService {
   readonly isAuthenticated = computed(() => this.oauthService.hasValidAccessToken());
 
   async initialize(): Promise<void> {
-    const appInfo = await firstValueFrom(this.http.get<AppInfo>('/api/app'));
+    const appInfo = await firstValueFrom(this.http.get<AppInfo>(`${environment.apiBaseUrl}/api/app`));
 
     const config: AuthConfig = {
       issuer: appInfo.oidc.issuer,
@@ -94,18 +96,18 @@ export class AuthService {
 
   getCurrentUser(): Observable<UserProfile> {
     return this.http
-      .get<UserProfile>('/api/auth/me')
+      .get<UserProfile>(`${environment.apiBaseUrl}/api/auth/me`)
       .pipe(tap((user) => this._profile.set(user)));
   }
 
   /** Creates user in DB + marks onboarding complete. */
   register(): Observable<UserProfile> {
     return this.http
-      .post<UserProfile>('/api/auth/register', {})
+      .post<UserProfile>(`${environment.apiBaseUrl}/api/auth/register`, {})
       .pipe(tap((user) => this._profile.set(user)));
   }
 
   completeOnboarding(): Observable<void> {
-    return this.http.post<void>('/api/users/me/onboarding/complete', {});
+    return this.http.post<void>(`${environment.apiBaseUrl}/api/users/me/onboarding/complete`, {});
   }
 }

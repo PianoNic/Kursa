@@ -19,9 +19,17 @@ import { Observable }                                        from 'rxjs';
 // @ts-ignore
 import { CreateCardRequest } from '../model/createCardRequest';
 // @ts-ignore
+import { FlashcardDeckDetailDto } from '../model/flashcardDeckDetailDto';
+// @ts-ignore
+import { FlashcardDeckDto } from '../model/flashcardDeckDto';
+// @ts-ignore
+import { FlashcardDto } from '../model/flashcardDto';
+// @ts-ignore
 import { GenerateFlashcardsRequest } from '../model/generateFlashcardsRequest';
 // @ts-ignore
 import { ReviewCardRequest } from '../model/reviewCardRequest';
+// @ts-ignore
+import { ReviewResultDto } from '../model/reviewResultDto';
 
 // @ts-ignore
 import { BASE_PATH, COLLECTION_FORMATS }                     from '../variables';
@@ -100,10 +108,10 @@ export class FlashcardsService {
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
      */
-    public apiFlashcardsCardsCardIdReviewPost(cardId: string, reviewCardRequest?: ReviewCardRequest, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: undefined, context?: HttpContext, transferCache?: boolean}): Observable<any>;
-    public apiFlashcardsCardsCardIdReviewPost(cardId: string, reviewCardRequest?: ReviewCardRequest, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: undefined, context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<any>>;
-    public apiFlashcardsCardsCardIdReviewPost(cardId: string, reviewCardRequest?: ReviewCardRequest, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: undefined, context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<any>>;
-    public apiFlashcardsCardsCardIdReviewPost(cardId: string, reviewCardRequest?: ReviewCardRequest, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: undefined, context?: HttpContext, transferCache?: boolean}): Observable<any> {
+    public apiFlashcardsCardsCardIdReviewPost(cardId: string, reviewCardRequest?: ReviewCardRequest, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json', context?: HttpContext, transferCache?: boolean}): Observable<ReviewResultDto>;
+    public apiFlashcardsCardsCardIdReviewPost(cardId: string, reviewCardRequest?: ReviewCardRequest, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<ReviewResultDto>>;
+    public apiFlashcardsCardsCardIdReviewPost(cardId: string, reviewCardRequest?: ReviewCardRequest, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<ReviewResultDto>>;
+    public apiFlashcardsCardsCardIdReviewPost(cardId: string, reviewCardRequest?: ReviewCardRequest, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json', context?: HttpContext, transferCache?: boolean}): Observable<any> {
         if (cardId === null || cardId === undefined) {
             throw new Error('Required parameter cardId was null or undefined when calling apiFlashcardsCardsCardIdReviewPost.');
         }
@@ -114,6 +122,9 @@ export class FlashcardsService {
         if (localVarHttpHeaderAcceptSelected === undefined) {
             // to determine the Accept header
             const httpHeaderAccepts: string[] = [
+                'text/plain',
+                'application/json',
+                'text/json'
             ];
             localVarHttpHeaderAcceptSelected = this.configuration.selectHeaderAccept(httpHeaderAccepts);
         }
@@ -155,7 +166,7 @@ export class FlashcardsService {
         }
 
         let localVarPath = `/api/flashcards/cards/${this.configuration.encodeParam({name: "cardId", value: cardId, in: "path", style: "simple", explode: false, dataType: "string", dataFormat: "uuid"})}/review`;
-        return this.httpClient.request<any>('post', `${this.configuration.basePath}${localVarPath}`,
+        return this.httpClient.request<ReviewResultDto>('post', `${this.configuration.basePath}${localVarPath}`,
             {
                 context: localVarHttpContext,
                 body: reviewCardRequest,
@@ -175,10 +186,10 @@ export class FlashcardsService {
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
      */
-    public apiFlashcardsDecksDeckIdCardsPost(deckId: string, createCardRequest?: CreateCardRequest, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: undefined, context?: HttpContext, transferCache?: boolean}): Observable<any>;
-    public apiFlashcardsDecksDeckIdCardsPost(deckId: string, createCardRequest?: CreateCardRequest, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: undefined, context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<any>>;
-    public apiFlashcardsDecksDeckIdCardsPost(deckId: string, createCardRequest?: CreateCardRequest, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: undefined, context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<any>>;
-    public apiFlashcardsDecksDeckIdCardsPost(deckId: string, createCardRequest?: CreateCardRequest, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: undefined, context?: HttpContext, transferCache?: boolean}): Observable<any> {
+    public apiFlashcardsDecksDeckIdCardsPost(deckId: string, createCardRequest?: CreateCardRequest, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json', context?: HttpContext, transferCache?: boolean}): Observable<FlashcardDto>;
+    public apiFlashcardsDecksDeckIdCardsPost(deckId: string, createCardRequest?: CreateCardRequest, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<FlashcardDto>>;
+    public apiFlashcardsDecksDeckIdCardsPost(deckId: string, createCardRequest?: CreateCardRequest, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<FlashcardDto>>;
+    public apiFlashcardsDecksDeckIdCardsPost(deckId: string, createCardRequest?: CreateCardRequest, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json', context?: HttpContext, transferCache?: boolean}): Observable<any> {
         if (deckId === null || deckId === undefined) {
             throw new Error('Required parameter deckId was null or undefined when calling apiFlashcardsDecksDeckIdCardsPost.');
         }
@@ -189,6 +200,9 @@ export class FlashcardsService {
         if (localVarHttpHeaderAcceptSelected === undefined) {
             // to determine the Accept header
             const httpHeaderAccepts: string[] = [
+                'text/plain',
+                'application/json',
+                'text/json'
             ];
             localVarHttpHeaderAcceptSelected = this.configuration.selectHeaderAccept(httpHeaderAccepts);
         }
@@ -230,7 +244,7 @@ export class FlashcardsService {
         }
 
         let localVarPath = `/api/flashcards/decks/${this.configuration.encodeParam({name: "deckId", value: deckId, in: "path", style: "simple", explode: false, dataType: "string", dataFormat: "uuid"})}/cards`;
-        return this.httpClient.request<any>('post', `${this.configuration.basePath}${localVarPath}`,
+        return this.httpClient.request<FlashcardDto>('post', `${this.configuration.basePath}${localVarPath}`,
             {
                 context: localVarHttpContext,
                 body: createCardRequest,
@@ -249,10 +263,10 @@ export class FlashcardsService {
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
      */
-    public apiFlashcardsDecksDeckIdDueGet(deckId: string, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: undefined, context?: HttpContext, transferCache?: boolean}): Observable<any>;
-    public apiFlashcardsDecksDeckIdDueGet(deckId: string, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: undefined, context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<any>>;
-    public apiFlashcardsDecksDeckIdDueGet(deckId: string, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: undefined, context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<any>>;
-    public apiFlashcardsDecksDeckIdDueGet(deckId: string, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: undefined, context?: HttpContext, transferCache?: boolean}): Observable<any> {
+    public apiFlashcardsDecksDeckIdDueGet(deckId: string, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json', context?: HttpContext, transferCache?: boolean}): Observable<Array<FlashcardDto>>;
+    public apiFlashcardsDecksDeckIdDueGet(deckId: string, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<Array<FlashcardDto>>>;
+    public apiFlashcardsDecksDeckIdDueGet(deckId: string, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<Array<FlashcardDto>>>;
+    public apiFlashcardsDecksDeckIdDueGet(deckId: string, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json', context?: HttpContext, transferCache?: boolean}): Observable<any> {
         if (deckId === null || deckId === undefined) {
             throw new Error('Required parameter deckId was null or undefined when calling apiFlashcardsDecksDeckIdDueGet.');
         }
@@ -263,6 +277,9 @@ export class FlashcardsService {
         if (localVarHttpHeaderAcceptSelected === undefined) {
             // to determine the Accept header
             const httpHeaderAccepts: string[] = [
+                'text/plain',
+                'application/json',
+                'text/json'
             ];
             localVarHttpHeaderAcceptSelected = this.configuration.selectHeaderAccept(httpHeaderAccepts);
         }
@@ -293,7 +310,7 @@ export class FlashcardsService {
         }
 
         let localVarPath = `/api/flashcards/decks/${this.configuration.encodeParam({name: "deckId", value: deckId, in: "path", style: "simple", explode: false, dataType: "string", dataFormat: "uuid"})}/due`;
-        return this.httpClient.request<any>('get', `${this.configuration.basePath}${localVarPath}`,
+        return this.httpClient.request<Array<FlashcardDto>>('get', `${this.configuration.basePath}${localVarPath}`,
             {
                 context: localVarHttpContext,
                 responseType: <any>responseType_,
@@ -311,10 +328,10 @@ export class FlashcardsService {
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
      */
-    public apiFlashcardsDecksDeckIdGet(deckId: string, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: undefined, context?: HttpContext, transferCache?: boolean}): Observable<any>;
-    public apiFlashcardsDecksDeckIdGet(deckId: string, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: undefined, context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<any>>;
-    public apiFlashcardsDecksDeckIdGet(deckId: string, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: undefined, context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<any>>;
-    public apiFlashcardsDecksDeckIdGet(deckId: string, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: undefined, context?: HttpContext, transferCache?: boolean}): Observable<any> {
+    public apiFlashcardsDecksDeckIdGet(deckId: string, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json', context?: HttpContext, transferCache?: boolean}): Observable<FlashcardDeckDetailDto>;
+    public apiFlashcardsDecksDeckIdGet(deckId: string, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<FlashcardDeckDetailDto>>;
+    public apiFlashcardsDecksDeckIdGet(deckId: string, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<FlashcardDeckDetailDto>>;
+    public apiFlashcardsDecksDeckIdGet(deckId: string, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json', context?: HttpContext, transferCache?: boolean}): Observable<any> {
         if (deckId === null || deckId === undefined) {
             throw new Error('Required parameter deckId was null or undefined when calling apiFlashcardsDecksDeckIdGet.');
         }
@@ -325,6 +342,9 @@ export class FlashcardsService {
         if (localVarHttpHeaderAcceptSelected === undefined) {
             // to determine the Accept header
             const httpHeaderAccepts: string[] = [
+                'text/plain',
+                'application/json',
+                'text/json'
             ];
             localVarHttpHeaderAcceptSelected = this.configuration.selectHeaderAccept(httpHeaderAccepts);
         }
@@ -355,7 +375,7 @@ export class FlashcardsService {
         }
 
         let localVarPath = `/api/flashcards/decks/${this.configuration.encodeParam({name: "deckId", value: deckId, in: "path", style: "simple", explode: false, dataType: "string", dataFormat: "uuid"})}`;
-        return this.httpClient.request<any>('get', `${this.configuration.basePath}${localVarPath}`,
+        return this.httpClient.request<FlashcardDeckDetailDto>('get', `${this.configuration.basePath}${localVarPath}`,
             {
                 context: localVarHttpContext,
                 responseType: <any>responseType_,
@@ -372,10 +392,10 @@ export class FlashcardsService {
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
      */
-    public apiFlashcardsDecksGet(observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: undefined, context?: HttpContext, transferCache?: boolean}): Observable<any>;
-    public apiFlashcardsDecksGet(observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: undefined, context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<any>>;
-    public apiFlashcardsDecksGet(observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: undefined, context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<any>>;
-    public apiFlashcardsDecksGet(observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: undefined, context?: HttpContext, transferCache?: boolean}): Observable<any> {
+    public apiFlashcardsDecksGet(observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json', context?: HttpContext, transferCache?: boolean}): Observable<Array<FlashcardDeckDto>>;
+    public apiFlashcardsDecksGet(observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<Array<FlashcardDeckDto>>>;
+    public apiFlashcardsDecksGet(observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<Array<FlashcardDeckDto>>>;
+    public apiFlashcardsDecksGet(observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json', context?: HttpContext, transferCache?: boolean}): Observable<any> {
 
         let localVarHeaders = this.defaultHeaders;
 
@@ -383,6 +403,9 @@ export class FlashcardsService {
         if (localVarHttpHeaderAcceptSelected === undefined) {
             // to determine the Accept header
             const httpHeaderAccepts: string[] = [
+                'text/plain',
+                'application/json',
+                'text/json'
             ];
             localVarHttpHeaderAcceptSelected = this.configuration.selectHeaderAccept(httpHeaderAccepts);
         }
@@ -413,7 +436,7 @@ export class FlashcardsService {
         }
 
         let localVarPath = `/api/flashcards/decks`;
-        return this.httpClient.request<any>('get', `${this.configuration.basePath}${localVarPath}`,
+        return this.httpClient.request<Array<FlashcardDeckDto>>('get', `${this.configuration.basePath}${localVarPath}`,
             {
                 context: localVarHttpContext,
                 responseType: <any>responseType_,
@@ -431,10 +454,10 @@ export class FlashcardsService {
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
      */
-    public apiFlashcardsGeneratePost(generateFlashcardsRequest?: GenerateFlashcardsRequest, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: undefined, context?: HttpContext, transferCache?: boolean}): Observable<any>;
-    public apiFlashcardsGeneratePost(generateFlashcardsRequest?: GenerateFlashcardsRequest, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: undefined, context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<any>>;
-    public apiFlashcardsGeneratePost(generateFlashcardsRequest?: GenerateFlashcardsRequest, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: undefined, context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<any>>;
-    public apiFlashcardsGeneratePost(generateFlashcardsRequest?: GenerateFlashcardsRequest, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: undefined, context?: HttpContext, transferCache?: boolean}): Observable<any> {
+    public apiFlashcardsGeneratePost(generateFlashcardsRequest?: GenerateFlashcardsRequest, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json', context?: HttpContext, transferCache?: boolean}): Observable<FlashcardDeckDetailDto>;
+    public apiFlashcardsGeneratePost(generateFlashcardsRequest?: GenerateFlashcardsRequest, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<FlashcardDeckDetailDto>>;
+    public apiFlashcardsGeneratePost(generateFlashcardsRequest?: GenerateFlashcardsRequest, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<FlashcardDeckDetailDto>>;
+    public apiFlashcardsGeneratePost(generateFlashcardsRequest?: GenerateFlashcardsRequest, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json', context?: HttpContext, transferCache?: boolean}): Observable<any> {
 
         let localVarHeaders = this.defaultHeaders;
 
@@ -442,6 +465,9 @@ export class FlashcardsService {
         if (localVarHttpHeaderAcceptSelected === undefined) {
             // to determine the Accept header
             const httpHeaderAccepts: string[] = [
+                'text/plain',
+                'application/json',
+                'text/json'
             ];
             localVarHttpHeaderAcceptSelected = this.configuration.selectHeaderAccept(httpHeaderAccepts);
         }
@@ -483,7 +509,7 @@ export class FlashcardsService {
         }
 
         let localVarPath = `/api/flashcards/generate`;
-        return this.httpClient.request<any>('post', `${this.configuration.basePath}${localVarPath}`,
+        return this.httpClient.request<FlashcardDeckDetailDto>('post', `${this.configuration.basePath}${localVarPath}`,
             {
                 context: localVarHttpContext,
                 body: generateFlashcardsRequest,

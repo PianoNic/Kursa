@@ -7,7 +7,10 @@ import { lucideArrowUp } from '@ng-icons/lucide';
 import { HlmButton } from '@spartan-ng/helm/button';
 import { HlmInputGroupImports } from '@spartan-ng/helm/input-group';
 import { AiContextService, ViewContext } from '../core/services/ai-context.service';
-import { ChatService, ChatMessage, Citation, ChatResponse } from '../core/services/chat.service';
+import { ChatService } from '../api/api/chat.service';
+import { ChatMessageDto } from '../api/model/chatMessageDto';
+import { CitationDto } from '../api/model/citationDto';
+import { ChatResponseDto } from '../api/model/chatResponseDto';
 
 @Component({
   selector: 'app-ai-panel',
@@ -84,7 +87,7 @@ import { ChatService, ChatMessage, Citation, ChatResponse } from '../core/servic
               [class]="msg.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-muted text-foreground'"
             >
               @if (msg.role === 'assistant') {
-                <div class="markdown-body prose prose-sm prose-invert max-w-none" [innerHTML]="renderMarkdown(msg.content)"></div>
+                <div class="markdown-body prose prose-sm prose-invert max-w-none" [innerHTML]="renderMarkdown(msg.content ?? '')"></div>
               } @else {
                 <p class="whitespace-pre-wrap">{{ msg.content }}</p>
               }
@@ -157,8 +160,8 @@ export class AiPanelComponent {
   private readonly sanitizer = inject(DomSanitizer);
   private readonly messagesContainer = viewChild<ElementRef<HTMLDivElement>>('messagesContainer');
 
-  readonly messages = signal<ChatMessage[]>([]);
-  readonly sources = signal<Citation[]>([]);
+  readonly messages = signal<ChatMessageDto[]>([]);
+  readonly sources = signal<CitationDto[]>([]);
   readonly loading = signal(false);
 
   readonly contextLabel = computed(() => {
@@ -225,7 +228,7 @@ export class AiPanelComponent {
     }
 
     // Optimistic user message
-    const tempMsg: ChatMessage = {
+    const tempMsg: ChatMessageDto = {
       id: crypto.randomUUID(),
       role: 'user',
       content: message,
@@ -236,16 +239,18 @@ export class AiPanelComponent {
     this.messages.update((msgs) => [...msgs, tempMsg]);
     this.scrollToBottom();
 
-    this.chatService.sendMessage(fullMessage, this.threadId).subscribe({
-      next: (response: ChatResponse) => {
+    this.chatService.apiChatSendPost({ message: fullMessage, threadId: this.threadId }).subscribe({
+      next: (response: ChatResponseDto) => {
         this.loading.set(false);
-        this.messages.update((msgs) => [...msgs, response.message]);
-        this.sources.set(response.sources);
+        if (response.message) {
+          this.messages.update((msgs) => [...msgs, response.message!]);
+        }
+        this.sources.set(response.sources ?? []);
         this.scrollToBottom();
       },
       error: () => {
         this.loading.set(false);
-        const errorMsg: ChatMessage = {
+        const errorMsg: ChatMessageDto = {
           id: crypto.randomUUID(),
           role: 'assistant',
           content: 'Sorry, something went wrong. Please try again.',

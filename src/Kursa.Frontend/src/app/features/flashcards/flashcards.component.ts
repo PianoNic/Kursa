@@ -6,12 +6,11 @@ import { HlmCardImports } from '@spartan-ng/helm/card';
 import { HlmInput } from '@spartan-ng/helm/input';
 import { HlmLabel } from '@spartan-ng/helm/label';
 import { HlmTextarea } from '@spartan-ng/helm/textarea';
-import {
-  FlashcardDeck,
-  Flashcard,
-  FlashcardService,
-} from '../../core/services/flashcard.service';
-import { PinnedContent, PinnedContentService } from '../../core/services/pinned-content.service';
+import { FlashcardsService } from '../../api/api/flashcards.service';
+import { FlashcardDeckDto } from '../../api/model/flashcardDeckDto';
+import { FlashcardDto } from '../../api/model/flashcardDto';
+import { PinnedContentsService } from '../../api/api/pinnedContents.service';
+import { PinnedContentDto } from '../../api/model/pinnedContentDto';
 
 type View = 'decks' | 'generate' | 'review' | 'add-card';
 
@@ -54,7 +53,7 @@ type View = 'decks' | 'generate' | 'review' | 'add-card';
                   }
                   <div class="mt-3 flex items-center gap-4 text-xs text-muted-foreground">
                     <span>{{ deck.cardCount }} cards</span>
-                    @if (deck.dueCount > 0) {
+                    @if ((deck.dueCount ?? 0) > 0) {
                       <span class="font-medium text-primary">{{ deck.dueCount }} due</span>
                     } @else {
                       <span class="text-green-500">All caught up</span>
@@ -63,13 +62,13 @@ type View = 'decks' | 'generate' | 'review' | 'add-card';
                   <div class="mt-4 flex gap-2">
                     <button
                       hlmBtn
-                      (click)="startReview(deck.id)"
+                      (click)="startReview(deck.id!)"
                       [disabled]="deck.dueCount === 0"
                       class="flex-1 text-xs"
                     >
                       Review ({{ deck.dueCount }})
                     </button>
-                    <button hlmBtn variant="outline" (click)="showAddCard(deck.id)" class="text-xs">Add Card</button>
+                    <button hlmBtn variant="outline" (click)="showAddCard(deck.id!)" class="text-xs">Add Card</button>
                   </div>
                   <p class="mt-2 text-xs text-muted-foreground">{{ deck.createdAt | date:'mediumDate' }}</p>
                 </div>
@@ -318,16 +317,16 @@ type View = 'decks' | 'generate' | 'review' | 'add-card';
   `,
 })
 export class FlashcardsComponent implements OnInit {
-  private readonly flashcardService = inject(FlashcardService);
-  private readonly pinnedService = inject(PinnedContentService);
+  private readonly flashcardService = inject(FlashcardsService);
+  private readonly pinnedService = inject(PinnedContentsService);
 
   readonly view = signal<View>('decks');
   readonly loading = signal(true);
   readonly generating = signal(false);
   readonly error = signal<string | null>(null);
 
-  readonly decks = signal<FlashcardDeck[]>([]);
-  readonly pinnedItems = signal<PinnedContent[]>([]);
+  readonly decks = signal<FlashcardDeckDto[]>([]);
+  readonly pinnedItems = signal<PinnedContentDto[]>([]);
   readonly loadingPinned = signal(false);
 
   // Generate form
@@ -336,7 +335,7 @@ export class FlashcardsComponent implements OnInit {
   topicInput = '';
 
   // Review state
-  readonly reviewCards = signal<Flashcard[]>([]);
+  readonly reviewCards = signal<FlashcardDto[]>([]);
   readonly currentCardIndex = signal(0);
   readonly flipped = signal(false);
   readonly reviewedCount = signal(0);
@@ -362,7 +361,7 @@ export class FlashcardsComponent implements OnInit {
 
   loadDecks(): void {
     this.loading.set(true);
-    this.flashcardService.getDecks().subscribe({
+    this.flashcardService.apiFlashcardsDecksGet().subscribe({
       next: (decks) => {
         this.decks.set(decks);
         this.loading.set(false);
@@ -380,7 +379,7 @@ export class FlashcardsComponent implements OnInit {
     this.error.set(null);
     if (this.pinnedItems().length === 0) {
       this.loadingPinned.set(true);
-      this.pinnedService.getPinnedContents().subscribe({
+      this.pinnedService.apiPinnedGet().subscribe({
         next: (items) => {
           this.pinnedItems.set(items);
           this.loadingPinned.set(false);
@@ -397,7 +396,7 @@ export class FlashcardsComponent implements OnInit {
 
     const topic = this.topicInput.trim() || undefined;
 
-    this.flashcardService.generateFlashcards(this.selectedContentId, this.cardCount, topic).subscribe({
+    this.flashcardService.apiFlashcardsGeneratePost({ contentId: this.selectedContentId, cardCount: this.cardCount, topic }).subscribe({
       next: () => {
         this.generating.set(false);
         this.view.set('decks');
@@ -414,7 +413,7 @@ export class FlashcardsComponent implements OnInit {
   startReview(deckId: string): void {
     this.currentDeckId = deckId;
     this.loading.set(true);
-    this.flashcardService.getDueCards(deckId).subscribe({
+    this.flashcardService.apiFlashcardsDecksDeckIdDueGet(deckId).subscribe({
       next: (cards) => {
         this.reviewCards.set(cards);
         this.currentCardIndex.set(0);
@@ -431,7 +430,7 @@ export class FlashcardsComponent implements OnInit {
     const card = this.currentCard();
     if (!card) return;
 
-    this.flashcardService.reviewCard(card.id, quality).subscribe({
+    this.flashcardService.apiFlashcardsCardsCardIdReviewPost(card.id!, { quality }).subscribe({
       next: () => {
         this.reviewedCount.update((c) => c + 1);
         const nextIndex = this.currentCardIndex() + 1;
@@ -458,7 +457,7 @@ export class FlashcardsComponent implements OnInit {
   addCard(): void {
     if (!this.newCardFront.trim() || !this.newCardBack.trim()) return;
 
-    this.flashcardService.createCard(this.addCardDeckId, this.newCardFront.trim(), this.newCardBack.trim()).subscribe({
+    this.flashcardService.apiFlashcardsDecksDeckIdCardsPost(this.addCardDeckId, { front: this.newCardFront.trim(), back: this.newCardBack.trim() }).subscribe({
       next: () => {
         this.cardAdded.set(true);
         this.newCardFront = '';

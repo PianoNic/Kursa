@@ -6,15 +6,12 @@ import { HlmCardImports } from '@spartan-ng/helm/card';
 import { HlmInput } from '@spartan-ng/helm/input';
 import { HlmLabel } from '@spartan-ng/helm/label';
 import { HlmTextarea } from '@spartan-ng/helm/textarea';
-import {
-  Quiz,
-  QuizDetail,
-  QuizQuestion,
-  QuizAttemptDetail,
-  QuizAnswerResult,
-  QuizService,
-} from '../../core/services/quiz.service';
-import { PinnedContent, PinnedContentService } from '../../core/services/pinned-content.service';
+import { QuizzesService } from '../../api/api/quizzes.service';
+import { QuizDto } from '../../api/model/quizDto';
+import { QuizDetailDto } from '../../api/model/quizDetailDto';
+import { QuizAttemptDetailDto } from '../../api/model/quizAttemptDetailDto';
+import { PinnedContentsService } from '../../api/api/pinnedContents.service';
+import { PinnedContentDto } from '../../api/model/pinnedContentDto';
 
 type View = 'list' | 'generate' | 'taking' | 'results';
 
@@ -63,25 +60,25 @@ type View = 'list' | 'generate' | 'taking' | 'results';
                     <div class="mt-2">
                       <div class="flex items-center justify-between text-xs text-muted-foreground">
                         <span>Best score</span>
-                        <span class="font-medium" [class]="quiz.bestScore >= quiz.questionCount * 0.7 ? 'text-green-500' : 'text-orange-500'">
+                        <span class="font-medium" [class]="(quiz.bestScore ?? 0) >= (quiz.questionCount ?? 1) * 0.7 ? 'text-green-500' : 'text-orange-500'">
                           {{ quiz.bestScore }}/{{ quiz.questionCount }}
                         </span>
                       </div>
                       <div class="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-muted">
                         <div
                           class="h-full rounded-full transition-all"
-                          [class]="quiz.bestScore >= quiz.questionCount * 0.7 ? 'bg-green-500' : 'bg-orange-500'"
-                          [style.width.%]="(quiz.bestScore / quiz.questionCount) * 100"
+                          [class]="(quiz.bestScore ?? 0) >= (quiz.questionCount ?? 1) * 0.7 ? 'bg-green-500' : 'bg-orange-500'"
+                          [style.width.%]="((quiz.bestScore ?? 0) / (quiz.questionCount ?? 1)) * 100"
                         ></div>
                       </div>
                     </div>
                   }
                   <div class="mt-4 flex gap-2">
-                    <button hlmBtn (click)="startQuiz(quiz.id)" class="flex-1 text-xs">Take Quiz</button>
+                    <button hlmBtn (click)="startQuiz(quiz.id!)" class="flex-1 text-xs">Take Quiz</button>
                     <button
                       hlmBtn
                       variant="outline"
-                      (click)="viewResults(quiz.id)"
+                      (click)="viewResults(quiz.id!)"
                       [disabled]="quiz.attemptCount === 0"
                       class="text-xs"
                     >
@@ -202,7 +199,7 @@ type View = 'list' | 'generate' | 'taking' | 'results';
                 <h1 class="text-xl font-bold text-foreground">{{ currentQuiz()!.title }}</h1>
                 <div class="flex items-center gap-3">
                   <span class="text-sm text-muted-foreground">
-                    {{ currentQuestionIndex() + 1 }}/{{ currentQuiz()!.questions.length }}
+                    {{ currentQuestionIndex() + 1 }}/{{ (currentQuiz()!.questions ?? []).length }}
                   </span>
                   <span class="rounded-md bg-muted px-3 py-1 text-sm font-medium text-foreground">
                     {{ formattedTimer() }}
@@ -214,7 +211,7 @@ type View = 'list' | 'generate' | 'taking' | 'results';
               <div class="h-1.5 w-full overflow-hidden rounded-full bg-muted">
                 <div
                   class="h-full rounded-full bg-primary transition-all"
-                  [style.width.%]="((currentQuestionIndex() + 1) / currentQuiz()!.questions.length) * 100"
+                  [style.width.%]="((currentQuestionIndex() + 1) / (currentQuiz()!.questions ?? []).length) * 100"
                 ></div>
               </div>
 
@@ -224,19 +221,19 @@ type View = 'list' | 'generate' | 'taking' | 'results';
 
                   <div class="mt-6 space-y-3">
                     @switch (q.type) {
-                      @case ('MultipleChoice') {
+                      @case (0) {
                         @if (q.options) {
                           @for (option of q.options; track option; let i = $index) {
                             <button
                               (click)="selectAnswer(option)"
                               class="flex w-full items-center gap-3 rounded-md border p-3 text-left text-sm transition-colors"
-                              [class]="answers()[q.id] === option
+                              [class]="answers()[q.id!] === option
                                 ? 'border-primary bg-primary/10 text-foreground'
                                 : 'border-border text-muted-foreground hover:border-primary/50 hover:bg-accent'"
                             >
                               <span
                                 class="flex h-6 w-6 items-center justify-center rounded-full border text-xs font-medium"
-                                [class]="answers()[q.id] === option
+                                [class]="answers()[q.id!] === option
                                   ? 'border-primary bg-primary text-primary-foreground'
                                   : 'border-border'"
                               >
@@ -247,13 +244,13 @@ type View = 'list' | 'generate' | 'taking' | 'results';
                           }
                         }
                       }
-                      @case ('TrueFalse') {
+                      @case (1) {
                         <div class="flex gap-3">
                           @for (option of ['True', 'False']; track option) {
                             <button
                               (click)="selectAnswer(option)"
                               class="flex-1 rounded-md border p-3 text-center text-sm font-medium transition-colors"
-                              [class]="answers()[q.id] === option
+                              [class]="answers()[q.id!] === option
                                 ? 'border-primary bg-primary/10 text-foreground'
                                 : 'border-border text-muted-foreground hover:border-primary/50 hover:bg-accent'"
                             >
@@ -262,11 +259,11 @@ type View = 'list' | 'generate' | 'taking' | 'results';
                           }
                         </div>
                       }
-                      @case ('FillInTheBlank') {
+                      @case (2) {
                         <input
                           hlmInput
                           type="text"
-                          [value]="answers()[q.id] || ''"
+                          [value]="answers()[q.id!] || ''"
                           (input)="onInputAnswer($event)"
                           placeholder="Type your answer..."
                           class="w-full"
@@ -275,7 +272,7 @@ type View = 'list' | 'generate' | 'taking' | 'results';
                       @default {
                         <textarea
                           hlmTextarea
-                          [value]="answers()[q.id] || ''"
+                          [value]="answers()[q.id!] || ''"
                           (input)="onInputAnswer($event)"
                           placeholder="Write your answer..."
                           rows="4"
@@ -295,7 +292,7 @@ type View = 'list' | 'generate' | 'taking' | 'results';
                   >
                     Previous
                   </button>
-                  @if (currentQuestionIndex() < currentQuiz()!.questions.length - 1) {
+                  @if (currentQuestionIndex() < (currentQuiz()!.questions ?? []).length - 1) {
                     <button hlmBtn (click)="nextQuestion()">Next</button>
                   } @else {
                     <button
@@ -409,8 +406,8 @@ type View = 'list' | 'generate' | 'taking' | 'results';
   `,
 })
 export class QuizzesComponent implements OnInit {
-  private readonly quizService = inject(QuizService);
-  private readonly pinnedService = inject(PinnedContentService);
+  private readonly quizService = inject(QuizzesService);
+  private readonly pinnedService = inject(PinnedContentsService);
 
   readonly view = signal<View>('list');
   readonly loading = signal(true);
@@ -418,8 +415,8 @@ export class QuizzesComponent implements OnInit {
   readonly submitting = signal(false);
   readonly error = signal<string | null>(null);
 
-  readonly quizzes = signal<Quiz[]>([]);
-  readonly pinnedItems = signal<PinnedContent[]>([]);
+  readonly quizzes = signal<QuizDto[]>([]);
+  readonly pinnedItems = signal<PinnedContentDto[]>([]);
   readonly loadingPinned = signal(false);
 
   // Generate form
@@ -429,21 +426,21 @@ export class QuizzesComponent implements OnInit {
   durationMinutes = 10;
 
   // Quiz taking
-  readonly currentQuiz = signal<QuizDetail | null>(null);
+  readonly currentQuiz = signal<QuizDetailDto | null>(null);
   readonly currentQuestionIndex = signal(0);
   readonly answers = signal<Record<string, string>>({});
   readonly timerSeconds = signal(0);
   private timerInterval: ReturnType<typeof setInterval> | null = null;
 
   // Results
-  readonly attemptResult = signal<QuizAttemptDetail | null>(null);
+  readonly attemptResult = signal<QuizAttemptDetailDto | null>(null);
 
   readonly indexedItems = computed(() => this.pinnedItems().filter((p) => p.isIndexed));
 
   readonly currentQuestion = computed(() => {
     const quiz = this.currentQuiz();
     if (!quiz) return null;
-    return quiz.questions[this.currentQuestionIndex()] ?? null;
+    return (quiz.questions ?? [])[this.currentQuestionIndex()] ?? null;
   });
 
   readonly formattedTimer = computed(() => {
@@ -455,8 +452,8 @@ export class QuizzesComponent implements OnInit {
 
   readonly scorePercentage = computed(() => {
     const result = this.attemptResult();
-    if (!result || result.totalQuestions === 0) return 0;
-    return (result.score / result.totalQuestions) * 100;
+    if (!result || !result.totalQuestions) return 0;
+    return ((result.score ?? 0) / result.totalQuestions) * 100;
   });
 
   ngOnInit(): void {
@@ -465,7 +462,7 @@ export class QuizzesComponent implements OnInit {
 
   loadQuizzes(): void {
     this.loading.set(true);
-    this.quizService.getQuizzes().subscribe({
+    this.quizService.apiQuizzesGet().subscribe({
       next: (quizzes) => {
         this.quizzes.set(quizzes);
         this.loading.set(false);
@@ -483,7 +480,7 @@ export class QuizzesComponent implements OnInit {
     this.error.set(null);
     if (this.pinnedItems().length === 0) {
       this.loadingPinned.set(true);
-      this.pinnedService.getPinnedContents().subscribe({
+      this.pinnedService.apiPinnedGet().subscribe({
         next: (items) => {
           this.pinnedItems.set(items);
           this.loadingPinned.set(false);
@@ -503,13 +500,13 @@ export class QuizzesComponent implements OnInit {
     const topic = this.topicInput.trim() || undefined;
     const durationSeconds = this.durationMinutes * 60;
 
-    this.quizService.generateQuiz(this.selectedContentId, this.questionCount, topic, durationSeconds).subscribe({
+    this.quizService.apiQuizzesGeneratePost({ contentId: this.selectedContentId, questionCount: this.questionCount, topic, durationSeconds }).subscribe({
       next: (quiz) => {
         this.generating.set(false);
         this.currentQuiz.set(quiz);
         this.currentQuestionIndex.set(0);
         this.answers.set({});
-        this.startTimer(quiz.durationSeconds);
+        this.startTimer(quiz.durationSeconds ?? 600);
         this.view.set('taking');
       },
       error: (err) => {
@@ -522,12 +519,12 @@ export class QuizzesComponent implements OnInit {
 
   startQuiz(quizId: string): void {
     this.loading.set(true);
-    this.quizService.getQuizDetail(quizId).subscribe({
+    this.quizService.apiQuizzesQuizIdGet(quizId).subscribe({
       next: (quiz) => {
         this.currentQuiz.set(quiz);
         this.currentQuestionIndex.set(0);
         this.answers.set({});
-        this.startTimer(quiz.durationSeconds);
+        this.startTimer(quiz.durationSeconds ?? 600);
         this.view.set('taking');
         this.loading.set(false);
       },
@@ -540,7 +537,7 @@ export class QuizzesComponent implements OnInit {
   selectAnswer(answer: string): void {
     const q = this.currentQuestion();
     if (!q) return;
-    this.answers.update((prev) => ({ ...prev, [q.id]: answer }));
+    this.answers.update((prev) => ({ ...prev, [q.id!]: answer }));
   }
 
   onInputAnswer(event: Event): void {
@@ -551,7 +548,7 @@ export class QuizzesComponent implements OnInit {
   nextQuestion(): void {
     const quiz = this.currentQuiz();
     if (!quiz) return;
-    if (this.currentQuestionIndex() < quiz.questions.length - 1) {
+    if (this.currentQuestionIndex() < (quiz.questions ?? []).length - 1) {
       this.currentQuestionIndex.update((i) => i + 1);
     }
   }
@@ -569,13 +566,13 @@ export class QuizzesComponent implements OnInit {
     this.submitting.set(true);
     this.stopTimer();
 
-    const elapsed = quiz.durationSeconds - this.timerSeconds();
-    const answerList = quiz.questions.map((q) => ({
+    const elapsed = (quiz.durationSeconds ?? 0) - this.timerSeconds();
+    const answerList = (quiz.questions ?? []).map((q) => ({
       questionId: q.id,
-      answer: this.answers()[q.id] ?? '',
+      answer: this.answers()[q.id!] ?? '',
     }));
 
-    this.quizService.submitAttempt(quiz.id, answerList, elapsed).subscribe({
+    this.quizService.apiQuizzesQuizIdSubmitPost(quiz.id!, { answers: answerList, durationSeconds: elapsed }).subscribe({
       next: (result) => {
         this.attemptResult.set(result);
         this.submitting.set(false);
@@ -591,10 +588,10 @@ export class QuizzesComponent implements OnInit {
   }
 
   viewResults(quizId: string): void {
-    this.quizService.getQuizResults(quizId).subscribe({
+    this.quizService.apiQuizzesQuizIdResultsGet(quizId).subscribe({
       next: (attempts) => {
         if (attempts.length > 0) {
-          this.quizService.getAttemptDetail(attempts[0].id).subscribe({
+          this.quizService.apiQuizzesAttemptsAttemptIdGet(attempts[0].id!).subscribe({
             next: (detail) => {
               this.attemptResult.set(detail);
               this.view.set('results');
@@ -608,7 +605,7 @@ export class QuizzesComponent implements OnInit {
   retakeQuiz(): void {
     const result = this.attemptResult();
     if (result) {
-      this.startQuiz(result.quizId);
+      this.startQuiz(result.quizId!);
     }
   }
 

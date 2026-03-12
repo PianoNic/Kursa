@@ -3,7 +3,8 @@ import { DecimalPipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { HlmButton } from '@spartan-ng/helm/button';
 import { HlmCardImports } from '@spartan-ng/helm/card';
-import { MoodleCourse, MoodleService } from '../../core/services/moodle.service';
+import { MoodleService } from '../../api/api/moodle.service';
+import { MoodleCourseDto } from '../../api/model/moodleCourseDto';
 
 @Component({
   selector: 'app-courses',
@@ -76,7 +77,7 @@ import { MoodleCourse, MoodleService } from '../../core/services/moodle.service'
 export class CoursesComponent implements OnInit {
   private readonly moodleService = inject(MoodleService);
 
-  readonly courses = signal<MoodleCourse[]>([]);
+  readonly courses = signal<MoodleCourseDto[]>([]);
   readonly loading = signal(true);
   readonly error = signal<string | null>(null);
 
@@ -88,7 +89,7 @@ export class CoursesComponent implements OnInit {
     this.loading.set(true);
     this.error.set(null);
 
-    this.moodleService.getEnrolledCourses().subscribe({
+    this.moodleService.apiMoodleCoursesGet().subscribe({
       next: (courses) => {
         this.courses.set(courses);
         this.loading.set(false);

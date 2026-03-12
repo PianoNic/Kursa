@@ -1,4 +1,5 @@
 using Kursa.Application.Features.Moodle.Commands;
+using Kursa.Application.Features.Moodle.Models;
 using Kursa.Application.Features.Moodle.Queries;
 using Mediator;
 using Microsoft.AspNetCore.Authorization;
@@ -12,6 +13,7 @@ namespace Kursa.API.Controllers;
 public class MoodleController(ISender sender) : ControllerBase
 {
     [HttpGet("status")]
+    [ProducesResponseType(typeof(MoodleConnectionStatusDto), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetConnectionStatusAsync(CancellationToken cancellationToken)
     {
         var result = await sender.Send(new GetMoodleConnectionStatusQuery(), cancellationToken);
@@ -59,6 +61,7 @@ public class MoodleController(ISender sender) : ControllerBase
     }
 
     [HttpGet("courses")]
+    [ProducesResponseType(typeof(IReadOnlyList<MoodleCourseDto>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetCoursesAsync(CancellationToken cancellationToken)
     {
         var result = await sender.Send(new GetEnrolledCoursesQuery(), cancellationToken);
@@ -69,6 +72,7 @@ public class MoodleController(ISender sender) : ControllerBase
     }
 
     [HttpGet("courses/{courseId:int}/content")]
+    [ProducesResponseType(typeof(IReadOnlyList<MoodleCourseSectionDto>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetCourseContentAsync(int courseId, CancellationToken cancellationToken)
     {
         var result = await sender.Send(new GetCourseContentQuery(courseId), cancellationToken);
@@ -79,6 +83,7 @@ public class MoodleController(ISender sender) : ControllerBase
     }
 
     [HttpGet("assignments")]
+    [ProducesResponseType(typeof(IReadOnlyList<AssignmentViewDto>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetAssignmentsAsync(
         [FromQuery] int? courseId, CancellationToken cancellationToken)
     {
@@ -90,6 +95,7 @@ public class MoodleController(ISender sender) : ControllerBase
     }
 
     [HttpGet("grades")]
+    [ProducesResponseType(typeof(IReadOnlyList<CourseGradeSummaryDto>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetGradesAsync(
         [FromQuery] int? courseId, CancellationToken cancellationToken)
     {
@@ -101,6 +107,7 @@ public class MoodleController(ISender sender) : ControllerBase
     }
 
     [HttpGet("courses/{courseId:int}/forums")]
+    [ProducesResponseType(typeof(IReadOnlyList<ForumViewDto>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetForumsAsync(int courseId, CancellationToken cancellationToken)
     {
         var result = await sender.Send(new GetForumsQuery(courseId), cancellationToken);
@@ -111,6 +118,7 @@ public class MoodleController(ISender sender) : ControllerBase
     }
 
     [HttpGet("forums/{forumId:int}/discussions")]
+    [ProducesResponseType(typeof(IReadOnlyList<DiscussionViewDto>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetForumDiscussionsAsync(int forumId, CancellationToken cancellationToken)
     {
         var result = await sender.Send(new GetForumDiscussionsQuery(forumId), cancellationToken);
@@ -121,6 +129,7 @@ public class MoodleController(ISender sender) : ControllerBase
     }
 
     [HttpGet("calendar")]
+    [ProducesResponseType(typeof(IReadOnlyList<CalendarEventViewDto>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetCalendarEventsAsync(
         [FromQuery] DateTime weekStart, CancellationToken cancellationToken)
     {

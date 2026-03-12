@@ -1,7 +1,8 @@
 import { ChangeDetectionStrategy, Component, signal, computed, inject, OnInit } from '@angular/core';
 import { HlmButton } from '@spartan-ng/helm/button';
 import { HlmCardImports } from '@spartan-ng/helm/card';
-import { TimetableService, CalendarEventView } from '../../core/services/timetable.service';
+import { MoodleService } from '../../api/api/moodle.service';
+import { CalendarEventViewDto } from '../../api/model/models';
 
 @Component({
   selector: 'app-timetable',
@@ -72,13 +73,13 @@ import { TimetableService, CalendarEventView } from '../../core/services/timetab
                   @for (event of getEventsForSlot(day.date, hour); track event.id) {
                     <div
                       class="absolute inset-x-0.5 rounded px-1 py-0.5 text-xs"
-                      [class]="getEventColor(event.eventType)"
+                      [class]="getEventColor(event.eventType ?? '')"
                       [style.top.px]="getEventTopOffset(event)"
                       [style.height.px]="getEventHeight(event)"
-                      [title]="event.title + ' (' + formatTime(event.startTime) + ' - ' + formatTime(event.endTime) + ')'"
+                      [title]="(event.title ?? '') + ' (' + formatTime(event.startTime ?? '') + ' - ' + formatTime(event.endTime ?? '') + ')'"
                     >
                       <div class="truncate font-medium">{{ event.title }}</div>
-                      <div class="truncate opacity-75">{{ formatTime(event.startTime) }}</div>
+                      <div class="truncate opacity-75">{{ formatTime(event.startTime ?? '') }}</div>
                     </div>
                   }
                 </div>
@@ -94,11 +95,11 @@ import { TimetableService, CalendarEventView } from '../../core/services/timetab
             <div class="space-y-2">
               @for (event of events(); track event.id) {
                 <div hlmCard class="flex items-center gap-3 p-3">
-                  <div class="h-2 w-2 shrink-0 rounded-full" [class]="getEventDotColor(event.eventType)" aria-hidden="true"></div>
+                  <div class="h-2 w-2 shrink-0 rounded-full" [class]="getEventDotColor(event.eventType ?? '')" aria-hidden="true"></div>
                   <div class="min-w-0 flex-1">
                     <p class="truncate text-sm font-medium text-foreground">{{ event.title }}</p>
                     <p class="text-xs text-muted-foreground">
-                      {{ formatEventDate(event.startTime) }} — {{ formatTime(event.startTime) }} to {{ formatTime(event.endTime) }}
+                      {{ formatEventDate(event.startTime ?? '') }} — {{ formatTime(event.startTime ?? '') }} to {{ formatTime(event.endTime ?? '') }}
                     </p>
                   </div>
                   <span class="shrink-0 rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground capitalize">
@@ -118,9 +119,9 @@ import { TimetableService, CalendarEventView } from '../../core/services/timetab
   `,
 })
 export class TimetableComponent implements OnInit {
-  private readonly timetableService = inject(TimetableService);
+  private readonly moodleService = inject(MoodleService);
 
-  readonly events = signal<CalendarEventView[]>([]);
+  readonly events = signal<CalendarEventViewDto[]>([]);
   readonly loading = signal(true);
   readonly error = signal<string | null>(null);
   readonly weekStart = signal(TimetableComponent.getMonday(new Date()));
@@ -179,9 +180,9 @@ export class TimetableComponent implements OnInit {
     this.loadEvents();
   }
 
-  getEventsForSlot(date: Date, hour: number): CalendarEventView[] {
+  getEventsForSlot(date: Date, hour: number): CalendarEventViewDto[] {
     return this.events().filter(e => {
-      const start = new Date(e.startTime);
+      const start = new Date(e.startTime ?? '');
       return (
         start.getDate() === date.getDate() &&
         start.getMonth() === date.getMonth() &&
@@ -191,13 +192,13 @@ export class TimetableComponent implements OnInit {
     });
   }
 
-  getEventTopOffset(event: CalendarEventView): number {
-    const start = new Date(event.startTime);
+  getEventTopOffset(event: CalendarEventViewDto): number {
+    const start = new Date(event.startTime ?? '');
     return (start.getMinutes() / 60) * 48; // 48px per hour slot
   }
 
-  getEventHeight(event: CalendarEventView): number {
-    return Math.max(20, (event.durationMinutes / 60) * 48);
+  getEventHeight(event: CalendarEventViewDto): number {
+    return Math.max(20, ((event.durationMinutes ?? 0) / 60) * 48);
   }
 
   getEventColor(type: string): string {
@@ -238,7 +239,7 @@ export class TimetableComponent implements OnInit {
     this.loading.set(true);
     this.error.set(null);
 
-    this.timetableService.getCalendarEvents(this.weekStart()).subscribe({
+    this.moodleService.apiMoodleCalendarGet(this.weekStart().toISOString()).subscribe({
       next: (events) => {
         this.events.set(events);
         this.loading.set(false);

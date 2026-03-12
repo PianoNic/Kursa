@@ -1,3 +1,4 @@
+using Kursa.Application.Features.StudySessions;
 using Kursa.Application.Features.StudySessions.Commands;
 using Kursa.Application.Features.StudySessions.Queries;
 using Mediator;
@@ -12,6 +13,7 @@ namespace Kursa.API.Controllers;
 public class StudySessionsController(ISender sender) : ControllerBase
 {
     [HttpGet]
+    [ProducesResponseType(typeof(IReadOnlyList<StudySessionDto>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetSessionsAsync(CancellationToken cancellationToken)
     {
         var result = await sender.Send(new GetStudySessionsQuery(), cancellationToken);
@@ -22,6 +24,7 @@ public class StudySessionsController(ISender sender) : ControllerBase
     }
 
     [HttpPost("start")]
+    [ProducesResponseType(typeof(StudySessionDto), StatusCodes.Status200OK)]
     public async Task<IActionResult> StartSessionAsync([FromBody] StartSessionRequest request, CancellationToken cancellationToken)
     {
         var result = await sender.Send(new StartStudySessionCommand(
@@ -35,6 +38,7 @@ public class StudySessionsController(ISender sender) : ControllerBase
     }
 
     [HttpPost("{sessionId:guid}/complete")]
+    [ProducesResponseType(typeof(StudySessionDto), StatusCodes.Status200OK)]
     public async Task<IActionResult> CompleteSessionAsync(Guid sessionId, [FromBody] CompleteSessionRequest request, CancellationToken cancellationToken)
     {
         var result = await sender.Send(new CompleteStudySessionCommand(

@@ -16,6 +16,16 @@ import { HttpClient, HttpHeaders, HttpParams,
 import { CustomHttpParameterCodec }                          from '../encoder';
 import { Observable }                                        from 'rxjs';
 
+// @ts-ignore
+import { OneNoteNotebookDto } from '../model/oneNoteNotebookDto';
+// @ts-ignore
+import { OneNotePageDto } from '../model/oneNotePageDto';
+// @ts-ignore
+import { OneNoteSectionDto } from '../model/oneNoteSectionDto';
+// @ts-ignore
+import { SharePointDriveItemDto } from '../model/sharePointDriveItemDto';
+// @ts-ignore
+import { SharePointSiteDto } from '../model/sharePointSiteDto';
 
 // @ts-ignore
 import { BASE_PATH, COLLECTION_FORMATS }                     from '../variables';
@@ -92,10 +102,10 @@ export class GraphService {
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
      */
-    public apiGraphOnenoteNotebooksGet(observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: undefined, context?: HttpContext, transferCache?: boolean}): Observable<any>;
-    public apiGraphOnenoteNotebooksGet(observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: undefined, context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<any>>;
-    public apiGraphOnenoteNotebooksGet(observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: undefined, context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<any>>;
-    public apiGraphOnenoteNotebooksGet(observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: undefined, context?: HttpContext, transferCache?: boolean}): Observable<any> {
+    public apiGraphOnenoteNotebooksGet(observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json', context?: HttpContext, transferCache?: boolean}): Observable<Array<OneNoteNotebookDto>>;
+    public apiGraphOnenoteNotebooksGet(observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<Array<OneNoteNotebookDto>>>;
+    public apiGraphOnenoteNotebooksGet(observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<Array<OneNoteNotebookDto>>>;
+    public apiGraphOnenoteNotebooksGet(observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json', context?: HttpContext, transferCache?: boolean}): Observable<any> {
 
         let localVarHeaders = this.defaultHeaders;
 
@@ -103,6 +113,9 @@ export class GraphService {
         if (localVarHttpHeaderAcceptSelected === undefined) {
             // to determine the Accept header
             const httpHeaderAccepts: string[] = [
+                'text/plain',
+                'application/json',
+                'text/json'
             ];
             localVarHttpHeaderAcceptSelected = this.configuration.selectHeaderAccept(httpHeaderAccepts);
         }
@@ -133,7 +146,7 @@ export class GraphService {
         }
 
         let localVarPath = `/api/Graph/onenote/notebooks`;
-        return this.httpClient.request<any>('get', `${this.configuration.basePath}${localVarPath}`,
+        return this.httpClient.request<Array<OneNoteNotebookDto>>('get', `${this.configuration.basePath}${localVarPath}`,
             {
                 context: localVarHttpContext,
                 responseType: <any>responseType_,
@@ -151,10 +164,10 @@ export class GraphService {
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
      */
-    public apiGraphOnenoteNotebooksNotebookIdSectionsGet(notebookId: string, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: undefined, context?: HttpContext, transferCache?: boolean}): Observable<any>;
-    public apiGraphOnenoteNotebooksNotebookIdSectionsGet(notebookId: string, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: undefined, context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<any>>;
-    public apiGraphOnenoteNotebooksNotebookIdSectionsGet(notebookId: string, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: undefined, context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<any>>;
-    public apiGraphOnenoteNotebooksNotebookIdSectionsGet(notebookId: string, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: undefined, context?: HttpContext, transferCache?: boolean}): Observable<any> {
+    public apiGraphOnenoteNotebooksNotebookIdSectionsGet(notebookId: string, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json', context?: HttpContext, transferCache?: boolean}): Observable<Array<OneNoteSectionDto>>;
+    public apiGraphOnenoteNotebooksNotebookIdSectionsGet(notebookId: string, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<Array<OneNoteSectionDto>>>;
+    public apiGraphOnenoteNotebooksNotebookIdSectionsGet(notebookId: string, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<Array<OneNoteSectionDto>>>;
+    public apiGraphOnenoteNotebooksNotebookIdSectionsGet(notebookId: string, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json', context?: HttpContext, transferCache?: boolean}): Observable<any> {
         if (notebookId === null || notebookId === undefined) {
             throw new Error('Required parameter notebookId was null or undefined when calling apiGraphOnenoteNotebooksNotebookIdSectionsGet.');
         }
@@ -165,6 +178,9 @@ export class GraphService {
         if (localVarHttpHeaderAcceptSelected === undefined) {
             // to determine the Accept header
             const httpHeaderAccepts: string[] = [
+                'text/plain',
+                'application/json',
+                'text/json'
             ];
             localVarHttpHeaderAcceptSelected = this.configuration.selectHeaderAccept(httpHeaderAccepts);
         }
@@ -195,7 +211,7 @@ export class GraphService {
         }
 
         let localVarPath = `/api/Graph/onenote/notebooks/${this.configuration.encodeParam({name: "notebookId", value: notebookId, in: "path", style: "simple", explode: false, dataType: "string", dataFormat: undefined})}/sections`;
-        return this.httpClient.request<any>('get', `${this.configuration.basePath}${localVarPath}`,
+        return this.httpClient.request<Array<OneNoteSectionDto>>('get', `${this.configuration.basePath}${localVarPath}`,
             {
                 context: localVarHttpContext,
                 responseType: <any>responseType_,
@@ -275,10 +291,10 @@ export class GraphService {
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
      */
-    public apiGraphOnenoteSectionsSectionIdPagesGet(sectionId: string, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: undefined, context?: HttpContext, transferCache?: boolean}): Observable<any>;
-    public apiGraphOnenoteSectionsSectionIdPagesGet(sectionId: string, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: undefined, context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<any>>;
-    public apiGraphOnenoteSectionsSectionIdPagesGet(sectionId: string, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: undefined, context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<any>>;
-    public apiGraphOnenoteSectionsSectionIdPagesGet(sectionId: string, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: undefined, context?: HttpContext, transferCache?: boolean}): Observable<any> {
+    public apiGraphOnenoteSectionsSectionIdPagesGet(sectionId: string, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json', context?: HttpContext, transferCache?: boolean}): Observable<Array<OneNotePageDto>>;
+    public apiGraphOnenoteSectionsSectionIdPagesGet(sectionId: string, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<Array<OneNotePageDto>>>;
+    public apiGraphOnenoteSectionsSectionIdPagesGet(sectionId: string, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<Array<OneNotePageDto>>>;
+    public apiGraphOnenoteSectionsSectionIdPagesGet(sectionId: string, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json', context?: HttpContext, transferCache?: boolean}): Observable<any> {
         if (sectionId === null || sectionId === undefined) {
             throw new Error('Required parameter sectionId was null or undefined when calling apiGraphOnenoteSectionsSectionIdPagesGet.');
         }
@@ -289,6 +305,9 @@ export class GraphService {
         if (localVarHttpHeaderAcceptSelected === undefined) {
             // to determine the Accept header
             const httpHeaderAccepts: string[] = [
+                'text/plain',
+                'application/json',
+                'text/json'
             ];
             localVarHttpHeaderAcceptSelected = this.configuration.selectHeaderAccept(httpHeaderAccepts);
         }
@@ -319,7 +338,7 @@ export class GraphService {
         }
 
         let localVarPath = `/api/Graph/onenote/sections/${this.configuration.encodeParam({name: "sectionId", value: sectionId, in: "path", style: "simple", explode: false, dataType: "string", dataFormat: undefined})}/pages`;
-        return this.httpClient.request<any>('get', `${this.configuration.basePath}${localVarPath}`,
+        return this.httpClient.request<Array<OneNotePageDto>>('get', `${this.configuration.basePath}${localVarPath}`,
             {
                 context: localVarHttpContext,
                 responseType: <any>responseType_,
@@ -337,10 +356,10 @@ export class GraphService {
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
      */
-    public apiGraphSharepointSitesGet(search?: string, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: undefined, context?: HttpContext, transferCache?: boolean}): Observable<any>;
-    public apiGraphSharepointSitesGet(search?: string, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: undefined, context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<any>>;
-    public apiGraphSharepointSitesGet(search?: string, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: undefined, context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<any>>;
-    public apiGraphSharepointSitesGet(search?: string, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: undefined, context?: HttpContext, transferCache?: boolean}): Observable<any> {
+    public apiGraphSharepointSitesGet(search?: string, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json', context?: HttpContext, transferCache?: boolean}): Observable<Array<SharePointSiteDto>>;
+    public apiGraphSharepointSitesGet(search?: string, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<Array<SharePointSiteDto>>>;
+    public apiGraphSharepointSitesGet(search?: string, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<Array<SharePointSiteDto>>>;
+    public apiGraphSharepointSitesGet(search?: string, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json', context?: HttpContext, transferCache?: boolean}): Observable<any> {
 
         let localVarQueryParameters = new HttpParams({encoder: this.encoder});
         if (search !== undefined && search !== null) {
@@ -354,6 +373,9 @@ export class GraphService {
         if (localVarHttpHeaderAcceptSelected === undefined) {
             // to determine the Accept header
             const httpHeaderAccepts: string[] = [
+                'text/plain',
+                'application/json',
+                'text/json'
             ];
             localVarHttpHeaderAcceptSelected = this.configuration.selectHeaderAccept(httpHeaderAccepts);
         }
@@ -384,7 +406,7 @@ export class GraphService {
         }
 
         let localVarPath = `/api/Graph/sharepoint/sites`;
-        return this.httpClient.request<any>('get', `${this.configuration.basePath}${localVarPath}`,
+        return this.httpClient.request<Array<SharePointSiteDto>>('get', `${this.configuration.basePath}${localVarPath}`,
             {
                 context: localVarHttpContext,
                 params: localVarQueryParameters,
@@ -404,10 +426,10 @@ export class GraphService {
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
      */
-    public apiGraphSharepointSitesSiteIdItemsGet(siteId: string, folderId?: string, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: undefined, context?: HttpContext, transferCache?: boolean}): Observable<any>;
-    public apiGraphSharepointSitesSiteIdItemsGet(siteId: string, folderId?: string, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: undefined, context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<any>>;
-    public apiGraphSharepointSitesSiteIdItemsGet(siteId: string, folderId?: string, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: undefined, context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<any>>;
-    public apiGraphSharepointSitesSiteIdItemsGet(siteId: string, folderId?: string, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: undefined, context?: HttpContext, transferCache?: boolean}): Observable<any> {
+    public apiGraphSharepointSitesSiteIdItemsGet(siteId: string, folderId?: string, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json', context?: HttpContext, transferCache?: boolean}): Observable<Array<SharePointDriveItemDto>>;
+    public apiGraphSharepointSitesSiteIdItemsGet(siteId: string, folderId?: string, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<Array<SharePointDriveItemDto>>>;
+    public apiGraphSharepointSitesSiteIdItemsGet(siteId: string, folderId?: string, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<Array<SharePointDriveItemDto>>>;
+    public apiGraphSharepointSitesSiteIdItemsGet(siteId: string, folderId?: string, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json', context?: HttpContext, transferCache?: boolean}): Observable<any> {
         if (siteId === null || siteId === undefined) {
             throw new Error('Required parameter siteId was null or undefined when calling apiGraphSharepointSitesSiteIdItemsGet.');
         }
@@ -424,6 +446,9 @@ export class GraphService {
         if (localVarHttpHeaderAcceptSelected === undefined) {
             // to determine the Accept header
             const httpHeaderAccepts: string[] = [
+                'text/plain',
+                'application/json',
+                'text/json'
             ];
             localVarHttpHeaderAcceptSelected = this.configuration.selectHeaderAccept(httpHeaderAccepts);
         }
@@ -454,7 +479,7 @@ export class GraphService {
         }
 
         let localVarPath = `/api/Graph/sharepoint/sites/${this.configuration.encodeParam({name: "siteId", value: siteId, in: "path", style: "simple", explode: false, dataType: "string", dataFormat: undefined})}/items`;
-        return this.httpClient.request<any>('get', `${this.configuration.basePath}${localVarPath}`,
+        return this.httpClient.request<Array<SharePointDriveItemDto>>('get', `${this.configuration.basePath}${localVarPath}`,
             {
                 context: localVarHttpContext,
                 params: localVarQueryParameters,

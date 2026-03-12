@@ -1,6 +1,11 @@
 import { ChangeDetectionStrategy, Component, inject, input, signal, OnInit, OnDestroy } from '@angular/core';
-import { MoodleCourse, MoodleCourseSection, MoodleModule, MoodleContent, MoodleService } from '../../core/services/moodle.service';
-import { PinnedContentService } from '../../core/services/pinned-content.service';
+import { MoodleService } from '../../api/api/moodle.service';
+import { PinnedContentsService } from '../../api/api/pinnedContents.service';
+import { MoodleCourseDto } from '../../api/model/moodleCourseDto';
+import { MoodleCourseSectionDto } from '../../api/model/moodleCourseSectionDto';
+import { MoodleModuleDto } from '../../api/model/moodleModuleDto';
+import { MoodleContentDto } from '../../api/model/moodleContentDto';
+import { PinMoodleModuleRequest } from '../../api/model/pinMoodleModuleRequest';
 import { AiContextService } from '../../core/services/ai-context.service';
 import { DecimalPipe } from '@angular/common';
 import { HlmButton } from '@spartan-ng/helm/button';
@@ -33,7 +38,7 @@ import { HlmCardImports } from '@spartan-ng/helm/card';
         </div>
       } @else {
         @for (section of sections(); track section.id) {
-          @if (section.visible !== 0 && section.modules.length > 0) {
+          @if (section.visible !== 0 && section.modules && section.modules.length > 0) {
             <div hlmCard>
               <div hlmCardHeader>
                 <h2 hlmCardTitle>{{ section.name }}</h2>
@@ -128,17 +133,17 @@ import { HlmCardImports } from '@spartan-ng/helm/card';
                             variant="ghost"
                             size="icon"
                             (click)="pinModule(mod)"
-                            [disabled]="pinningModuleId() === mod.id"
-                            [title]="pinnedModuleIds().has(mod.id) ? 'Pinned for AI' : 'Pin for AI'"
-                            [class]="pinnedModuleIds().has(mod.id) ? 'text-emerald-400' : 'text-muted-foreground'"
+                            [disabled]="pinningModuleId() === mod.id!"
+                            [title]="pinnedModuleIds().has(mod.id!) ? 'Pinned for AI' : 'Pin for AI'"
+                            [class]="pinnedModuleIds().has(mod.id!) ? 'text-emerald-400' : 'text-muted-foreground'"
                             aria-label="Pin module for AI search"
                           >
-                            @if (pinningModuleId() === mod.id) {
+                            @if (pinningModuleId() === mod.id!) {
                               <svg class="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
                                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
                               </svg>
-                            } @else if (pinnedModuleIds().has(mod.id)) {
+                            } @else if (pinnedModuleIds().has(mod.id!)) {
                               <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                                 <path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z"/>
                               </svg>
@@ -169,19 +174,19 @@ import { HlmCardImports } from '@spartan-ng/helm/card';
 })
 export class CourseDetailComponent implements OnInit, OnDestroy {
   private readonly moodleService = inject(MoodleService);
-  private readonly pinnedContentService = inject(PinnedContentService);
+  private readonly pinnedContentsService = inject(PinnedContentsService);
   private readonly aiContext = inject(AiContextService);
 
   readonly courseId = input.required<number>();
-  readonly sections = signal<MoodleCourseSection[]>([]);
+  readonly sections = signal<MoodleCourseSectionDto[]>([]);
   readonly loading = signal(true);
   readonly error = signal<string | null>(null);
-  readonly course = signal<MoodleCourse | null>(null);
+  readonly course = signal<MoodleCourseDto | null>(null);
   readonly pinnedModuleIds = signal<Set<number>>(new Set());
   readonly pinningModuleId = signal<number | null>(null);
 
   ngOnInit(): void {
-    this.moodleService.getCourseContent(this.courseId()).subscribe({
+    this.moodleService.apiMoodleCoursesCourseIdContentGet(this.courseId()).subscribe({
       next: (sections) => {
         this.sections.set(sections);
         this.loading.set(false);
@@ -195,7 +200,7 @@ export class CourseDetailComponent implements OnInit, OnDestroy {
       },
     });
 
-    this.moodleService.getEnrolledCourses().subscribe({
+    this.moodleService.apiMoodleCoursesGet().subscribe({
       next: (courses) => {
         const id = +this.courseId();
         const found = courses.find(c => c.id === id) ?? null;
@@ -204,8 +209,8 @@ export class CourseDetailComponent implements OnInit, OnDestroy {
           this.aiContext.setContext({
             type: 'course',
             id: String(found.id),
-            title: found.fullName,
-            description: `Moodle course — ${found.shortName}`,
+            title: found.fullName ?? '',
+            description: `Moodle course — ${found.shortName ?? ''}`,
           });
         }
       },
@@ -216,14 +221,25 @@ export class CourseDetailComponent implements OnInit, OnDestroy {
     this.aiContext.clearContext();
   }
 
-  pinModule(mod: MoodleModule): void {
+  pinModule(mod: MoodleModuleDto): void {
     const c = this.course();
     if (!c || this.pinningModuleId() === mod.id) return;
 
-    this.pinningModuleId.set(mod.id);
-    this.pinnedContentService.pinMoodleModule(c, mod).subscribe({
+    this.pinningModuleId.set(mod.id!);
+    const request: PinMoodleModuleRequest = {
+      moodleCourseId: c.id,
+      courseName: c.fullName,
+      courseShortName: c.shortName,
+      moodleModuleId: mod.id,
+      moduleName: mod.name,
+      modType: mod.modName,
+      description: mod.description,
+      url: mod.url,
+      fileUrl: mod.contents?.[0]?.fileUrl ?? null,
+    };
+    this.pinnedContentsService.apiPinnedMoodlePost(request).subscribe({
       next: () => {
-        this.pinnedModuleIds.update(ids => new Set([...ids, mod.id]));
+        this.pinnedModuleIds.update(ids => new Set([...ids, mod.id!]));
         this.pinningModuleId.set(null);
       },
       error: () => {
@@ -232,23 +248,23 @@ export class CourseDetailComponent implements OnInit, OnDestroy {
     });
   }
 
-  totalFileSize(contents: MoodleContent[]): number {
-    return contents.reduce((sum, c) => sum + c.fileSize, 0) / 1024;
+  totalFileSize(contents: MoodleContentDto[]): number {
+    return contents.reduce((sum, c) => sum + (c.fileSize ?? 0), 0) / 1024;
   }
 
-  isQuiz(modName: string): boolean {
+  isQuiz(modName: string | null | undefined): boolean {
     return modName === 'quiz';
   }
 
-  isAssignment(modName: string): boolean {
+  isAssignment(modName: string | null | undefined): boolean {
     return modName === 'assign';
   }
 
-  hasFiles(mod: MoodleModule): boolean {
+  hasFiles(mod: MoodleModuleDto): boolean {
     return !!mod.contents && mod.contents.length > 0;
   }
 
-  primaryFileUrl(mod: MoodleModule): string | null {
+  primaryFileUrl(mod: MoodleModuleDto): string | null {
     const raw = mod.contents?.find(c => c.fileUrl)?.fileUrl ?? null;
     return raw ? this.proxyFileUrl(raw) : null;
   }
@@ -261,7 +277,7 @@ export class CourseDetailComponent implements OnInit, OnDestroy {
     return url;
   }
 
-  modLabel(modName: string): string {
+  modLabel(modName: string | null | undefined): string {
     const labels: Record<string, string> = {
       resource: 'File',
       url: 'Link',
@@ -281,10 +297,10 @@ export class CourseDetailComponent implements OnInit, OnDestroy {
       scorm: 'SCORM',
       lti: 'External tool',
     };
-    return labels[modName] ?? modName;
+    return labels[modName ?? ''] ?? modName ?? '';
   }
 
-  modIconBg(modName: string): string {
+  modIconBg(modName: string | null | undefined): string {
     const map: Record<string, string> = {
       quiz: 'bg-violet-500/15 text-violet-400',
       assign: 'bg-amber-500/15 text-amber-400',
@@ -295,10 +311,10 @@ export class CourseDetailComponent implements OnInit, OnDestroy {
       folder: 'bg-yellow-500/15 text-yellow-400',
       book: 'bg-indigo-500/15 text-indigo-400',
     };
-    return map[modName] ?? 'bg-muted text-muted-foreground';
+    return map[modName ?? ''] ?? 'bg-muted text-muted-foreground';
   }
 
-  modIconPath(modName: string): string {
+  modIconPath(modName: string | null | undefined): string {
     switch (modName) {
       case 'quiz':
         return 'M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 5.25h.008v.008H12v-.008Z';

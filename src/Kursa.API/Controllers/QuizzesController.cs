@@ -1,3 +1,4 @@
+using Kursa.Application.Features.Quizzes;
 using Kursa.Application.Features.Quizzes.Commands;
 using Kursa.Application.Features.Quizzes.Queries;
 using Mediator;
@@ -12,6 +13,7 @@ namespace Kursa.API.Controllers;
 public class QuizzesController(ISender sender) : ControllerBase
 {
     [HttpGet]
+    [ProducesResponseType(typeof(IReadOnlyList<QuizDto>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetQuizzesAsync(CancellationToken cancellationToken)
     {
         var result = await sender.Send(new GetQuizzesQuery(), cancellationToken);
@@ -22,6 +24,7 @@ public class QuizzesController(ISender sender) : ControllerBase
     }
 
     [HttpGet("{quizId:guid}")]
+    [ProducesResponseType(typeof(QuizDetailDto), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetQuizDetailAsync(Guid quizId, CancellationToken cancellationToken)
     {
         var result = await sender.Send(new GetQuizDetailQuery(quizId), cancellationToken);
@@ -32,6 +35,7 @@ public class QuizzesController(ISender sender) : ControllerBase
     }
 
     [HttpPost("generate")]
+    [ProducesResponseType(typeof(QuizDetailDto), StatusCodes.Status200OK)]
     public async Task<IActionResult> GenerateQuizAsync([FromBody] GenerateQuizRequest request, CancellationToken cancellationToken)
     {
         var result = await sender.Send(new GenerateQuizCommand(
@@ -46,6 +50,7 @@ public class QuizzesController(ISender sender) : ControllerBase
     }
 
     [HttpPost("{quizId:guid}/submit")]
+    [ProducesResponseType(typeof(QuizAttemptDetailDto), StatusCodes.Status200OK)]
     public async Task<IActionResult> SubmitAttemptAsync(Guid quizId, [FromBody] SubmitAttemptRequest request, CancellationToken cancellationToken)
     {
         var answers = request.Answers
@@ -60,6 +65,7 @@ public class QuizzesController(ISender sender) : ControllerBase
     }
 
     [HttpGet("{quizId:guid}/results")]
+    [ProducesResponseType(typeof(IReadOnlyList<QuizAttemptDto>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetQuizResultsAsync(Guid quizId, CancellationToken cancellationToken)
     {
         var result = await sender.Send(new GetQuizResultsQuery(quizId), cancellationToken);
@@ -70,6 +76,7 @@ public class QuizzesController(ISender sender) : ControllerBase
     }
 
     [HttpGet("attempts/{attemptId:guid}")]
+    [ProducesResponseType(typeof(QuizAttemptDetailDto), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetAttemptDetailAsync(Guid attemptId, CancellationToken cancellationToken)
     {
         var result = await sender.Send(new GetAttemptDetailQuery(attemptId), cancellationToken);

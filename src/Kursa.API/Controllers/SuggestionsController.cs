@@ -1,3 +1,4 @@
+using Kursa.Application.Features.Suggestions.Models;
 using Kursa.Application.Features.Suggestions.Queries;
 using Mediator;
 using Microsoft.AspNetCore.Authorization;
@@ -11,6 +12,7 @@ namespace Kursa.API.Controllers;
 public class SuggestionsController(ISender sender) : ControllerBase
 {
     [HttpGet]
+    [ProducesResponseType(typeof(IReadOnlyList<StudySuggestionDto>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetSuggestionsAsync(CancellationToken cancellationToken)
     {
         var result = await sender.Send(new GetStudySuggestionsQuery(), cancellationToken);

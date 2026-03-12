@@ -3,14 +3,13 @@ import { FormsModule } from '@angular/forms';
 import { HlmButton } from '@spartan-ng/helm/button';
 import { HlmCardImports } from '@spartan-ng/helm/card';
 import { HlmInput } from '@spartan-ng/helm/input';
-import {
-  GraphService,
-  OneNoteNotebook,
-  OneNoteSection,
-  OneNotePage,
-  SharePointSite,
-  SharePointDriveItem,
-} from '../../core/services/graph.service';
+import { GraphService } from '../../api/api/graph.service';
+import { OneNoteNotebookDto } from '../../api/model/oneNoteNotebookDto';
+import { OneNoteSectionDto } from '../../api/model/oneNoteSectionDto';
+import { OneNotePageDto } from '../../api/model/oneNotePageDto';
+import { SharePointSiteDto } from '../../api/model/sharePointSiteDto';
+import { SharePointDriveItemDto } from '../../api/model/sharePointDriveItemDto';
+import { GraphTokenService } from '../../core/services/graph-token.service';
 
 type ActiveTab = 'onenote' | 'sharepoint';
 type OneNoteView = 'notebooks' | 'sections' | 'pages' | 'content';
@@ -121,8 +120,8 @@ type SharePointView = 'sites' | 'items';
                       </div>
                       <div class="min-w-0 flex-1">
                         <h3 class="truncate font-medium text-foreground">{{ nb.displayName }}</h3>
-                        @if (nb.lastModifiedAt) {
-                          <p class="text-xs text-muted-foreground">{{ formatDate(nb.lastModifiedAt) }}</p>
+                        @if (nb.lastModifiedDateTime) {
+                          <p class="text-xs text-muted-foreground">{{ formatDate(nb.lastModifiedDateTime) }}</p>
                         }
                       </div>
                     </div>
@@ -167,8 +166,8 @@ type SharePointView = 'sites' | 'items';
                     <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded bg-green-500/10 text-green-500 text-sm font-medium" aria-hidden="true">P</div>
                     <div class="min-w-0 flex-1">
                       <span class="text-foreground">{{ page.title }}</span>
-                      @if (page.lastModifiedAt) {
-                        <p class="text-xs text-muted-foreground">{{ formatDate(page.lastModifiedAt) }}</p>
+                      @if (page.lastModifiedDateTime) {
+                        <p class="text-xs text-muted-foreground">{{ formatDate(page.lastModifiedDateTime) }}</p>
                       }
                     </div>
                   </button>
@@ -234,7 +233,7 @@ type SharePointView = 'sites' | 'items';
                       variant="outline"
                       type="button"
                       class="h-auto w-full items-center justify-start gap-3 p-3 text-left"
-                      (click)="openFolder(item.id)"
+                      (click)="openFolder(item.id!)"
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5 text-yellow-500" aria-hidden="true"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z" /></svg>
                       <span class="text-foreground">{{ item.name }}</span>
@@ -251,7 +250,7 @@ type SharePointView = 'sites' | 'items';
                       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5 text-muted-foreground" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /></svg>
                       <div class="min-w-0 flex-1">
                         <span class="text-foreground">{{ item.name }}</span>
-                        <p class="text-xs text-muted-foreground">{{ formatFileSize(item.size) }}</p>
+                        <p class="text-xs text-muted-foreground">{{ formatFileSize(item.size ?? 0) }}</p>
                       </div>
                     </a>
                   }
@@ -266,6 +265,7 @@ type SharePointView = 'sites' | 'items';
 })
 export class MicrosoftComponent implements OnInit {
   private readonly graphService = inject(GraphService);
+  private readonly graphTokenService = inject(GraphTokenService);
 
   tokenInput = '';
   readonly activeTab = signal<ActiveTab>('onenote');
@@ -274,17 +274,17 @@ export class MicrosoftComponent implements OnInit {
 
   // OneNote state
   readonly onenoteView = signal<OneNoteView>('notebooks');
-  readonly notebooks = signal<OneNoteNotebook[]>([]);
-  readonly sections = signal<OneNoteSection[]>([]);
-  readonly pages = signal<OneNotePage[]>([]);
+  readonly notebooks = signal<OneNoteNotebookDto[]>([]);
+  readonly sections = signal<OneNoteSectionDto[]>([]);
+  readonly pages = signal<OneNotePageDto[]>([]);
   readonly pageContent = signal('');
   readonly currentNotebookName = signal('');
   readonly currentSectionName = signal('');
 
   // SharePoint state
   readonly sharepointView = signal<SharePointView>('sites');
-  readonly sites = signal<SharePointSite[]>([]);
-  readonly driveItems = signal<SharePointDriveItem[]>([]);
+  readonly sites = signal<SharePointSiteDto[]>([]);
+  readonly driveItems = signal<SharePointDriveItemDto[]>([]);
   readonly currentSiteName = signal('');
   private currentSiteId = '';
 
@@ -293,18 +293,18 @@ export class MicrosoftComponent implements OnInit {
   }
 
   hasToken(): boolean {
-    return this.graphService.hasToken();
+    return this.graphTokenService.hasToken();
   }
 
   connectToken(): void {
     if (!this.tokenInput.trim()) return;
-    this.graphService.setToken(this.tokenInput.trim());
+    this.graphTokenService.setToken(this.tokenInput.trim());
     this.tokenInput = '';
     this.loadInitialData();
   }
 
   disconnect(): void {
-    this.graphService.clearToken();
+    this.graphTokenService.clearToken();
     this.notebooks.set([]);
     this.sites.set([]);
   }
@@ -321,10 +321,10 @@ export class MicrosoftComponent implements OnInit {
 
   // -- OneNote navigation --
 
-  openNotebook(nb: OneNoteNotebook): void {
-    this.currentNotebookName.set(nb.displayName);
+  openNotebook(nb: OneNoteNotebookDto): void {
+    this.currentNotebookName.set(nb.displayName ?? '');
     this.loading.set(true);
-    this.graphService.getSections(nb.id).subscribe({
+    this.graphService.apiGraphOnenoteNotebooksNotebookIdSectionsGet(nb.id!).subscribe({
       next: (sections) => {
         this.sections.set(sections);
         this.onenoteView.set('sections');
@@ -334,10 +334,10 @@ export class MicrosoftComponent implements OnInit {
     });
   }
 
-  openSection(sec: OneNoteSection): void {
-    this.currentSectionName.set(sec.displayName);
+  openSection(sec: OneNoteSectionDto): void {
+    this.currentSectionName.set(sec.displayName ?? '');
     this.loading.set(true);
-    this.graphService.getPages(sec.id).subscribe({
+    this.graphService.apiGraphOnenoteSectionsSectionIdPagesGet(sec.id!).subscribe({
       next: (pages) => {
         this.pages.set(pages);
         this.onenoteView.set('pages');
@@ -347,9 +347,9 @@ export class MicrosoftComponent implements OnInit {
     });
   }
 
-  openPage(page: OneNotePage): void {
+  openPage(page: OneNotePageDto): void {
     this.loading.set(true);
-    this.graphService.getPageContent(page.id).subscribe({
+    this.graphService.apiGraphOnenotePagesPageIdContentGet(page.id!).subscribe({
       next: (content) => {
         this.pageContent.set(content);
         this.onenoteView.set('content');
@@ -370,11 +370,11 @@ export class MicrosoftComponent implements OnInit {
 
   // -- SharePoint navigation --
 
-  openSite(site: SharePointSite): void {
-    this.currentSiteId = site.id;
-    this.currentSiteName.set(site.displayName);
+  openSite(site: SharePointSiteDto): void {
+    this.currentSiteId = site.id!;
+    this.currentSiteName.set(site.displayName ?? '');
     this.loading.set(true);
-    this.graphService.getDriveItems(site.id).subscribe({
+    this.graphService.apiGraphSharepointSitesSiteIdItemsGet(site.id!).subscribe({
       next: (items) => {
         this.driveItems.set(items);
         this.sharepointView.set('items');
@@ -386,7 +386,7 @@ export class MicrosoftComponent implements OnInit {
 
   openFolder(folderId: string): void {
     this.loading.set(true);
-    this.graphService.getDriveItems(this.currentSiteId, folderId).subscribe({
+    this.graphService.apiGraphSharepointSitesSiteIdItemsGet(this.currentSiteId, folderId).subscribe({
       next: (items) => {
         this.driveItems.set(items);
         this.loading.set(false);
@@ -424,7 +424,7 @@ export class MicrosoftComponent implements OnInit {
   private loadNotebooks(): void {
     this.loading.set(true);
     this.error.set(null);
-    this.graphService.getNotebooks().subscribe({
+    this.graphService.apiGraphOnenoteNotebooksGet().subscribe({
       next: (notebooks) => {
         this.notebooks.set(notebooks);
         this.loading.set(false);
@@ -434,7 +434,7 @@ export class MicrosoftComponent implements OnInit {
   }
 
   private loadSites(): void {
-    this.graphService.getSites().subscribe({
+    this.graphService.apiGraphSharepointSitesGet().subscribe({
       next: (sites) => this.sites.set(sites),
       error: () => { /* silent for background load */ },
     });
