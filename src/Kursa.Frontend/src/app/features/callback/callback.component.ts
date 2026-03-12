@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, inject, OnInit, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
+import { firstValueFrom } from 'rxjs';
 
 @Component({
   selector: 'app-callback',
@@ -40,7 +41,12 @@ export class CallbackComponent implements OnInit {
   async ngOnInit(): Promise<void> {
     const success = await this.authService.handleCallback();
     if (success) {
-      await this.router.navigate(['/dashboard']);
+      try {
+        const user = await firstValueFrom(this.authService.getCurrentUser());
+        await this.router.navigate([user.onboardingCompleted ? '/dashboard' : '/onboarding']);
+      } catch {
+        await this.router.navigate(['/dashboard']);
+      }
     } else {
       this.error.set(
         'Sign-in failed. Make sure the Pocket ID client has redirect URL ' +
