@@ -3,12 +3,9 @@ import { DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { HlmButton } from '@spartan-ng/helm/button';
 import { HlmCardImports } from '@spartan-ng/helm/card';
-import {
-  Analytics,
-  AnalyticsService,
-  StudyActivity,
-} from '../../core/services/analytics.service';
-import { SuggestionService, StudySuggestion } from '../../core/services/suggestion.service';
+import { AnalyticsService } from '../../api/api/analytics.service';
+import { SuggestionsService } from '../../api/api/suggestions.service';
+import { AnalyticsDto, StudyActivityDto, StudySuggestionDto } from '../../api/model/models';
 
 @Component({
   selector: 'app-dashboard',
@@ -19,7 +16,7 @@ import { SuggestionService, StudySuggestion } from '../../core/services/suggesti
       <div class="flex items-center justify-between">
         <h1 class="text-2xl font-bold text-foreground">Dashboard</h1>
         @if (data(); as d) {
-          @if (d.currentStreak > 0) {
+          @if ((d.currentStreak ?? 0) > 0) {
             <div class="flex items-center gap-2 rounded-md bg-orange-500/10 px-3 py-1.5">
               <svg class="h-5 w-5 text-orange-500" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.362 5.214A8.252 8.252 0 0 1 12 21 8.25 8.25 0 0 1 6.038 7.047 8.287 8.287 0 0 0 9 9.601a8.983 8.983 0 0 1 3.361-6.867 8.21 8.21 0 0 0 3 2.48Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M12 18a3.75 3.75 0 0 0 .495-7.468 5.99 5.99 0 0 0-1.925 3.547 5.975 5.975 0 0 1-2.133-1.001A3.75 3.75 0 0 0 12 18Z" /></svg>
               <span class="text-sm font-semibold text-orange-500">{{ d.currentStreak }} day streak</span>
@@ -40,15 +37,15 @@ import { SuggestionService, StudySuggestion } from '../../core/services/suggesti
               <svg class="h-4 w-4 text-primary" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg>
               <span class="text-sm font-medium text-muted-foreground">Study Time</span>
             </div>
-            <p class="text-2xl font-bold text-foreground">{{ formatDuration(d.overview.totalStudyTimeSeconds) }}</p>
-            <p class="text-xs text-muted-foreground">{{ d.overview.totalPomodoros }} pomodoros</p>
+            <p class="text-2xl font-bold text-foreground">{{ formatDuration(d.overview?.totalStudyTimeSeconds ?? 0) }}</p>
+            <p class="text-xs text-muted-foreground">{{ d.overview?.totalPomodoros ?? 0 }} pomodoros</p>
           </div>
           <div hlmCard class="p-5 gap-2">
             <div class="flex items-center gap-2">
               <svg class="h-4 w-4 text-primary" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 5.25h.008v.008H12v-.008Z" /></svg>
               <span class="text-sm font-medium text-muted-foreground">Quizzes</span>
             </div>
-            <p class="text-2xl font-bold text-foreground">{{ d.overview.totalQuizzesTaken }}</p>
+            <p class="text-2xl font-bold text-foreground">{{ d.overview?.totalQuizzesTaken ?? 0 }}</p>
             <p class="text-xs text-muted-foreground">attempts taken</p>
           </div>
           <div hlmCard class="p-5 gap-2">
@@ -56,7 +53,7 @@ import { SuggestionService, StudySuggestion } from '../../core/services/suggesti
               <svg class="h-4 w-4 text-primary" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6.429 9.75 2.25 12l4.179 2.25m0-4.5 5.571 3 5.571-3m-11.142 0L2.25 7.5 12 2.25l9.75 5.25-4.179 2.25m0 0L21.75 12l-4.179 2.25m0 0 4.179 2.25L12 21.75 2.25 16.5l4.179-2.25m11.142 0-5.571 3-5.571-3" /></svg>
               <span class="text-sm font-medium text-muted-foreground">Flashcards</span>
             </div>
-            <p class="text-2xl font-bold text-foreground">{{ d.overview.totalCardsReviewed }}</p>
+            <p class="text-2xl font-bold text-foreground">{{ d.overview?.totalCardsReviewed ?? 0 }}</p>
             <p class="text-xs text-muted-foreground">cards reviewed</p>
           </div>
           <div hlmCard class="p-5 gap-2">
@@ -64,7 +61,7 @@ import { SuggestionService, StudySuggestion } from '../../core/services/suggesti
               <svg class="h-4 w-4 text-primary" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0Z" /></svg>
               <span class="text-sm font-medium text-muted-foreground">Pinned</span>
             </div>
-            <p class="text-2xl font-bold text-foreground">{{ d.overview.totalPinnedContents }}</p>
+            <p class="text-2xl font-bold text-foreground">{{ d.overview?.totalPinnedContents ?? 0 }}</p>
             <p class="text-xs text-muted-foreground">materials saved</p>
           </div>
         </div>
@@ -74,14 +71,14 @@ import { SuggestionService, StudySuggestion } from '../../core/services/suggesti
           <div hlmCard class="p-5">
             <h2 class="text-sm font-semibold text-foreground">Weekly Activity</h2>
             <div class="mt-4 flex items-end gap-2" style="height: 120px">
-              @for (day of d.weeklyActivity; track day.date) {
+              @for (day of d.weeklyActivity ?? []; track day.date) {
                 <div class="flex flex-1 flex-col items-center gap-1">
                   <div
                     class="w-full rounded-sm bg-primary transition-all"
-                    [style.height.px]="getBarHeight(day, d.weeklyActivity)"
-                    [style.min-height.px]="day.studyTimeSeconds > 0 ? 4 : 0"
+                    [style.height.px]="getBarHeight(day, d.weeklyActivity ?? [])"
+                    [style.min-height.px]="(day.studyTimeSeconds ?? 0) > 0 ? 4 : 0"
                   ></div>
-                  <span class="text-xs text-muted-foreground">{{ getDayLabel(day.date) }}</span>
+                  <span class="text-xs text-muted-foreground">{{ getDayLabel(day.date ?? '') }}</span>
                 </div>
               }
             </div>
@@ -91,40 +88,40 @@ import { SuggestionService, StudySuggestion } from '../../core/services/suggesti
           <div hlmCard class="p-5">
             <div class="flex items-center justify-between">
               <h2 class="text-sm font-semibold text-foreground">Flashcard Status</h2>
-              @if (d.flashcardStats.dueToday > 0) {
+              @if ((d.flashcardStats?.dueToday ?? 0) > 0) {
                 <a
                   routerLink="/flashcards"
                   class="text-xs font-medium text-primary hover:underline"
                 >
-                  Review {{ d.flashcardStats.dueToday }} due
+                  Review {{ d.flashcardStats?.dueToday ?? 0 }} due
                 </a>
               }
             </div>
-            @if (d.flashcardStats.totalCards === 0) {
+            @if ((d.flashcardStats?.totalCards ?? 0) === 0) {
               <p class="mt-4 text-sm text-muted-foreground">No flashcards yet. Generate some from your pinned content.</p>
             } @else {
               <div class="mt-4 space-y-3">
                 <div>
                   <div class="flex justify-between text-xs text-muted-foreground">
                     <span>Mastered</span>
-                    <span>{{ d.flashcardStats.masteredCards }}/{{ d.flashcardStats.totalCards }}</span>
+                    <span>{{ d.flashcardStats?.masteredCards ?? 0 }}/{{ d.flashcardStats?.totalCards ?? 0 }}</span>
                   </div>
                   <div class="mt-1 h-2 w-full overflow-hidden rounded-full bg-muted">
                     <div
                       class="h-full rounded-full bg-green-500 transition-all"
-                      [style.width.%]="(d.flashcardStats.masteredCards / d.flashcardStats.totalCards) * 100"
+                      [style.width.%]="((d.flashcardStats?.masteredCards ?? 0) / (d.flashcardStats?.totalCards ?? 1)) * 100"
                     ></div>
                   </div>
                 </div>
                 <div>
                   <div class="flex justify-between text-xs text-muted-foreground">
                     <span>Learning</span>
-                    <span>{{ d.flashcardStats.learningCards }}</span>
+                    <span>{{ d.flashcardStats?.learningCards ?? 0 }}</span>
                   </div>
                   <div class="mt-1 h-2 w-full overflow-hidden rounded-full bg-muted">
                     <div
                       class="h-full rounded-full bg-primary transition-all"
-                      [style.width.%]="(d.flashcardStats.learningCards / d.flashcardStats.totalCards) * 100"
+                      [style.width.%]="((d.flashcardStats?.learningCards ?? 0) / (d.flashcardStats?.totalCards ?? 1)) * 100"
                     ></div>
                   </div>
                 </div>
@@ -132,9 +129,9 @@ import { SuggestionService, StudySuggestion } from '../../core/services/suggesti
                   <span class="text-muted-foreground">Due today</span>
                   <span
                     class="font-medium"
-                    [class]="d.flashcardStats.dueToday > 0 ? 'text-orange-500' : 'text-green-500'"
+                    [class]="(d.flashcardStats?.dueToday ?? 0) > 0 ? 'text-orange-500' : 'text-green-500'"
                   >
-                    {{ d.flashcardStats.dueToday }}
+                    {{ d.flashcardStats?.dueToday ?? 0 }}
                   </span>
                 </div>
               </div>
@@ -147,11 +144,11 @@ import { SuggestionService, StudySuggestion } from '../../core/services/suggesti
               <h2 class="text-sm font-semibold text-foreground">Recent Quiz Results</h2>
               <a routerLink="/quizzes" class="text-xs font-medium text-primary hover:underline">View all</a>
             </div>
-            @if (d.recentQuizPerformance.length === 0) {
+            @if ((d.recentQuizPerformance ?? []).length === 0) {
               <p class="mt-4 text-sm text-muted-foreground">No quizzes taken yet.</p>
             } @else {
               <div class="mt-3 space-y-2">
-                @for (quiz of d.recentQuizPerformance.slice(0, 5); track quiz.quizId) {
+                @for (quiz of (d.recentQuizPerformance ?? []).slice(0, 5); track quiz.quizId) {
                   <div class="flex items-center justify-between rounded-md p-2 hover:bg-accent">
                     <div class="min-w-0 flex-1">
                       <p class="truncate text-sm text-foreground">{{ quiz.quizTitle }}</p>
@@ -159,7 +156,7 @@ import { SuggestionService, StudySuggestion } from '../../core/services/suggesti
                     </div>
                     <span
                       class="ml-3 text-sm font-semibold"
-                      [class]="(quiz.score / quiz.totalQuestions) >= 0.7 ? 'text-green-500' : 'text-orange-500'"
+                      [class]="((quiz.score ?? 0) / (quiz.totalQuestions ?? 1)) >= 0.7 ? 'text-green-500' : 'text-orange-500'"
                     >
                       {{ quiz.score }}/{{ quiz.totalQuestions }}
                     </span>
@@ -222,11 +219,11 @@ import { SuggestionService, StudySuggestion } from '../../core/services/suggesti
               <h2 class="text-sm font-semibold text-foreground">Streaks</h2>
               <div class="mt-3 grid grid-cols-2 gap-4">
                 <div class="text-center">
-                  <p class="text-3xl font-bold text-orange-500">{{ d.currentStreak }}</p>
+                  <p class="text-3xl font-bold text-orange-500">{{ d.currentStreak ?? 0 }}</p>
                   <p class="text-xs text-muted-foreground">Current</p>
                 </div>
                 <div class="text-center">
-                  <p class="text-3xl font-bold text-foreground">{{ d.longestStreak }}</p>
+                  <p class="text-3xl font-bold text-foreground">{{ d.longestStreak ?? 0 }}</p>
                   <p class="text-xs text-muted-foreground">Longest</p>
                 </div>
               </div>
@@ -284,15 +281,15 @@ import { SuggestionService, StudySuggestion } from '../../core/services/suggesti
 })
 export class DashboardComponent implements OnInit {
   private readonly analyticsService = inject(AnalyticsService);
-  private readonly suggestionService = inject(SuggestionService);
+  private readonly suggestionService = inject(SuggestionsService);
 
   readonly loading = signal(true);
-  readonly data = signal<Analytics | null>(null);
-  readonly suggestions = signal<StudySuggestion[]>([]);
+  readonly data = signal<AnalyticsDto | null>(null);
+  readonly suggestions = signal<StudySuggestionDto[]>([]);
   readonly suggestionsLoading = signal(true);
 
   ngOnInit(): void {
-    this.analyticsService.getAnalytics().subscribe({
+    this.analyticsService.apiAnalyticsGet().subscribe({
       next: (data) => {
         this.data.set(data);
         this.loading.set(false);
@@ -300,7 +297,7 @@ export class DashboardComponent implements OnInit {
       error: () => this.loading.set(false),
     });
 
-    this.suggestionService.getSuggestions().subscribe({
+    this.suggestionService.apiSuggestionsGet().subscribe({
       next: (suggestions) => {
         this.suggestions.set(suggestions);
         this.suggestionsLoading.set(false);
@@ -317,9 +314,9 @@ export class DashboardComponent implements OnInit {
     return '0m';
   }
 
-  getBarHeight(day: StudyActivity, allDays: StudyActivity[]): number {
-    const maxTime = Math.max(...allDays.map((d) => d.studyTimeSeconds), 1);
-    return (day.studyTimeSeconds / maxTime) * 100;
+  getBarHeight(day: StudyActivityDto, allDays: StudyActivityDto[]): number {
+    const maxTime = Math.max(...allDays.map((d) => d.studyTimeSeconds ?? 0), 1);
+    return ((day.studyTimeSeconds ?? 0) / maxTime) * 100;
   }
 
   getDayLabel(dateStr: string): string {

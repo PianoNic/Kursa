@@ -6,7 +6,9 @@ import { HlmCardImports } from '@spartan-ng/helm/card';
 import { HlmInput } from '@spartan-ng/helm/input';
 import { HlmLabel } from '@spartan-ng/helm/label';
 import { AuthService } from '../../core/services/auth.service';
-import { MoodleService } from '../../core/services/moodle.service';
+import { MoodleService } from '../../api/api/moodle.service';
+import { ValidateMoodleCredentialsCommand } from '../../api/model/validateMoodleCredentialsCommand';
+import { LinkMoodleTokenCommand } from '../../api/model/linkMoodleTokenCommand';
 
 @Component({
   selector: 'app-onboarding',
@@ -178,7 +180,8 @@ export class OnboardingComponent implements OnInit {
     if (this.currentStep() === 1 && this.moodleUsername && this.moodlePassword) {
       this.moodleLinkError.set(null);
       this.moodleValidating.set(true);
-      this.moodleService.validateCredentials(this.moodleUsername, this.moodlePassword).subscribe({
+      const validateCmd: ValidateMoodleCredentialsCommand = { username: this.moodleUsername, password: this.moodlePassword };
+      this.moodleService.apiMoodleValidatePost(validateCmd).subscribe({
         next: () => {
           this.moodleValidating.set(false);
           this.moodleLinkSuccess.set(true);
@@ -213,7 +216,8 @@ export class OnboardingComponent implements OnInit {
       next: () => {
         // Now link Moodle if credentials were provided
         if (this.moodleUsername && this.moodlePassword) {
-          this.moodleService.linkMoodle(this.moodleUsername, this.moodlePassword).subscribe({
+          const linkCmd: LinkMoodleTokenCommand = { username: this.moodleUsername, password: this.moodlePassword };
+          this.moodleService.apiMoodleLinkPost(linkCmd).subscribe({
             next: () => this.router.navigate(['/dashboard']),
             error: () => this.router.navigate(['/dashboard']),
           });

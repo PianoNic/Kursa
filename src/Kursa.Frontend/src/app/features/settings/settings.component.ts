@@ -10,7 +10,8 @@ import { HlmButton } from '@spartan-ng/helm/button';
 import { HlmCardImports } from '@spartan-ng/helm/card';
 import { HlmInput } from '@spartan-ng/helm/input';
 import { HlmLabel } from '@spartan-ng/helm/label';
-import { MoodleService } from '../../core/services/moodle.service';
+import { MoodleService } from '../../api/api/moodle.service';
+import { LinkMoodleTokenCommand } from '../../api/model/linkMoodleTokenCommand';
 
 @Component({
   selector: 'app-settings',
@@ -128,8 +129,8 @@ export class SettingsComponent implements OnInit {
   });
 
   ngOnInit(): void {
-    this.moodleService.getConnectionStatus().subscribe({
-      next: (status) => this.isConnected.set(status.isConnected),
+    this.moodleService.apiMoodleStatusGet().subscribe({
+      next: (status) => this.isConnected.set(status.isConnected ?? false),
       error: () => this.isConnected.set(false),
     });
   }
@@ -141,7 +142,8 @@ export class SettingsComponent implements OnInit {
     this.isSubmitting.set(true);
     this.errorMessage.set(null);
 
-    this.moodleService.linkMoodle(username!, password!).subscribe({
+    const linkCmd: LinkMoodleTokenCommand = { username: username!, password: password! };
+    this.moodleService.apiMoodleLinkPost(linkCmd).subscribe({
       next: () => {
         this.isConnected.set(true);
         this.isSubmitting.set(false);
@@ -158,7 +160,7 @@ export class SettingsComponent implements OnInit {
     this.isSubmitting.set(true);
     this.errorMessage.set(null);
 
-    this.moodleService.unlinkToken().subscribe({
+    this.moodleService.apiMoodleLinkDelete().subscribe({
       next: () => {
         this.isConnected.set(false);
         this.isSubmitting.set(false);

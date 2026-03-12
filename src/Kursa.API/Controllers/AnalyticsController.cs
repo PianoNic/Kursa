@@ -11,6 +11,7 @@ namespace Kursa.API.Controllers;
 public class AnalyticsController(ISender sender) : ControllerBase
 {
     [HttpGet]
+    [ProducesResponseType(typeof(AnalyticsDto), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetAnalyticsAsync(CancellationToken cancellationToken)
     {
         var result = await sender.Send(new GetAnalyticsQuery(), cancellationToken);

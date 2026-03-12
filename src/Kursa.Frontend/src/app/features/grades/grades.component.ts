@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, signal, computed, inject, OnInit } from '@angular/core';
 import { HlmCardImports } from '@spartan-ng/helm/card';
-import { GradeService, CourseGradeSummary } from '../../core/services/grade.service';
+import { MoodleService } from '../../api/api/moodle.service';
+import { CourseGradeSummaryDto } from '../../api/model/models';
 
 @Component({
   selector: 'app-grades',
@@ -56,8 +57,8 @@ import { GradeService, CourseGradeSummary } from '../../core/services/grade.serv
               <button
                 type="button"
                 class="flex w-full items-center justify-between p-4 text-left transition-colors hover:bg-accent/50"
-                (click)="toggleCourse(course.courseId)"
-                [attr.aria-expanded]="expandedCourses().has(course.courseId)"
+                (click)="toggleCourse(course.courseId!)"
+                [attr.aria-expanded]="expandedCourses().has(course.courseId!)"
               >
                 <div class="min-w-0 flex-1">
                   <h2 class="truncate font-semibold text-foreground">{{ course.courseName }}</h2>
@@ -68,7 +69,7 @@ import { GradeService, CourseGradeSummary } from '../../core/services/grade.serv
                 <div class="ml-4 flex items-center gap-4">
                   @if (course.percentage) {
                     <div class="text-right">
-                      <p class="text-lg font-bold" [class]="getGradeColor(course.courseTotalRaw, course.courseTotalMax)">
+                      <p class="text-lg font-bold" [class]="getGradeColor(course.courseTotalRaw, course.courseTotalMax ?? 1)">
                         {{ course.percentage }}
                       </p>
                       @if (course.courseTotal) {
@@ -80,7 +81,7 @@ import { GradeService, CourseGradeSummary } from '../../core/services/grade.serv
                     xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
                     class="h-5 w-5 text-muted-foreground transition-transform"
-                    [class.rotate-180]="expandedCourses().has(course.courseId)"
+                    [class.rotate-180]="expandedCourses().has(course.courseId!)"
                     aria-hidden="true"
                   >
                     <path d="m6 9 6 6 6-6" />
@@ -89,9 +90,9 @@ import { GradeService, CourseGradeSummary } from '../../core/services/grade.serv
               </button>
 
               <!-- Grade Items (expandable) -->
-              @if (expandedCourses().has(course.courseId)) {
+              @if (expandedCourses().has(course.courseId!)) {
                 <div class="border-t border-border">
-                  @if (course.items.length === 0) {
+                  @if ((course.items ?? []).length === 0) {
                     <p class="p-4 text-sm text-muted-foreground">No grade items in this course.</p>
                   } @else {
                     <div class="overflow-x-auto">
@@ -106,12 +107,12 @@ import { GradeService, CourseGradeSummary } from '../../core/services/grade.serv
                           </tr>
                         </thead>
                         <tbody>
-                          @for (item of course.items; track item.id) {
+                          @for (item of course.items ?? []; track item.id) {
                             <tr class="border-b border-border/50 last:border-b-0">
                               <td class="p-3">
                                 <div class="flex items-center gap-2">
-                                  <span class="inline-flex h-6 w-6 items-center justify-center rounded text-xs" [class]="getModuleBadgeClass(item.itemModule)">
-                                    {{ getModuleIcon(item.itemModule) }}
+                                  <span class="inline-flex h-6 w-6 items-center justify-center rounded text-xs" [class]="getModuleBadgeClass(item.itemModule ?? null)">
+                                    {{ getModuleIcon(item.itemModule ?? null) }}
                                   </span>
                                   <span class="text-foreground">{{ item.itemName ?? 'Unnamed item' }}</span>
                                 </div>
@@ -119,7 +120,7 @@ import { GradeService, CourseGradeSummary } from '../../core/services/grade.serv
                               <td class="p-3 text-muted-foreground capitalize">{{ item.itemModule ?? item.itemType }}</td>
                               <td class="p-3 text-right">
                                 @if (item.gradeFormatted) {
-                                  <span [class]="getGradeColor(item.grade, item.gradeMax)">
+                                  <span [class]="getGradeColor(item.grade, item.gradeMax ?? 1)">
                                     {{ item.gradeFormatted }}
                                   </span>
                                 } @else {
@@ -128,7 +129,7 @@ import { GradeService, CourseGradeSummary } from '../../core/services/grade.serv
                               </td>
                               <td class="p-3 text-right">
                                 @if (item.percentage) {
-                                  <span [class]="getGradeColor(item.grade, item.gradeMax)">{{ item.percentage }}</span>
+                                  <span [class]="getGradeColor(item.grade, item.gradeMax ?? 1)">{{ item.percentage }}</span>
                                 } @else {
                                   <span class="text-muted-foreground">—</span>
                                 }
@@ -151,8 +152,8 @@ import { GradeService, CourseGradeSummary } from '../../core/services/grade.serv
                         @for (item of getGradedItems(course); track item.id) {
                           <div
                             class="flex-1 rounded-t transition-colors"
-                            [class]="getBarColor(item.grade, item.gradeMax)"
-                            [style.height.%]="getBarHeight(item.grade, item.gradeMax)"
+                            [class]="getBarColor(item.grade, item.gradeMax ?? 1)"
+                            [style.height.%]="getBarHeight(item.grade, item.gradeMax ?? 1)"
                             [title]="(item.itemName ?? 'Item') + ': ' + (item.percentage ?? 'N/A')"
                           ></div>
                         }
@@ -169,28 +170,28 @@ import { GradeService, CourseGradeSummary } from '../../core/services/grade.serv
   `,
 })
 export class GradesComponent implements OnInit {
-  private readonly gradeService = inject(GradeService);
+  private readonly moodleService = inject(MoodleService);
 
-  readonly courses = signal<CourseGradeSummary[]>([]);
+  readonly courses = signal<CourseGradeSummaryDto[]>([]);
   readonly loading = signal(true);
   readonly error = signal<string | null>(null);
   readonly expandedCourses = signal<Set<number>>(new Set());
 
   readonly totalGraded = computed(() =>
-    this.courses().reduce((sum, c) => sum + c.gradedItemCount, 0)
+    this.courses().reduce((sum, c) => sum + (c.gradedItemCount ?? 0), 0)
   );
 
   readonly averageGrade = computed(() => {
     const all = this.courses().filter(c => c.courseTotalRaw != null);
     if (all.length === 0) return '—';
-    const avg = all.reduce((sum, c) => sum + ((c.courseTotalRaw ?? 0) / c.courseTotalMax) * 100, 0) / all.length;
+    const avg = all.reduce((sum, c) => sum + ((c.courseTotalRaw ?? 0) / (c.courseTotalMax ?? 1)) * 100, 0) / all.length;
     return `${avg.toFixed(1)}%`;
   });
 
   readonly highestGrade = computed(() => {
     const all = this.courses().filter(c => c.courseTotalRaw != null);
     if (all.length === 0) return '—';
-    const max = Math.max(...all.map(c => ((c.courseTotalRaw ?? 0) / c.courseTotalMax) * 100));
+    const max = Math.max(...all.map(c => ((c.courseTotalRaw ?? 0) / (c.courseTotalMax ?? 1)) * 100));
     return `${max.toFixed(1)}%`;
   });
 
@@ -237,8 +238,8 @@ export class GradesComponent implements OnInit {
     }
   }
 
-  getGradedItems(course: CourseGradeSummary): CourseGradeSummary['items'] {
-    return course.items.filter(i => i.grade != null);
+  getGradedItems(course: CourseGradeSummaryDto): NonNullable<CourseGradeSummaryDto['items']> {
+    return (course.items ?? []).filter(i => i.grade != null);
   }
 
   getBarHeight(grade: number | null | undefined, max: number): number {
@@ -259,7 +260,7 @@ export class GradesComponent implements OnInit {
     this.loading.set(true);
     this.error.set(null);
 
-    this.gradeService.getGrades().subscribe({
+    this.moodleService.apiMoodleGradesGet().subscribe({
       next: (courses) => {
         this.courses.set(courses);
         this.loading.set(false);

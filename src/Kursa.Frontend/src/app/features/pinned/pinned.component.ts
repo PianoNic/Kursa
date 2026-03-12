@@ -2,7 +2,8 @@ import { ChangeDetectionStrategy, Component, inject, signal, OnInit } from '@ang
 import { DatePipe } from '@angular/common';
 import { HlmButton } from '@spartan-ng/helm/button';
 import { HlmCardImports } from '@spartan-ng/helm/card';
-import { PinnedContent, PinnedContentService } from '../../core/services/pinned-content.service';
+import { PinnedContentsService } from '../../api/api/pinnedContents.service';
+import { PinnedContentDto } from '../../api/model/pinnedContentDto';
 
 @Component({
   selector: 'app-pinned',
@@ -41,7 +42,7 @@ import { PinnedContent, PinnedContentService } from '../../core/services/pinned-
           @for (item of items(); track item.id) {
             <div hlmCard class="flex items-center gap-4 p-4 transition-colors hover:bg-accent">
               <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded bg-muted text-xs font-medium text-muted-foreground uppercase" aria-hidden="true">
-                {{ item.contentType.slice(0, 3) }}
+                {{ (item.contentType ?? '').slice(0, 3) }}
               </div>
 
               <div class="min-w-0 flex-1">
@@ -87,9 +88,9 @@ import { PinnedContent, PinnedContentService } from '../../core/services/pinned-
   `,
 })
 export class PinnedComponent implements OnInit {
-  private readonly pinnedService = inject(PinnedContentService);
+  private readonly pinnedService = inject(PinnedContentsService);
 
-  readonly items = signal<PinnedContent[]>([]);
+  readonly items = signal<PinnedContentDto[]>([]);
   readonly loading = signal(true);
   readonly error = signal<string | null>(null);
 
@@ -99,7 +100,7 @@ export class PinnedComponent implements OnInit {
 
   private loadPinned(): void {
     this.loading.set(true);
-    this.pinnedService.getPinnedContents().subscribe({
+    this.pinnedService.apiPinnedGet().subscribe({
       next: (items) => {
         this.items.set(items);
         this.loading.set(false);
@@ -112,18 +113,18 @@ export class PinnedComponent implements OnInit {
     });
   }
 
-  toggleStar(item: PinnedContent): void {
-    this.pinnedService.toggleStar(item.contentId).subscribe({
-      next: (result) => {
+  toggleStar(item: PinnedContentDto): void {
+    this.pinnedService.apiPinnedContentIdStarPost(item.contentId!).subscribe({
+      next: () => {
         this.items.update((items) =>
-          items.map((i) => (i.id === item.id ? { ...i, isStarred: result.isStarred } : i))
+          items.map((i) => (i.id === item.id ? { ...i, isStarred: !i.isStarred } : i))
         );
       },
     });
   }
 
-  unpin(item: PinnedContent): void {
-    this.pinnedService.unpinContent(item.contentId).subscribe({
+  unpin(item: PinnedContentDto): void {
+    this.pinnedService.apiPinnedContentIdDelete(item.contentId!).subscribe({
       next: () => {
         this.items.update((items) => items.filter((i) => i.id !== item.id));
       },

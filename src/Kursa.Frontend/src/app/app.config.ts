@@ -5,6 +5,7 @@ import { provideOAuthClient } from 'angular-oauth2-oidc';
 
 import { routes } from './app.routes';
 import { authInterceptor } from './core/interceptors/auth.interceptor';
+import { graphTokenInterceptor } from './core/interceptors/graph-token.interceptor';
 import { AuthService } from './core/services/auth.service';
 import { Configuration } from './api';
 import { environment } from '../environments/environment';
@@ -17,7 +18,7 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
     provideRouter(routes, withComponentInputBinding()),
-    provideHttpClient(withInterceptors([authInterceptor])),
+    provideHttpClient(withInterceptors([authInterceptor, graphTokenInterceptor])),
     provideOAuthClient(),
     {
       provide: Configuration,

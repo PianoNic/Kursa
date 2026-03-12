@@ -1,3 +1,4 @@
+using Kursa.Application.Features.Users;
 using Kursa.Application.Features.Users.Commands;
 using Kursa.Application.Features.Users.Queries;
 using Mediator;
@@ -12,6 +13,7 @@ namespace Kursa.API.Controllers;
 public class UsersController(ISender sender) : ControllerBase
 {
     [HttpGet("me")]
+    [ProducesResponseType(typeof(UserDto), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetCurrentUserAsync(CancellationToken cancellationToken)
     {
         var result = await sender.Send(new GetCurrentUserQuery(), cancellationToken);
@@ -22,6 +24,7 @@ public class UsersController(ISender sender) : ControllerBase
     }
 
     [HttpPut("me/profile")]
+    [ProducesResponseType(typeof(UserDto), StatusCodes.Status200OK)]
     public async Task<IActionResult> UpdateProfileAsync(
         UpdateUserProfileCommand command,
         CancellationToken cancellationToken)
@@ -34,6 +37,7 @@ public class UsersController(ISender sender) : ControllerBase
     }
 
     [HttpPut("me/settings")]
+    [ProducesResponseType(typeof(UserSettingsDto), StatusCodes.Status200OK)]
     public async Task<IActionResult> UpdateSettingsAsync(
         UpdateUserSettingsCommand command,
         CancellationToken cancellationToken)

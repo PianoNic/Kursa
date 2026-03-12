@@ -1,13 +1,14 @@
 import { ChangeDetectionStrategy, Component, signal, computed, inject, OnInit } from '@angular/core';
 import { HlmButton } from '@spartan-ng/helm/button';
 import { HlmCardImports } from '@spartan-ng/helm/card';
-import { AssignmentService, AssignmentView } from '../../core/services/assignment.service';
+import { MoodleService } from '../../api/api/moodle.service';
+import { AssignmentViewDto } from '../../api/model/models';
 
 interface CalendarDay {
   date: Date;
   isCurrentMonth: boolean;
   isToday: boolean;
-  assignments: AssignmentView[];
+  assignments: AssignmentViewDto[];
 }
 
 @Component({
@@ -205,9 +206,9 @@ interface CalendarDay {
   `,
 })
 export class AssignmentsComponent implements OnInit {
-  private readonly assignmentService = inject(AssignmentService);
+  private readonly moodleService = inject(MoodleService);
 
-  readonly assignments = signal<AssignmentView[]>([]);
+  readonly assignments = signal<AssignmentViewDto[]>([]);
   readonly loading = signal(true);
   readonly error = signal<string | null>(null);
   readonly activeView = signal<'list' | 'calendar'>('list');
@@ -348,7 +349,7 @@ export class AssignmentsComponent implements OnInit {
     this.loading.set(true);
     this.error.set(null);
 
-    this.assignmentService.getAssignments().subscribe({
+    this.moodleService.apiMoodleAssignmentsGet().subscribe({
       next: (assignments) => {
         this.assignments.set(assignments);
         this.loading.set(false);
@@ -360,7 +361,7 @@ export class AssignmentsComponent implements OnInit {
     });
   }
 
-  private getAssignmentsForDate(date: Date): AssignmentView[] {
+  private getAssignmentsForDate(date: Date): AssignmentViewDto[] {
     return this.assignments().filter(a => {
       if (!a.dueDate) return false;
       const due = new Date(a.dueDate);
