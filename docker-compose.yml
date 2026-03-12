@@ -22,7 +22,7 @@ services:
   api:
     build:
       context: .
-      dockerfile: docker/Dockerfile.api
+      dockerfile: src/Kursa.API/Dockerfile
     ports:
       - "5000:8080"
     environment:
