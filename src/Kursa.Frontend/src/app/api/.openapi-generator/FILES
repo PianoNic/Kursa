@@ -1,9 +1,9 @@
 .gitignore
-.openapi-generator-ignore
 README.md
 api.module.ts
 api/analytics.service.ts
 api/api.ts
+api/app.service.ts
 api/auth.service.ts
 api/chat.service.ts
 api/flashcards.service.ts

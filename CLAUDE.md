@@ -137,11 +137,17 @@ Kursa/
 - Keep commits atomic and focused
 
 ### Docker
-- Every service gets a Dockerfile
+- Single Dockerfile (`src/Kursa.API/Dockerfile`) — multi-stage build serving both API and Angular SPA
 - `compose.yml` for full local dev stack
-- Use multi-stage builds for .NET and Angular
+- .NET serves the Angular SPA via `SpaServices.Extensions` middleware (no nginx)
 - `.env.example` for all environment variables
 - Health checks on all services
+
+### API Client Generation
+- OpenAPI client generated via `@openapitools/openapi-generator-cli` with `typescript-angular` generator
+- Run `bun run apigen` in the frontend directory to regenerate from Swagger
+- Generated client lives in `src/Kursa.Frontend/src/app/api/`
+- Configuration provider wired in `app.config.ts` with `apiBaseUrl` from environment
 
 ---
 

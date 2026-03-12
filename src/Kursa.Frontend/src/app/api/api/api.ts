@@ -1,5 +1,7 @@
 export * from './analytics.service';
 import { AnalyticsService } from './analytics.service';
+export * from './app.service';
+import { AppService } from './app.service';
 export * from './auth.service';
 import { AuthService } from './auth.service';
 export * from './chat.service';
@@ -24,4 +26,4 @@ export * from './summaries.service';
 import { SummariesService } from './summaries.service';
 export * from './users.service';
 import { UsersService } from './users.service';
-export const APIS = [AnalyticsService, AuthService, ChatService, FlashcardsService, GraphService, MoodleService, PinnedContentsService, QuizzesService, RecordingsService, StudySessionsService, SuggestionsService, SummariesService, UsersService];
+export const APIS = [AnalyticsService, AppService, AuthService, ChatService, FlashcardsService, GraphService, MoodleService, PinnedContentsService, QuizzesService, RecordingsService, StudySessionsService, SuggestionsService, SummariesService, UsersService];
