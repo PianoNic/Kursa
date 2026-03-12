@@ -17,7 +17,9 @@
 - **Moodle**: All calls via MoodlewareAPI (FastAPI bridge). Kiota typed client. Redis caching.
 - **Package Manager (frontend)**: bun (NEVER npm/yarn)
 - **Containerization**: Docker + compose.yml. Single container serves API + Angular SPA via SpaServices.Extensions (no nginx)
-- **API Client**: Generated via `@openapitools/openapi-generator-cli` (`typescript-angular`). Run `bun run apigen`.
+- **API Client**: Generated via `@openapitools/openapi-generator-cli` (`typescript-angular`). Run `bun run apigen`. 68 fully typed models. All frontend components use generated services exclusively (no hand-written services except auth.service.ts for OIDC and ai-context.service.ts for state).
+- **Swagger**: All controller endpoints have `[ProducesResponseType]` attributes for typed Swagger output. Response DTOs in `src/Kursa.API/Dtos/` and `src/Kursa.Application/Features/*/`.
+- **Graph Token**: `GraphTokenService` manages Microsoft Graph access token; `graphTokenInterceptor` injects `X-Graph-Token` header.
 - **Swagger**: Swashbuckle in development mode at /swagger
 - **AppController**: GET /api/app returns version, environment, health, OIDC config
 
