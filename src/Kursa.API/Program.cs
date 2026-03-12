@@ -18,6 +18,7 @@ try
         configuration.ReadFrom.Configuration(context.Configuration));
 
     builder.Services.AddControllers();
+    builder.Services.AddSpaStaticFiles(options => { options.RootPath = "wwwroot/browser"; });
     builder.Services.AddOpenApi();
     builder.Services.AddProblemDetails();
     builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
@@ -75,10 +76,25 @@ try
     }
 
     app.UseSerilogRequestLogging();
-    app.UseHttpsRedirection();
+    app.UseStaticFiles();
+
+    if (!app.Environment.IsDevelopment())
+    {
+        app.UseSpaStaticFiles();
+    }
+
+    app.UseRouting();
     app.UseAuthentication();
     app.UseAuthorization();
     app.MapControllers();
+
+    if (!app.Environment.IsDevelopment())
+    {
+        app.UseSpa(spa =>
+        {
+            spa.Options.SourcePath = "wwwroot";
+        });
+    }
 
     app.Run();
 }
