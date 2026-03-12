@@ -1,53 +1,33 @@
 import { Injectable, inject, signal, computed } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
 import { Observable, firstValueFrom } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import { OAuthService, AuthConfig } from 'angular-oauth2-oidc';
-import { environment } from '../../../environments/environment';
-
-export interface UserProfile {
-  id: string;
-  email: string;
-  displayName: string;
-  avatarUrl: string | null;
-  role: string;
-  onboardingCompleted: boolean;
-  moodleConnected: boolean;
-  createdAt?: string;
-}
-
-interface AppInfo {
-  version: string;
-  environment: string;
-  isHealthy: boolean;
-  oidc: {
-    issuer: string;
-    clientId: string;
-    redirectUri: string;
-    postLogoutRedirectUri: string;
-    scope: string;
-  };
-}
+import { AppService } from '../../api/api/app.service';
+import { AuthService as ApiAuthService } from '../../api/api/auth.service';
+import { UsersService } from '../../api/api/users.service';
+import { UserDto } from '../../api/model/userDto';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-  private readonly http = inject(HttpClient);
+  private readonly appService = inject(AppService);
+  private readonly apiAuth = inject(ApiAuthService);
+  private readonly usersService = inject(UsersService);
   private readonly oauthService = inject(OAuthService);
 
-  private readonly _profile = signal<UserProfile | null>(null);
+  private readonly _profile = signal<UserDto | null>(null);
 
   readonly profile = this._profile.asReadonly();
   readonly isAuthenticated = computed(() => this.oauthService.hasValidAccessToken());
 
   async initialize(): Promise<void> {
-    const appInfo = await firstValueFrom(this.http.get<AppInfo>(`${environment.apiBaseUrl}/api/app`));
+    const appInfo = await firstValueFrom(this.appService.apiAppGet());
 
     const config: AuthConfig = {
-      issuer: appInfo.oidc.issuer,
-      clientId: appInfo.oidc.clientId,
-      redirectUri: appInfo.oidc.redirectUri,
-      postLogoutRedirectUri: appInfo.oidc.postLogoutRedirectUri,
-      scope: appInfo.oidc.scope,
+      issuer: appInfo.oidc?.issuer ?? '',
+      clientId: appInfo.oidc?.clientId ?? '',
+      redirectUri: appInfo.oidc?.redirectUri ?? '/callback',
+      postLogoutRedirectUri: appInfo.oidc?.postLogoutRedirectUri ?? '/',
+      scope: appInfo.oidc?.scope ?? 'openid profile email',
       responseType: 'code',
       showDebugInformation: appInfo.environment !== 'Production',
       strictDiscoveryDocumentValidation: false,
@@ -94,20 +74,20 @@ export class AuthService {
     return (this.oauthService.getIdentityClaims() as Record<string, unknown>) ?? {};
   }
 
-  getCurrentUser(): Observable<UserProfile> {
-    return this.http
-      .get<UserProfile>(`${environment.apiBaseUrl}/api/auth/me`)
+  getCurrentUser(): Observable<UserDto> {
+    return this.apiAuth
+      .apiAuthMeGet()
       .pipe(tap((user) => this._profile.set(user)));
   }
 
   /** Creates user in DB + marks onboarding complete. */
-  register(): Observable<UserProfile> {
-    return this.http
-      .post<UserProfile>(`${environment.apiBaseUrl}/api/auth/register`, {})
+  register(): Observable<UserDto> {
+    return this.apiAuth
+      .apiAuthRegisterPost()
       .pipe(tap((user) => this._profile.set(user)));
   }
 
   completeOnboarding(): Observable<void> {
-    return this.http.post<void>(`${environment.apiBaseUrl}/api/users/me/onboarding/complete`, {});
+    return this.usersService.apiUsersMeOnboardingCompletePost();
   }
 }
