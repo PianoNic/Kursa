@@ -66,7 +66,7 @@ public sealed class MoodleService(
 
         // Resolve the Moodle userid for this token — required by core_enrol_get_users_courses
         var siteInfo = await GetSiteInfoAsync(moodleToken, cancellationToken);
-        var body = new Get_user_courses_params();
+        var body = new Get_user_courses_params { MoodleUrl = moodleOptions.Value.SiteUrl };
         body.AdditionalData["userid"] = siteInfo.UserId;
 
         var response = await client.Core.Enrol.GetUsersCourses.PostAsync(
@@ -86,7 +86,7 @@ public sealed class MoodleService(
 
         var client = clientFactory.CreateForToken(moodleToken);
         var response = await client.Core.Course.GetContents.PostAsync(
-            new Get_course_contents_params { Courseid = courseId }, cancellationToken: cancellationToken);
+            new Get_course_contents_params { MoodleUrl = moodleOptions.Value.SiteUrl, Courseid = courseId }, cancellationToken: cancellationToken);
 
         ThrowIfMoodleError(response, "core_course_get_contents");
 
@@ -110,7 +110,7 @@ public sealed class MoodleService(
     {
         var client = clientFactory.CreateForToken(moodleToken);
         var response = await client.Core.Webservice.GetSiteInfo.PostAsync(
-            new Get_site_info_params(), cancellationToken: cancellationToken);
+            new Get_site_info_params { MoodleUrl = moodleOptions.Value.SiteUrl }, cancellationToken: cancellationToken);
 
         return await DeserializeMoodleDataAsync<MoodleSiteInfoDto>(response, cancellationToken)
             ?? throw new InvalidOperationException("Failed to deserialize Moodle site info.");
@@ -125,7 +125,7 @@ public sealed class MoodleService(
         if (cached is not null) return cached;
 
         var client = clientFactory.CreateForToken(moodleToken);
-        var body = new Get_assignments_params();
+        var body = new Get_assignments_params { MoodleUrl = moodleOptions.Value.SiteUrl };
         if (courseIds is { Count: > 0 })
         {
             body.AdditionalData["courseids"] = courseIds.ToList();
@@ -146,7 +146,7 @@ public sealed class MoodleService(
 
         var client = clientFactory.CreateForToken(moodleToken);
         var response = await client.Gradereport.User.GetGradeItems.PostAsync(
-            new Get_grade_items_params { Courseid = courseId }, cancellationToken: cancellationToken);
+            new Get_grade_items_params { MoodleUrl = moodleOptions.Value.SiteUrl, Courseid = courseId }, cancellationToken: cancellationToken);
 
         var dto = await DeserializeMoodleDataAsync<MoodleGradeReportDto>(response, cancellationToken) ?? new MoodleGradeReportDto();
         await SetCacheAsync(cacheKey, dto, ContentCacheDuration, cancellationToken);
@@ -161,7 +161,7 @@ public sealed class MoodleService(
         if (cached is not null) return cached;
 
         var client = clientFactory.CreateForToken(moodleToken);
-        var body = new Get_forums_by_courses_params();
+        var body = new Get_forums_by_courses_params { MoodleUrl = moodleOptions.Value.SiteUrl };
         body.AdditionalData["courseids"] = new List<int> { courseId };
 
         var response = await client.Mod.Forum.GetForumsByCourses.PostAsync(body, cancellationToken: cancellationToken);
@@ -179,7 +179,7 @@ public sealed class MoodleService(
 
         var client = clientFactory.CreateForToken(moodleToken);
         var response = await client.Mod.Forum.GetForumDiscussions.PostAsync(
-            new Get_forum_discussions_params { Forumid = forumId }, cancellationToken: cancellationToken);
+            new Get_forum_discussions_params { MoodleUrl = moodleOptions.Value.SiteUrl, Forumid = forumId }, cancellationToken: cancellationToken);
 
         var dto = await DeserializeMoodleDataAsync<MoodleForumDiscussionsResponseDto>(response, cancellationToken) ?? new MoodleForumDiscussionsResponseDto();
         await SetCacheAsync(cacheKey, dto, ContentCacheDuration, cancellationToken);
@@ -195,7 +195,7 @@ public sealed class MoodleService(
         if (cached is not null) return cached;
 
         var client = clientFactory.CreateForToken(moodleToken);
-        var body = new Get_calendar_events_params();
+        var body = new Get_calendar_events_params { MoodleUrl = moodleOptions.Value.SiteUrl };
         body.AdditionalData["events"] = new Dictionary<string, long>
         {
             ["timestart"] = timeStart,
