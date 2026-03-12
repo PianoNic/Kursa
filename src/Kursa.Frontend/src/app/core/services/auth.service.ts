@@ -1,9 +1,8 @@
 import { Injectable, inject, signal, computed } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, firstValueFrom } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import { OAuthService, AuthConfig } from 'angular-oauth2-oidc';
-import { environment } from '../../../environments/environment';
 
 export interface UserProfile {
   id: string;
@@ -13,6 +12,19 @@ export interface UserProfile {
   role: string;
   onboardingCompleted: boolean;
   moodleConnected: boolean;
+}
+
+interface AppInfo {
+  version: string;
+  environment: string;
+  isHealthy: boolean;
+  oidc: {
+    issuer: string;
+    clientId: string;
+    redirectUri: string;
+    postLogoutRedirectUri: string;
+    scope: string;
+  };
 }
 
 @Injectable({ providedIn: 'root' })
@@ -26,15 +38,17 @@ export class AuthService {
   readonly isAuthenticated = computed(() => this.oauthService.hasValidAccessToken());
 
   async initialize(): Promise<void> {
+    const appInfo = await firstValueFrom(this.http.get<AppInfo>('/api/app'));
+
     const config: AuthConfig = {
-      issuer: environment.oidc.issuer,
-      clientId: environment.oidc.clientId,
-      redirectUri: environment.oidc.redirectUri,
-      postLogoutRedirectUri: environment.oidc.postLogoutRedirectUri,
-      scope: environment.oidc.scope,
-      responseType: environment.oidc.responseType,
-      showDebugInformation: environment.oidc.showDebugInformation,
-      strictDiscoveryDocumentValidation: environment.oidc.strictDiscoveryDocumentValidation,
+      issuer: appInfo.oidc.issuer,
+      clientId: appInfo.oidc.clientId,
+      redirectUri: appInfo.oidc.redirectUri,
+      postLogoutRedirectUri: appInfo.oidc.postLogoutRedirectUri,
+      scope: appInfo.oidc.scope,
+      responseType: 'code',
+      showDebugInformation: appInfo.environment !== 'Production',
+      strictDiscoveryDocumentValidation: false,
       useSilentRefresh: false,
       clearHashAfterLogin: true,
     };
