@@ -30,7 +30,7 @@ public sealed class MoodlewareClientFactory(
         return new MoodlewareApiClient(adapter);
     }
 
-    /// <summary>Creates an unauthenticated client for calling open endpoints such as POST /auth.</summary>
+    /// <summary>Creates an unauthenticated client for calling open endpoints such as POST /get-token.</summary>
     public MoodlewareApiClient CreateAnonymous()
     {
         var httpClient = httpClientFactory.CreateClient("Moodle");
