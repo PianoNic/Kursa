@@ -16,19 +16,23 @@
 - **RAG**: Agentic tool-calling loop via Semantic Kernel (not hardcoded pipeline)
 - **Moodle**: All calls via MoodlewareAPI (FastAPI bridge). Kiota typed client. Redis caching.
 - **Package Manager (frontend)**: bun (NEVER npm/yarn)
-- **Containerization**: Docker + docker-compose
+- **Containerization**: Docker + compose.yml. Single container serves API + Angular SPA via SpaServices.Extensions (no nginx)
+- **API Client**: Generated via `@openapitools/openapi-generator-cli` (`typescript-angular`). Run `bun run apigen`.
+- **Swagger**: Swashbuckle in development mode at /swagger
+- **AppController**: GET /api/app returns version, environment, health, OIDC config
 
 ## Project Structure
 ```
 Kursa/
 ├── src/
-│   ├── Kursa.API/           # ASP.NET Core Web API
+│   ├── Kursa.API/           # ASP.NET Core Web API + Dockerfile
 │   ├── Kursa.Application/   # CQRS handlers, DTOs, interfaces
 │   ├── Kursa.Domain/        # Entities, value objects, enums
 │   ├── Kursa.Infrastructure/ # EF Core, external service clients
 │   └── Kursa.Frontend/      # Angular 21 frontend
+│       └── src/app/api/     # Generated OpenAPI client
 │       └── src/lib/ui/      # spartan.ng hlm-* components
-├── docker-compose.yml
+├── compose.yml
 ├── Kursa.slnx               # Solution file (NOT .sln)
 ├── CLAUDE.md
 └── .github/workflows/       # CI/CD pipelines
@@ -39,7 +43,6 @@ Kursa/
 
 ### Open Issues
 - **#81** feat(courses): self-enrol via MoodlewareAPI
-- **#86** feat(topbar): user profile picture + settings dropdown
 - **#94** bug(analytics): EF Core LINQ GroupBy translation issue
 - **#109** feat(rag): index full module content (HTML, page body, file text)
 

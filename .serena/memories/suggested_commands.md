@@ -15,6 +15,10 @@ bun run build
 # Full stack (Docker)
 docker compose up -d
 docker compose build
+
+# Regenerate API client (requires backend running)
+cd src/Kursa.Frontend
+bun run apigen
 ```
 
 ## Testing
