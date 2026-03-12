@@ -1,4 +1,4 @@
-# Kursa
+# Kursa 
 
 > **AI-powered LMS + Study Companion** — Moodle but actually good, with AI baked in.
 
