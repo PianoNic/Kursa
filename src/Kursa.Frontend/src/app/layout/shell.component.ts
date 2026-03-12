@@ -1,9 +1,11 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import { ChangeDetectionStrategy, Component, inject, OnInit, signal } from '@angular/core';
+import { HttpErrorResponse } from '@angular/common/http';
+import { Router, RouterOutlet } from '@angular/router';
 import { SidebarComponent } from './sidebar.component';
 import { TopbarComponent } from './topbar.component';
 import { AiPanelComponent } from './ai-panel.component';
 import { AiContextService } from '../core/services/ai-context.service';
+import { AuthService } from '../core/services/auth.service';
 
 @Component({
   selector: 'app-shell',
@@ -29,9 +31,24 @@ import { AiContextService } from '../core/services/ai-context.service';
     </div>
   `,
 })
-export class ShellComponent {
+export class ShellComponent implements OnInit {
+  private readonly authService = inject(AuthService);
+  private readonly router = inject(Router);
   readonly aiContext = inject(AiContextService);
   sidebarOpen = signal(true);
+
+  ngOnInit(): void {
+    // Load user profile; if 404 the user hasn't registered → send to onboarding
+    if (!this.authService.profile()) {
+      this.authService.getCurrentUser().subscribe({
+        error: (err: HttpErrorResponse) => {
+          if (err.status === 404) {
+            this.router.navigate(['/onboarding']);
+          }
+        },
+      });
+    }
+  }
 
   toggleSidebar() {
     this.sidebarOpen.update((v) => !v);

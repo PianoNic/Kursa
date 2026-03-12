@@ -1,9 +1,12 @@
-import { ChangeDetectionStrategy, Component, inject, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
+import { HlmButton } from '@spartan-ng/helm/button';
 import { AuthService } from '../../core/services/auth.service';
 
 @Component({
   selector: 'app-login',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [HlmButton],
   template: `
     <div class="flex min-h-screen items-center justify-center bg-background">
       <div class="text-center">
@@ -11,16 +14,21 @@ import { AuthService } from '../../core/services/auth.service';
           <img src="favicon.ico" alt="Kursa" class="h-10 w-10" />
           <span class="text-3xl font-bold text-foreground">Kursa</span>
         </div>
-        <p class="mb-8 text-muted-foreground">Signing you in…</p>
-        <div class="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent mx-auto"></div>
+
+        @if (isExpired) {
+          <p class="mb-4 text-sm text-destructive">Your session has expired. Please sign in again.</p>
+        } @else {
+          <p class="mb-4 text-muted-foreground">Sign in to access your courses and study tools.</p>
+        }
+
+        <button hlmBtn (click)="authService.login()">Sign in with Pocket ID</button>
       </div>
     </div>
   `,
 })
-export class LoginComponent implements OnInit {
-  private readonly authService = inject(AuthService);
+export class LoginComponent {
+  readonly authService = inject(AuthService);
+  private readonly route = inject(ActivatedRoute);
 
-  ngOnInit(): void {
-    this.authService.login();
-  }
+  readonly isExpired = this.route.snapshot.queryParamMap.get('expired') === 'true';
 }

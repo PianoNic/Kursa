@@ -38,10 +38,10 @@ try
             .AddJwtBearer(options =>
             {
                 options.Authority = builder.Configuration["Oidc:Authority"];
-                options.Audience = builder.Configuration["Oidc:ClientId"];
                 options.RequireHttpsMetadata = builder.Configuration.GetValue("Oidc:RequireHttpsMetadata", true);
                 options.TokenValidationParameters.NameClaimType = "name";
                 options.TokenValidationParameters.RoleClaimType = "role";
+                options.TokenValidationParameters.ValidateAudience = false;
             });
     }
 

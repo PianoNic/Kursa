@@ -84,6 +84,13 @@ export class AuthService {
       .pipe(tap((user) => this._profile.set(user)));
   }
 
+  /** Creates user in DB + marks onboarding complete. */
+  register(): Observable<UserProfile> {
+    return this.http
+      .post<UserProfile>('/api/auth/register', {})
+      .pipe(tap((user) => this._profile.set(user)));
+  }
+
   completeOnboarding(): Observable<void> {
     return this.http.post<void>('/api/users/me/onboarding/complete', {});
   }

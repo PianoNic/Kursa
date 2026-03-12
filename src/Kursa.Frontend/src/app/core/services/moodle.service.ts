@@ -61,6 +61,10 @@ export class MoodleService {
     return this.http.get<MoodleConnectionStatus>(`${this.baseUrl}/status`);
   }
 
+  validateCredentials(username: string, password: string): Observable<void> {
+    return this.http.post<void>(`${this.baseUrl}/validate`, { username, password });
+  }
+
   linkMoodle(username: string, password: string): Observable<void> {
     return this.http.post<void>(`${this.baseUrl}/link`, { username, password });
   }

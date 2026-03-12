@@ -6,11 +6,11 @@ export const authGuard: CanActivateFn = () => {
   const oauthService = inject(OAuthService);
   const router = inject(Router);
 
-  if (oauthService.hasValidAccessToken()) {
+  // Check both that the library considers the token valid AND that a token actually exists
+  const token = oauthService.getAccessToken();
+  if (token && oauthService.hasValidAccessToken()) {
     return true;
   }
 
-  // Save attempted URL for redirect after login
-  oauthService.initCodeFlow();
   return router.createUrlTree(['/login']);
 };
